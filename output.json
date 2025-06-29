@@ -1,0 +1,172 @@
+{
+    "Pagi": [
+        {
+            "Pokok": {
+                "name": "Nasi Kebuli",
+                "category": "Makanan pokok",
+                "portion": 89.43,
+                "calories": 142.19,
+                "carbs": 18.51,
+                "protein": 4.36,
+                "fat": 5.66,
+                "fiber": 0.98
+            },
+            "Lauk": {
+                "name": "Tahu Cabe Garam",
+                "category": "Lauk",
+                "portion": 89.43,
+                "calories": 136.83,
+                "carbs": 20.77,
+                "protein": 7.06,
+                "fat": 2.98,
+                "fiber": 0.98
+            },
+            "Sayur": {
+                "name": "Oseng Buncis Tempe",
+                "category": "Sayur",
+                "portion": 89.43,
+                "calories": 187.8,
+                "carbs": 28.89,
+                "protein": 7.1,
+                "fat": 5.77,
+                "fiber": 3.04
+            },
+            "avg_similarity": 0.9951
+        }
+    ],
+    "Siang": [
+        {
+            "Pokok": {
+                "name": "Nasi Samin",
+                "category": "Makanan pokok",
+                "portion": 160.24,
+                "calories": 331.7,
+                "carbs": 58.84,
+                "protein": 7.16,
+                "fat": 8.59,
+                "fiber": 5.61
+            },
+            "Lauk": {
+                "name": "Semur Tahu",
+                "category": "Lauk",
+                "portion": 160.24,
+                "calories": 227.54,
+                "carbs": 34.93,
+                "protein": 5.75,
+                "fat": 7.8,
+                "fiber": 0.96
+            },
+            "Sayur": {
+                "name": "Taoge, goreng",
+                "category": "Sayur",
+                "portion": 160.24,
+                "calories": 141.01,
+                "carbs": 22.43,
+                "protein": 5.13,
+                "fat": 3.37,
+                "fiber": 1.12
+            },
+            "avg_similarity": 0.9918
+        }
+    ],
+    "Sore/Malam": [
+        {
+            "Pokok": {
+                "name": "Tahu Tek",
+                "category": "Makanan pokok",
+                "portion": 150.78,
+                "calories": 583.52,
+                "carbs": 94.63,
+                "protein": 25.18,
+                "fat": 14.14,
+                "fiber": 9.05
+            },
+            "Lauk": null,
+            "Sayur": null,
+            "avg_similarity": 0.9988
+        },
+        {
+            "Pokok": {
+                "name": "Gado-gado",
+                "category": "Makanan pokok",
+                "portion": 425.94,
+                "calories": 583.54,
+                "carbs": 89.45,
+                "protein": 25.98,
+                "fat": 13.63,
+                "fiber": 4.69
+            },
+            "Lauk": null,
+            "Sayur": null,
+            "avg_similarity": 0.9963
+        }
+    ],
+    "Snack 1": [
+        {
+            "Pokok": null,
+            "Lauk": null,
+            "Sayur": null,
+            "Buah": {
+                "name": "Kokosan, segar",
+                "category": "Buah",
+                "portion": 271.41,
+                "calories": 233.41,
+                "carbs": 35.28,
+                "protein": 4.34,
+                "fat": 0.54,
+                "fiber": 3.8
+            },
+            "avg_similarity": 0.9837
+        },
+        {
+            "Pokok": null,
+            "Lauk": null,
+            "Sayur": null,
+            "Buah": {
+                "name": "Sawo duren, segar",
+                "category": "Buah",
+                "portion": 364.71,
+                "calories": 233.41,
+                "carbs": 29.18,
+                "protein": 3.65,
+                "fat": 11.31,
+                "fiber": 2.92
+            },
+            "avg_similarity": 0.9813
+        }
+    ],
+    "Snack 2": [
+        {
+            "Pokok": null,
+            "Lauk": null,
+            "Sayur": null,
+            "Buah": {
+                "name": "Durian, segar",
+                "category": "Buah",
+                "portion": 261.29,
+                "calories": 350.13,
+                "carbs": 73.16,
+                "protein": 6.53,
+                "fat": 7.84,
+                "fiber": 9.15
+            },
+            "avg_similarity": 0.9734
+        },
+        {
+            "Pokok": null,
+            "Lauk": null,
+            "Sayur": null,
+            "Buah": {
+                "name": "Kawista, segar",
+                "category": "Buah",
+                "portion": 291.77,
+                "calories": 350.12,
+                "carbs": 60.69,
+                "protein": 10.21,
+                "fat": 7.29,
+                "fiber": 13.42
+            },
+            "avg_similarity": 0.9705
+        }
+    ]
+}

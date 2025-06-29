@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator - SmartDiabets</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #2c5f5d;
+            --secondary-color: #d4a574;
+            --text-light: #f8f9fa;
+            --text-dark: #2c3e50;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1a4a47 100%);
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+            z-index: 1;
+        }
+
+        .navbar-custom {
+            background: rgba(44, 95, 93, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-brand {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.8rem;
+            color: var(--text-light) !important;
+        }
+
+        .nav-link {
+            color: var(--text-light) !important;
+            font-weight: 500;
+            margin: 0 10px;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--secondary-color) !important;
+        }
+
+        .main-container {
+            position: relative;
+            z-index: 2;
+        }
+
+        .calculator-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .card-header-custom {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            border: none;
+        }
+
+        .card-title-custom {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .card-subtitle-custom {
+            opacity: 0.9;
+            margin-top: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .card-body-custom {
+            padding: 2.5rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(44, 95, 93, 0.25);
+            background: white;
+        }
+
+        .form-control::placeholder {
+            color: #6c757d;
+            opacity: 0.7;
+        }
+
+        .btn-custom {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            color: white;
+            padding: 15px 35px;
+            font-weight: 600;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1rem;
+        }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(44, 95, 93, 0.3);
+            color: white;
+        }
+
+        .btn-custom:active {
+            transform: translateY(0);
+        }
+
+        .input-group-text {
+            background: var(--primary-color);
+            color: white;
+            border: 2px solid var(--primary-color);
+            border-radius: 10px 0 0 10px;
+        }
+
+        .form-floating > label {
+            color: #6c757d;
+        }
+
+        .back-link {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 3;
+        }
+
+        .back-link:hover {
+            color: var(--secondary-color);
+        }
+
+        .calculator-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .calculator-card {
+                margin: 1rem;
+                width: calc(100% - 2rem);
+            }
+            
+            .card-header-custom {
+                padding: 1.5rem;
+            }
+            
+            .card-title-custom {
+                font-size: 1.5rem;
+            }
+            
+            .card-body-custom {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Loading animation for form submission */
+        .btn-custom.loading {
+            position: relative;
+            color: transparent;
+        }
+
+        .btn-custom.loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin-left: -10px;
+            margin-top: -10px;
+            border: 2px solid transparent;
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .activity-badge {
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(44, 95, 93, 0.1);
+            border-radius: 50%;
+        }
+
+        .activity-item {
+            border-left: 3px solid var(--secondary-color);
+            padding-left: 1rem;
+            margin-left: 1rem;
+        }
+
+        .modal-content {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            border: none;
+        }
+
+        .modal-footer {
+            border: none;
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <!-- Back to Home Link
+    <a href="/" class="back-link">
+        <i class="bi bi-arrow-left me-2"></i>
+        Kembali ke Beranda
+    </a> -->
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">SmartDiabets</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/calculator">Calculator</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 76px); padding: 2rem 0;">
+        <div class="calculator-card" style="width: 100%; max-width: 500px;">
+            <!-- Card Header -->
+            <div class="card-header-custom">
+                <div class="calculator-icon">
+                    <i class="bi bi-calculator"></i>
+                </div>
+                <h5 class="card-title-custom">Kalkulator Kalori</h5>
+                <p class="card-subtitle-custom">Hitung kebutuhan kalori harian Anda</p>
+            </div>
+            
+            <!-- Card Body -->
+            <div class="card-body-custom">
+                <form action="/outputs" method="post" id="calculatorForm">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">
+                            <i class="bi bi-person me-2"></i>Nama Lengkap
+                        </label>
+                        <input type="text" class="form-control" id="name" name="name" placeholder="Masukkan nama lengkap Anda" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="age" class="form-label">
+                                <i class="bi bi-calendar me-2"></i>Umur
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="age" name="age" placeholder="25" min="1" max="120" required>
+                                <span class="input-group-text">tahun</span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="gender" class="form-label">
+                                <i class="bi bi-gender-ambiguous me-2"></i>Jenis Kelamin
+                            </label>
+                            <select class="form-select" id="gender" name="gender" required>
+                                <option selected disabled>Pilih jenis kelamin</option>
+                                <option value="pria">Laki-laki</option>
+                                <option value="wanita">Perempuan</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="weight" class="form-label">
+                                <i class="bi bi-speedometer me-2"></i>Berat Badan
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="weight" name="weight" placeholder="70" min="1" max="300" required>
+                                <span class="input-group-text">kg</span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="height" class="form-label">
+                                <i class="bi bi-rulers me-2"></i>Tinggi Badan
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="height" name="height" placeholder="170" min="50" max="250" required>
+                                <span class="input-group-text">cm</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="activity" class="form-label">
+                            <i class="bi bi-activity me-2"></i>Tingkat Aktivitas Harian
+                            <i class="bi bi-info-circle ms-2" style="color: var(--secondary-color); cursor: pointer;" data-bs-toggle="modal" data-bs-target="#activityModal" title="Klik untuk info detail"></i>
+                        </label>
+                        <select class="form-select" id="activity" name="activity" required>
+                            <option value="rest">🛌 Istirahat</option>
+                            <option value="light">🚶 Ringan</option>
+                            <option value="moderate">🏃 Sedang</option>
+                            <option value="heavy">💪 Berat </option>
+                            <option value="very_heavy">🏋️ Sangat Berat</option>
+                        </select>
+                    </div>
+                    
+                    <a href="/" class="btn btn-outline-secondary w-100 mb-3">
+                        <i class="bi bi-arrow-left me-2"></i>
+                        Kembali ke Beranda
+                    </a>
+                    <button type="submit" class="btn btn-custom w-100" id="submitBtn">
+                        <i class="bi bi-calculator me-2"></i>
+                        Hitung Kebutuhan Kalori
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Info Modal -->
+    <div class="modal fade" id="activityModal" tabindex="-1" aria-labelledby="activityModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
+                    <h5 class="modal-title" id="activityModalLabel">
+                        <i class="bi bi-book me-2"></i>Panduan Tingkat Aktivitas (PERKENI)
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="padding: 2rem;">
+                    <p class="text-muted mb-4">Berikut adalah penjelasan detail tingkat aktivitas berdasarkan pedoman PERKENI (Perkumpulan Endokrinologi Indonesia):</p>
+                    
+                    <div class="activity-item mb-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="activity-badge">🛌</span>
+                            <h6 class="mb-0 ms-3" style="color: var(--primary-color); font-weight: 600;">Istirahat</h6>
+                        </div>
+                        <p class="ms-5 mb-2"><strong>Penambahan:</strong> 10% dari kebutuhan basal</p>
+                        <p class="ms-5 text-muted">Kondisi istirahat atau aktivitas minimal</p>
+                    </div>
+
+                    <div class="activity-item mb-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="activity-badge">🚶</span>
+                            <h6 class="mb-0 ms-3" style="color: var(--primary-color); font-weight: 600;">Ringan</h6>
+                        </div>
+                        <p class="ms-5 mb-2"><strong>Penambahan:</strong> 20% dari kebutuhan basal</p>
+                        <p class="ms-5 text-muted">Pegawai kantor, guru, ibu rumah tangga</p>
+                    </div>
+
+                    <div class="activity-item mb-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="activity-badge">🏃</span>
+                            <h6 class="mb-0 ms-3" style="color: var(--primary-color); font-weight: 600;">Sedang</h6>
+                        </div>
+                        <p class="ms-5 mb-2"><strong>Penambahan:</strong> 30% dari kebutuhan basal</p>
+                        <p class="ms-5 text-muted">Pegawai industri ringan, mahasiswa, militer yang sedang tidak berperang</p>
+                    </div>
+
+                    <div class="activity-item mb-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="activity-badge">💪</span>
+                            <h6 class="mb-0 ms-3" style="color: var(--primary-color); font-weight: 600;">Berat</h6>
+                        </div>
+                        <p class="ms-5 mb-2"><strong>Penambahan:</strong> 40% dari kebutuhan basal</p>
+                        <p class="ms-5 text-muted">Petani, buruh, atlet, militer dalam keadaan latihan</p>
+                    </div>
+
+                    <div class="activity-item mb-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="activity-badge">🏋️</span>
+                            <h6 class="mb-0 ms-3" style="color: var(--primary-color); font-weight: 600;">Sangat Berat</h6>
+                        </div>
+                        <p class="ms-5 mb-2"><strong>Penambahan:</strong> 50% dari kebutuhan basal</p>
+                        <p class="ms-5 text-muted">Tukang becak, tukang gali</p>
+                    </div>
+
+                    <div class="alert alert-info mt-4" style="background-color: rgba(44, 95, 93, 0.1); border-color: var(--primary-color);">
+                        <i class="bi bi-lightbulb me-2"></i>
+                        <strong>Catatan:</strong> Pemilihan tingkat aktivitas yang tepat sangat penting untuk menghitung kebutuhan kalori yang akurat sesuai dengan kondisi dan pekerjaan Anda.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Form submission loading state
+        document.getElementById('calculatorForm').addEventListener('submit', function() {
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+        });
+
+        // Input validation and formatting
+        document.getElementById('age').addEventListener('input', function() {
+            if (this.value < 1) this.value = 1;
+            if (this.value > 120) this.value = 120;
+        });
+
+        document.getElementById('weight').addEventListener('input', function() {
+            if (this.value < 1) this.value = 1;
+            if (this.value > 300) this.value = 300;
+        });
+
+        // document.getElementById('height').addEventListener('input', function() {
+        //     if (this.value < 50) this.value = 50;
+        //     if (this.value > 250) this.value = 250;
+        // });
+
+        // Form animation on load
+        window.addEventListener('load', function() {
+            const card = document.querySelector('.calculator-card');
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.6s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 100);
+        });
+    </script>
+</body>
+</html>
