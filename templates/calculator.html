@@ -1,503 +1,448 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="id" data-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculator - SmartDiabets</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    
-    <style>
-        :root {
-            --primary-color: #2c5f5d;
-            --secondary-color: #d4a574;
-            --text-light: #f8f9fa;
-            --text-dark: #2c3e50;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Kalkulator – SmartDiabets</title>
 
-        body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            background: linear-gradient(135deg, var(--primary-color) 0%, #1a4a47 100%);
-            min-height: 100vh;
-            position: relative;
-        }
+  <!-- Bootstrap & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-            opacity: 0.3;
-            z-index: 1;
-        }
+  <style>
+    :root{
+      --brand:#047857; --brand-2:#22c55e; --accent:#fb923c;
+      --ink:#022c22; --ink-soft:#134e4a; --muted:#6b7280;
+      --paper:#f4faf7; --card:#ffffffef; --border:#00000010;
+      --shadow:0 18px 50px rgba(15,118,110,.18); --ring:0 0 0 .25rem rgba(34,197,94,.3);
+      --hero-grad: radial-gradient(1200px 600px at 10% 10%, rgba(34,197,94,.16), transparent 60%),
+                   radial-gradient(1000px 500px at 90% 40%, rgba(56,189,248,.16), transparent 60%),
+                   linear-gradient(135deg, #ecfdf5, #eff6ff);
+      --ink-hero:#064e3b;
+      --nav-bg:rgba(15,23,42,.96);
+    }
+    html[data-theme="dark"]{
+      --paper:#020617; --ink:#e5e7eb; --ink-soft:#e2e8f0; --muted:#9ca3af;
+      --card:#020617f5; --border:#ffffff1a;
+      --nav-bg:#020617f0;
+      --ink-hero:#e0f2fe;
+      --hero-grad: radial-gradient(1200px 600px at 10% 10%, rgba(34,197,94,.18), transparent 60%),
+                   radial-gradient(1000px 500px at 90% 40%, rgba(56,189,248,.18), transparent 60%),
+                   linear-gradient(135deg, #020617, #022c22);
+    }
 
-        .navbar-custom {
-            background: rgba(44, 95, 93, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
+    html[data-theme="dark"]{ color-scheme: dark; }
+    html[data-theme="light"]{ color-scheme: light; }
 
-        .navbar-brand {
-            font-family: 'Playfair Display', serif;
-            font-weight: 700;
-            font-size: 1.8rem;
-            color: var(--text-light) !important;
-        }
+    *,*::before,*::after{box-sizing:border-box}
+    body{
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--ink); background:var(--paper); min-height:100vh; overflow-x:hidden
+    }
+    a{color:inherit}
+    .text-muted-2{ color:var(--muted) }
+    .container-xl{width:min(1100px,92%)}
 
-        .nav-link {
-            color: var(--text-light) !important;
-            font-weight: 500;
-            margin: 0 10px;
-            transition: color 0.3s ease;
-        }
+    .navbar-custom{background:var(--nav-bg); backdrop-filter: blur(10px); border-bottom:1px solid var(--border)}
+    .navbar-brand{font-family:'Playfair Display',serif; color:#fff; font-weight:700}
+    .nav-link{ color:#eaf6f6; font-weight:500 }
+    .nav-link .bi{margin-right:.4rem}
+    .nav-link.active,.nav-link:hover{ color:var(--accent) }
+    .theme-toggle{
+      border:1px solid rgba(255,255,255,.18); color:#fff; background:transparent;
+      border-radius:999px; padding:.45rem .8rem; display:flex; align-items:center; gap:.35rem
+    }
 
-        .nav-link:hover {
-            color: var(--secondary-color) !important;
-        }
+    .hero-mini{
+      position:relative; padding:88px 0 48px; background:var(--hero-grad);
+      color:var(--ink-hero); overflow:hidden
+    }
+    .hero-mini::after{
+      content:""; position:absolute; inset:0; pointer-events:none; opacity:.12; mix-blend-mode:overlay;
+      background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><circle cx="8" cy="12" r="1" fill="white" opacity=".14"/></svg>');
+    }
+    .hero-title{ font-family:'Playfair Display',serif; font-size:clamp(1.9rem,3.5vw,2.6rem); margin:0 }
+    .gradient-text{ background:linear-gradient(90deg,#1fb99d 0%, #2cc9b1 35%, #6f8fff 70%, #9c7bff 100%); -webkit-background-clip:text; background-clip:text; color:transparent }
+    .hero-sub{ margin-top:.4rem; opacity:.95 }
 
-        .main-container {
-            position: relative;
-            z-index: 2;
-        }
+    /* Bubbles */
+    .bubbles{ position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; opacity:.20; display:block }
+    .bubble{
+      position:absolute; bottom:-140px; border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.75), rgba(255,255,255,.25) 60%, rgba(255,255,255,.08));
+      box-shadow: inset 0 1px 2px rgba(255,255,255,.4), 0 10px 30px rgba(0,0,0,.12);
+      animation: floatUp var(--dur, 14s) linear infinite, sway var(--sway, 6s) ease-in-out infinite;
+      filter: blur(var(--blur, 0px));
+      transform: translateY(var(--ty,0)) scale(var(--scale,1));
+    }
+    @keyframes floatUp{
+      from{ transform:translateY(0) translateX(0) scale(var(--scale,1)); opacity:0 }
+      12%{ opacity:.75 }
+      to{ transform:translateY(-120vh) translateX(0) scale(var(--scale,1)); opacity:0 }
+    }
+    @keyframes sway{
+      0%,100%{ transform: translateY(var(--ty,0)) translateX(-18px) scale(var(--scale,1)) }
+      50%{ transform: translateY(var(--ty,0)) translateX(18px) scale(var(--scale,1)) }
+    }
 
-        .calculator-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        }
+    .card-3d{
+      border-radius:16px; background:var(--card); border:1px solid var(--border);
+      box-shadow:var(--shadow); backdrop-filter: blur(10px); transition:transform .22s ease
+    }
+    .card-3d:hover{ transform:translateY(-4px) }
+    .card-head{ padding:20px; border-bottom:1px solid var(--border); background:rgba(255,255,255,.03) }
+    .card-body{ padding:22px }
 
-        .card-header-custom {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            padding: 2rem;
-            text-align: center;
-            border: none;
-        }
+    .icon-badge{
+      width:40px;height:40px;border-radius:12px;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(34,197,94,.12); color:var(--brand); border:1px solid rgba(34,197,94,.18)
+    }
+    html[data-theme="dark"] .icon-badge{ color:#6ee7b7; background:rgba(34,197,94,.18) }
 
-        .card-title-custom {
-            font-family: 'Playfair Display', serif;
-            font-size: 2rem;
-            font-weight: 700;
-            margin: 0;
-        }
+    /* FORM */
+    .form-label{ font-weight:600; color:var(--ink-soft) }
+    .form-control, .form-select{
+      border:1px solid #e6e7eb; border-radius:12px; padding:10px 12px;
+      background:var(--card); color:var(--ink); transition:.16s
+    }
+    html[data-theme="dark"] .form-control,
+    html[data-theme="dark"] .form-select{ border-color:rgba(255,255,255,.16) }
+    .form-control::placeholder{ color:var(--muted) }
+    .form-control:focus, .form-select:focus{ outline:none; box-shadow:var(--ring); border-color:var(--brand) }
+    .input-group-text{ background:var(--brand); color:#fff; border:1px solid var(--brand); border-radius:12px 0 0 12px }
 
-        .card-subtitle-custom {
-            opacity: 0.9;
-            margin-top: 0.5rem;
-            font-size: 1rem;
-        }
+    .section-label{ font-weight:700; color:var(--ink-soft) }
+    .hint{ font-size:.85rem; color:var(--muted) }
 
-        .card-body-custom {
-            padding: 2.5rem;
-        }
+    .pill{
+      position:relative; display:inline-flex; align-items:center; gap:.5rem;
+      border:1px solid #e6e7eb; background:var(--card);
+      padding:.45rem .7rem; border-radius:999px; cursor:pointer; user-select:none
+    }
+    html[data-theme="dark"] .pill{ border-color:rgba(255,255,255,.16) }
+    .pill input{ position:absolute; inset:0; opacity:0 }
+    .pill .dot{ width:16px; height:16px; border-radius:50%; border:2px solid #cbd5e1; background:transparent }
+    .pill.active{ border-color:rgba(34,197,94,.45); box-shadow:0 0 0 .2rem rgba(34,197,94,.15) }
+    .pill input:checked + .dot{ background:var(--brand); border-color:var(--brand) }
 
-        .form-label {
-            font-weight: 600;
-            color: var(--text-dark);
-            margin-bottom: 0.5rem;
-            font-size: 0.95rem;
-        }
+    .btn-primary-cta{
+      background:linear-gradient(135deg,var(--brand),var(--brand-2));
+      border:none; color:#fff; font-weight:800; border-radius:999px;
+      padding:12px 18px
+    }
+    .btn-primary-cta.loading{ position:relative; color:transparent !important; pointer-events:none }
+    .btn-primary-cta.loading:after{
+      content:""; position:absolute; inset:0; margin:auto; width:20px; height:20px; border-radius:50%;
+      border:2px solid rgba(255,255,255,.35); border-top-color:#fff; animation:spin 1s linear infinite;
+    }
+    @keyframes spin{ to{ transform:rotate(360deg) } }
 
-        .form-control, .form-select {
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            padding: 12px 16px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
-        }
+    .badge-info{
+      cursor:pointer; font-weight:700; font-size:.75rem;
+      display:inline-flex; align-items:center; gap:.35rem;
+      padding:.22rem .6rem; border-radius:999px;
+      border:1px solid rgba(251,146,60,.35);
+      background:rgba(251,146,60,.10); color:#c2410c;
+    }
 
-        .form-control:focus, .form-select:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(44, 95, 93, 0.25);
-            background: white;
-        }
-
-        .form-control::placeholder {
-            color: #6c757d;
-            opacity: 0.7;
-        }
-
-        .btn-custom {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            border: none;
-            color: white;
-            padding: 15px 35px;
-            font-weight: 600;
-            border-radius: 50px;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-size: 1rem;
-        }
-
-        .btn-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(44, 95, 93, 0.3);
-            color: white;
-        }
-
-        .btn-custom:active {
-            transform: translateY(0);
-        }
-
-        .input-group-text {
-            background: var(--primary-color);
-            color: white;
-            border: 2px solid var(--primary-color);
-            border-radius: 10px 0 0 10px;
-        }
-
-        .form-floating > label {
-            color: #6c757d;
-        }
-
-        .back-link {
-            color: var(--text-light);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s ease;
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 3;
-        }
-
-        .back-link:hover {
-            color: var(--secondary-color);
-        }
-
-        .calculator-icon {
-            width: 60px;
-            height: 60px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1rem;
-            color: white;
-            font-size: 1.5rem;
-        }
-
-        @media (max-width: 768px) {
-            .calculator-card {
-                margin: 1rem;
-                width: calc(100% - 2rem);
-            }
-            
-            .card-header-custom {
-                padding: 1.5rem;
-            }
-            
-            .card-title-custom {
-                font-size: 1.5rem;
-            }
-            
-            .card-body-custom {
-                padding: 1.5rem;
-            }
-        }
-
-        /* Loading animation for form submission */
-        .btn-custom.loading {
-            position: relative;
-            color: transparent;
-        }
-
-        .btn-custom.loading::after {
-            content: '';
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            top: 50%;
-            left: 50%;
-            margin-left: -10px;
-            margin-top: -10px;
-            border: 2px solid transparent;
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .activity-badge {
-            font-size: 1.5rem;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(44, 95, 93, 0.1);
-            border-radius: 50%;
-        }
-
-        .activity-item {
-            border-left: 3px solid var(--secondary-color);
-            padding-left: 1rem;
-            margin-left: 1rem;
-        }
-
-        .modal-content {
-            border: none;
-            border-radius: 15px;
-            overflow: hidden;
-        }
-
-        .modal-header {
-            border: none;
-        }
-
-        .modal-footer {
-            border: none;
-            background: #f8f9fa;
-        }
-    </style>
+    @media (max-width:768px){ .card-body{ padding:18px } }
+  </style>
 </head>
 <body>
-    <!-- Back to Home Link
-    <a href="/" class="back-link">
-        <i class="bi bi-arrow-left me-2"></i>
-        Kembali ke Beranda
-    </a> -->
 
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-custom">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">SmartDiabets</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
+  <!-- NAV -->
+  <nav class="navbar navbar-expand-lg navbar-custom navbar-dark fixed-top" aria-label="Navigasi utama">
+    <div class="container-xl">
+      <a class="navbar-brand" href="/"><i class="bi bi-activity me-2"></i>SmartDiabets</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigasi">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div id="nav" class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+          <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house-heart"></i>Beranda</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/calculator"><i class="bi bi-calculator"></i>Kalkulator</a></li>
+          <li class="nav-item"><a class="nav-link" href="/blog"><i class="bi bi-journal-text"></i>Artikel</a></li>
+          <li class="nav-item ms-lg-2">
+            <button class="theme-toggle" id="themeToggle" type="button" title="Dark/Light">
+              <i class="bi bi-moon-stars" id="themeIcon"></i><span class="d-none d-md-inline" id="themeText">Mode</span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/index.html">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/calculator">Calculator</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <div class="main-container d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 76px); padding: 2rem 0;">
-        <div class="calculator-card" style="width: 100%; max-width: 500px;">
-            <!-- Card Header -->
-            <div class="card-header-custom">
-                <div class="calculator-icon">
-                    <i class="bi bi-calculator"></i>
-                </div>
-                <h5 class="card-title-custom">Kalkulator Kalori</h5>
-                <p class="card-subtitle-custom">Hitung kebutuhan kalori harian Anda</p>
-            </div>
-            
-            <!-- Card Body -->
-            <div class="card-body-custom">
-                <form action="/outputs" method="post" id="calculatorForm">
-                    <div class="mb-3">
-                        <label for="name" class="form-label">
-                            <i class="bi bi-person me-2"></i>Nama Lengkap
-                        </label>
-                        <input type="text" class="form-control" id="name" name="name" placeholder="Masukkan nama lengkap Anda" required>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="age" class="form-label">
-                                <i class="bi bi-calendar me-2"></i>Umur
-                            </label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="age" name="age" placeholder="25" min="1" max="120" required>
-                                <span class="input-group-text">tahun</span>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="gender" class="form-label">
-                                <i class="bi bi-gender-ambiguous me-2"></i>Jenis Kelamin
-                            </label>
-                            <select class="form-select" id="gender" name="gender" required>
-                                <option selected disabled>Pilih jenis kelamin</option>
-                                <option value="pria">Laki-laki</option>
-                                <option value="wanita">Perempuan</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="weight" class="form-label">
-                                <i class="bi bi-speedometer me-2"></i>Berat Badan
-                            </label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="weight" name="weight" placeholder="70" min="1" max="300" required>
-                                <span class="input-group-text">kg</span>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="height" class="form-label">
-                                <i class="bi bi-rulers me-2"></i>Tinggi Badan
-                            </label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="height" name="height" placeholder="170" min="50" max="250" required>
-                                <span class="input-group-text">cm</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label for="activity" class="form-label">
-                            <i class="bi bi-activity me-2"></i>Tingkat Aktivitas Harian
-                            <i class="bi bi-info-circle ms-2" style="color: var(--secondary-color); cursor: pointer;" data-bs-toggle="modal" data-bs-target="#activityModal" title="Klik untuk info detail"></i>
-                        </label>
-                        <select class="form-select" id="activity" name="activity" required>
-                            <option value="rest">🛌 Istirahat</option>
-                            <option value="light">🚶 Ringan</option>
-                            <option value="moderate">🏃 Sedang</option>
-                            <option value="heavy">💪 Berat </option>
-                            <option value="very_heavy">🏋️ Sangat Berat</option>
-                        </select>
-                    </div>
-                    
-                    <a href="/" class="btn btn-outline-secondary w-100 mb-3">
-                        <i class="bi bi-arrow-left me-2"></i>
-                        Kembali ke Beranda
-                    </a>
-                    <button type="submit" class="btn btn-custom w-100" id="submitBtn">
-                        <i class="bi bi-calculator me-2"></i>
-                        Hitung Kebutuhan Kalori
-                    </button>
-                </form>
-            </div>
-        </div>
+          </li>
+        </ul>
+      </div>
     </div>
+  </nav>
 
-    <!-- Activity Info Modal -->
-    <div class="modal fade" id="activityModal" tabindex="-1" aria-labelledby="activityModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
-                    <h5 class="modal-title" id="activityModalLabel">
-                        <i class="bi bi-book me-2"></i>Panduan Tingkat Aktivitas (PERKENI)
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" style="padding: 2rem;">
-                    <p class="text-muted mb-4">Berikut adalah penjelasan detail tingkat aktivitas berdasarkan pedoman PERKENI (Perkumpulan Endokrinologi Indonesia):</p>
-                    
-                    <div class="activity-item mb-4">
-                        <div class="d-flex align-items-center mb-2">
-                            <span class="activity-badge">🛌</span>
-                            <h6 class="mb-0 ms-3" style="color: var(--primary-color); font-weight: 600;">Istirahat</h6>
-                        </div>
-                        <p class="ms-5 mb-2"><strong>Penambahan:</strong> 10% dari kebutuhan basal</p>
-                        <p class="ms-5 text-muted">Kondisi istirahat atau aktivitas minimal</p>
-                    </div>
+  <!-- HERO MINI -->
+  <section class="hero-mini">
+    <div class="bubbles" id="bubbles" aria-hidden="true"></div>
+    <canvas id="sparks" aria-hidden="true" style="position:absolute; inset:0; z-index:0; opacity:.45;"></canvas>
 
-                    <div class="activity-item mb-4">
-                        <div class="d-flex align-items-center mb-2">
-                            <span class="activity-badge">🚶</span>
-                            <h6 class="mb-0 ms-3" style="color: var(--primary-color); font-weight: 600;">Ringan</h6>
-                        </div>
-                        <p class="ms-5 mb-2"><strong>Penambahan:</strong> 20% dari kebutuhan basal</p>
-                        <p class="ms-5 text-muted">Pegawai kantor, guru, ibu rumah tangga</p>
-                    </div>
-
-                    <div class="activity-item mb-4">
-                        <div class="d-flex align-items-center mb-2">
-                            <span class="activity-badge">🏃</span>
-                            <h6 class="mb-0 ms-3" style="color: var(--primary-color); font-weight: 600;">Sedang</h6>
-                        </div>
-                        <p class="ms-5 mb-2"><strong>Penambahan:</strong> 30% dari kebutuhan basal</p>
-                        <p class="ms-5 text-muted">Pegawai industri ringan, mahasiswa, militer yang sedang tidak berperang</p>
-                    </div>
-
-                    <div class="activity-item mb-4">
-                        <div class="d-flex align-items-center mb-2">
-                            <span class="activity-badge">💪</span>
-                            <h6 class="mb-0 ms-3" style="color: var(--primary-color); font-weight: 600;">Berat</h6>
-                        </div>
-                        <p class="ms-5 mb-2"><strong>Penambahan:</strong> 40% dari kebutuhan basal</p>
-                        <p class="ms-5 text-muted">Petani, buruh, atlet, militer dalam keadaan latihan</p>
-                    </div>
-
-                    <div class="activity-item mb-4">
-                        <div class="d-flex align-items-center mb-2">
-                            <span class="activity-badge">🏋️</span>
-                            <h6 class="mb-0 ms-3" style="color: var(--primary-color); font-weight: 600;">Sangat Berat</h6>
-                        </div>
-                        <p class="ms-5 mb-2"><strong>Penambahan:</strong> 50% dari kebutuhan basal</p>
-                        <p class="ms-5 text-muted">Tukang becak, tukang gali</p>
-                    </div>
-
-                    <div class="alert alert-info mt-4" style="background-color: rgba(44, 95, 93, 0.1); border-color: var(--primary-color);">
-                        <i class="bi bi-lightbulb me-2"></i>
-                        <strong>Catatan:</strong> Pemilihan tingkat aktivitas yang tepat sangat penting untuk menghitung kebutuhan kalori yang akurat sesuai dengan kondisi dan pekerjaan Anda.
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                </div>
-            </div>
-        </div>
+    <div class="container-xl position-relative" style="z-index:1">
+      <h1 class="hero-title"><span class="gradient-text">Kalkulator Kalori</span> & Gizi Harian</h1>
+      <p class="hero-sub">Mulai dari piringmu—tentukan kebutuhan energi & preferensi agar rekomendasi menu makin pas.</p>
     </div>
+  </section>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <script>
-        // Form submission loading state
-        document.getElementById('calculatorForm').addEventListener('submit', function() {
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.classList.add('loading');
-            submitBtn.disabled = true;
+  <!-- CONTENT -->
+  <main class="py-4">
+    <div class="container-xl">
+      <div class="card-3d" id="card">
+        <div class="card-head d-flex align-items-center gap-3">
+          <div class="icon-badge"><i class="bi bi-calculator"></i></div>
+          <div>
+            <div class="fw-bold" style="font-size:1.2rem">Profil & Preferensi</div>
+            <div class="text-muted-2">Broca + PERKENI + filter alergi</div>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <form action="/outputs" method="post" id="calculatorForm">
+            <!-- Nama -->
+            <div class="mb-3">
+              <label class="form-label" for="name"><i class="bi bi-person me-1"></i> Nama Lengkap</label>
+              <input id="name" name="name" type="text" class="form-control" placeholder="Nama kamu" required>
+            </div>
+
+            <!-- Usia & Gender -->
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label" for="age"><i class="bi bi-calendar me-1"></i> Umur</label>
+                <div class="input-group">
+                  <input id="age" name="age" type="number" class="form-control" placeholder="25" min="1" max="120" required>
+                  <span class="input-group-text">tahun</span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="gender"><i class="bi bi-gender-ambiguous me-1"></i> Jenis Kelamin</label>
+                <select id="gender" name="gender" class="form-select" required>
+                  <option value="" disabled selected>Pilih jenis kelamin</option>
+                  <option value="pria">Laki-laki</option>
+                  <option value="wanita">Perempuan</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- BB & TB -->
+            <div class="row g-3 mt-0">
+              <div class="col-md-6">
+                <label class="form-label" for="weight"><i class="bi bi-speedometer me-1"></i> Berat Badan</label>
+                <div class="input-group">
+                  <input id="weight" name="weight" type="number" class="form-control" placeholder="70" min="1" max="300" required>
+                  <span class="input-group-text">kg</span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="height"><i class="bi bi-rulers me-1"></i> Tinggi Badan</label>
+                <div class="input-group">
+                  <input id="height" name="height" type="number" class="form-control" placeholder="170" min="50" max="250" required>
+                  <span class="input-group-text">cm</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Aktivitas -->
+            <div class="mt-3">
+              <label class="form-label" for="activity">
+                <i class="bi bi-activity me-1"></i> Tingkat Aktivitas Harian
+                <span class="badge-info ms-1" data-bs-toggle="modal" data-bs-target="#activityModal">
+                  <i class="bi bi-info-circle"></i> PERKENI
+                </span>
+              </label>
+              <select id="activity" name="activity" class="form-select" required>
+                <option value="" disabled selected>Pilih tingkat aktivitas</option>
+
+                <option value="rest">🛌 Istirahat ( +10% )</option>
+                <option value="light">🚶 Ringan ( +20% )</option>
+                <option value="moderate">🏃 Sedang ( +30% )</option>
+                <option value="heavy">💪 Berat ( +40% )</option>
+                <option value="very_heavy">🏋️ Sangat Berat ( +50% )</option>
+              </select>
+            </div>
+
+            <!-- Alergi -->
+            <div class="mt-4">
+              <div class="section-label mb-2"><i class="bi bi-shield-check me-1"></i> Alergi / Larangan Bahan</div>
+              <div class="d-flex flex-wrap gap-2">
+                <label class="pill"><input type="checkbox" name="allergies" value="kacang"><span class="dot"></span> Kacang</label>
+                <label class="pill"><input type="checkbox" name="allergies" value="susu"><span class="dot"></span> Susu/Dairy</label>
+                <label class="pill"><input type="checkbox" name="allergies" value="seafood"><span class="dot"></span> Seafood</label>
+                <label class="pill"><input type="checkbox" name="allergies" value="telur"><span class="dot"></span> Telur</label>
+                <label class="pill"><input type="checkbox" name="allergies" value="kedelai"><span class="dot"></span> Kedelai</label>
+                <label class="pill"><input type="checkbox" name="allergies" value="gluten"><span class="dot"></span> Gluten/Gandum</label>
+              </div>
+              <div class="hint mt-2">Centang yang perlu dihindari — sistem tidak akan menampilkan menu yang mengandung bahan tersebut.</div>
+            </div>
+
+            <!-- Preferensi exclude -->
+            <div class="mt-3">
+              <label class="form-label" for="exclude_foods">
+                <i class="bi bi-x-circle me-1"></i> Makanan yang ingin dihindari (opsional)
+              </label>
+              <input id="exclude_foods" name="exclude_foods" type="text" class="form-control"
+                    placeholder="Misal: rendang, udang, susu sapi — pisahkan dengan koma">
+              <div class="hint mt-1">Contoh penulisan: <em>petis, udang, bakso sapi</em></div>
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-4 d-grid gap-2">
+              <a href="/" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Kembali ke Beranda
+              </a>
+              <button id="submitBtn" type="submit" class="btn btn-primary-cta">
+                <i class="bi bi-calculator me-1"></i> Hitung Kebutuhan & Lanjutkan
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal PERKENI -->
+  <div class="modal fade" id="activityModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+      <div class="modal-header" style="background:linear-gradient(135deg,var(--brand),var(--accent)); color:#fff">
+        <h5 class="modal-title"><i class="bi bi-book me-2"></i>Panduan Tingkat Aktivitas (PERKENI)</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="mb-3"><strong>Ringkas:</strong> Istirahat +10% • Ringan +20% • Sedang +30% • Berat +40% • Sangat Berat +50% dari kebutuhan basal.</div>
+        <ul class="mb-0">
+          <li><b>Istirahat</b> — aktivitas minimal.</li>
+          <li><b>Ringan</b> — pegawai kantor, guru, ibu rumah tangga.</li>
+          <li><b>Sedang</b> — industri ringan, mahasiswa, militer tidak berperang.</li>
+          <li><b>Berat</b> — petani, buruh, atlet, militer latihan.</li>
+          <li><b>Sangat Berat</b> — tukang gali, pekerjaan fisik sangat tinggi.</li>
+        </ul>
+      </div>
+    </div></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Theme toggle (system/dark/light) -> selalu set data-theme resolved
+      const root = document.documentElement;
+      const KEY  = 'smartdiabets-theme';
+      const btn  = document.getElementById('themeToggle');
+      const icon = document.getElementById('themeIcon');
+
+      function applyTheme(pref){
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const resolved = (pref === 'system') ? (prefersDark ? 'dark' : 'light') : pref;
+        root.setAttribute('data-theme', resolved);
+        if(icon) icon.className = (resolved === 'dark') ? 'bi bi-brightness-high' : 'bi bi-moon-stars';
+        try{ localStorage.setItem(KEY, pref); }catch(e){}
+      }
+
+      const saved = (function(){ try{ return localStorage.getItem(KEY) }catch(e){ return null } })() || 'system';
+      applyTheme(saved);
+
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        const cur = (function(){ try{ return localStorage.getItem(KEY) }catch(e){ return 'system' } })() || 'system';
+        if(cur === 'system') applyTheme('system');
+      });
+
+      btn?.addEventListener('click', () => {
+        const cur = (function(){ try{ return localStorage.getItem(KEY) }catch(e){ return 'system' } })() || 'system';
+        const next = (cur==='system') ? 'dark' : (cur==='dark' ? 'light' : 'system');
+        applyTheme(next);
+      });
+
+      // Bubbles
+      const host = document.getElementById('bubbles');
+      if(host){
+        const N=14;
+        for(let i=0;i<N;i++){
+          const b=document.createElement('span');
+          b.className='bubble';
+          const size=Math.random()*90+26;
+          b.style.width=size+'px'; b.style.height=size+'px';
+          b.style.left=(Math.random()*100)+'%';
+          b.style.setProperty('--dur',(12+Math.random()*12)+'s');
+          b.style.setProperty('--sway',(5+Math.random()*6)+'s');
+          b.style.setProperty('--scale',0.9+Math.random()*0.6);
+          b.style.setProperty('--blur',(Math.random()*2.5)+'px');
+          b.style.setProperty('--ty',(Math.random()*20-10)+'px');
+          host.appendChild(b);
+        }
+      }
+
+      // Sparks particle canvas
+      const sparks=document.getElementById('sparks');
+      const heroEl=document.querySelector('.hero-mini');
+      if(sparks && heroEl){
+        const ctx=sparks.getContext('2d');
+        let W=heroEl.clientWidth, H=heroEl.clientHeight;
+        const DPR=Math.min(2, window.devicePixelRatio||1);
+        const N=70; const parts=[];
+        function resize(){
+          W=heroEl.clientWidth; H=heroEl.clientHeight;
+          sparks.width=W*DPR; sparks.height=H*DPR;
+          sparks.style.width=W+'px'; sparks.style.height=H+'px';
+          ctx.setTransform(DPR,0,0,DPR,0,0);
+        }
+        function spawn(p){
+          p.x=Math.random()*W; p.y=H+Math.random()*H*0.2;
+          p.vy=0.6+Math.random()*1.2; p.vx=(Math.random()-0.5)*0.6;
+          p.r=1+Math.random()*2; p.a=0.25+Math.random()*0.5; p.h=Math.random()*360;
+        }
+        for(let i=0;i<N;i++){ parts.push({}); spawn(parts[i]); }
+        function tick(){
+          ctx.clearRect(0,0,W,H);
+          for(const p of parts){
+            p.x+=p.vx; p.y-=p.vy;
+            if(p.y<-10||p.x<-10||p.x>W+10) spawn(p);
+            ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+            ctx.fillStyle=`hsla(${p.h},90%,60%,${p.a})`;
+            ctx.fill();
+          }
+          requestAnimationFrame(tick);
+        }
+        resize(); tick();
+        window.addEventListener('resize', resize);
+      }
+
+      // Toggle pill state
+      document.querySelectorAll('.pill').forEach(p=>{
+        const cb=p.querySelector('input[type="checkbox"]');
+        const sync=()=>p.classList.toggle('active', cb.checked);
+        sync();
+        p.addEventListener('click', e=>{
+          if(e.target !== cb){
+            cb.checked = !cb.checked;
+            cb.dispatchEvent(new Event('change', {bubbles:true}));
+          }
         });
+        cb.addEventListener('change', sync);
+      });
 
-        // Input validation and formatting
-        document.getElementById('age').addEventListener('input', function() {
-            if (this.value < 1) this.value = 1;
-            if (this.value > 120) this.value = 120;
+      // Clamp nilai input
+      const clamp=(el,min,max)=>{
+        if(!el) return;
+        el.addEventListener('input',()=>{
+          if(el.value==='')return;
+          const v=+el.value;
+          if(v<min)el.value=min;
+          if(v>max)el.value=max;
         });
+      };
+      clamp(document.getElementById('age'),1,120);
+      clamp(document.getElementById('weight'),1,300);
+      clamp(document.getElementById('height'),50,250);
 
-        document.getElementById('weight').addEventListener('input', function() {
-            if (this.value < 1) this.value = 1;
-            if (this.value > 300) this.value = 300;
-        });
-
-        // document.getElementById('height').addEventListener('input', function() {
-        //     if (this.value < 50) this.value = 50;
-        //     if (this.value > 250) this.value = 250;
-        // });
-
-        // Form animation on load
-        window.addEventListener('load', function() {
-            const card = document.querySelector('.calculator-card');
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(30px)';
-            
-            setTimeout(() => {
-                card.style.transition = 'all 0.6s ease';
-                card.style.opacity = '1';
-                card.style.transform = 'translateY(0)';
-            }, 100);
-        });
-    </script>
+      // Loading state submit
+      const form=document.getElementById('calculatorForm');
+      const btnSubmit=document.getElementById('submitBtn');
+      form?.addEventListener('submit', ()=>{
+        btnSubmit?.classList.add('loading');
+        if(btnSubmit) btnSubmit.disabled=true;
+      });
+    });
+  </script>
 </body>
 </html>

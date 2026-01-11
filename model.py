@@ -1,245 +1,482 @@
+# model.py
 import pandas as pd
 import numpy as np
-import pickle
-from sklearn.metrics.pairwise import cosine_similarity
 import json
+import re
+import logging
+import warnings
+from typing import List, Dict, Optional
 
-# Fungsi load data asli (Excel)
-def load_raw_data(file_path):
+warnings.filterwarnings('ignore', message='This pattern is interpreted as a regular expression')
+#Load data makanan dari file Excel
+def load_raw_data(file_path: str) -> pd.DataFrame:
     df = pd.read_excel(file_path, engine='openpyxl')
     df.columns = df.columns.str.strip()
     return df
 
-# Fungsi load data normalisasi (pickle)
-def load_normalized_data(pickle_path):
-    df_norm = pd.read_pickle(pickle_path)
-    return df_norm
+FEATURES = ['Energi (kal)', 'Protein (g)', 'Lemak (g)', 'Karbohidrat (g)', 'Serat (g)']
 
-# Fungsi load objek scaler (pickle)
-def load_scaler(pickle_path):
-    with open(pickle_path, 'rb') as f:
-        scaler = pickle.load(f)
-    return scaler
+logger = logging.getLogger(__name__)
 
-# Fungsi hitung similarity antara profil user dan makanan
-def calc_similarity(user_profile, foods_df, features):
-    user_vec = user_profile[features].values.reshape(1, -1)
-    foods_vecs = foods_df[features].values
-    similarities = cosine_similarity(user_vec, foods_vecs).flatten()
-    return similarities
+#Pola regex untuk deteksi alergen pada nama makanan
+ALLERGEN_PATTERNS: Dict[str, str] = {
+    'ikan': r'\b(ikan|kakap|tuna|salmon|gurame|lele|nila|tongkol|bandeng|teri|baronang|cakalang|kembung|tenggiri|patin|bawal|mujair|gabus|mas|dori|cod|haddock|mackerel)\b',
+    'udang': r'\b(udang|shrimp|rebon|ebi|lobster|kepiting|rajungan|crab)\b',
+    'cumi': r'\b(cumi|sotong|squid|octopus|gurita)\b',
+    'kerang': r'\b(kerang|tiram|oyster|mussel|scallop|clam)\b',
+    'seafood': r'\b(ikan|kakap|tuna|salmon|gurame|lele|nila|tongkol|bandeng|teri|udang|shrimp|rebon|ebi|cumi|sotong|kerang|kepiting|rajungan|lobster|terasi|petis|rumput\s*laut|nori)\b',
+    'kacang': r'\b(kacang|peanut|almond|mede|mete|kenari|pistachio|pecan|walnut|cashew|hazelnut|macadamia)\b',
+    'kedelai': r'\b(kedelai|soy|tempe|tahu|tofu|kecap|tauco|miso|edamame|shoyu)\b',
+    'susu': r'\b(susu|milk|keju|cheese|yogurt|yoghurt|mentega|butter|krim|cream|whey|kasein|laktosa|lactose|kental\s*manis|skim)\b',
+    'telur': r'\b(telur|telor|egg|ovum)\b',
+    'gandum': r'\b(gandum|wheat|terigu|gluten|roti|mie|mi|pasta|spaghetti|udon|ramen|makaroni|fettuccine|linguine|penne)\b',
+    'gluten': r'\b(gandum|wheat|terigu|gluten|roti|mie|mi|pasta|spaghetti|udon|ramen|makaroni|barley|jelai|rye)\b',
+}
 
-# Pilih top N makanan berdasar similarity dengan filter dan exclude
-def select_top_n_foods(raw_df, norm_df, user_profile, features, n=5, filters=None, exclude_foods=None):
-    df_filtered = raw_df.copy()
-    if filters:
-        for k, v in filters.items():
-            df_filtered = df_filtered[df_filtered[k] == v]
-    if exclude_foods:
-        df_filtered = df_filtered[~df_filtered['Nama_Bahan'].isin(exclude_foods)]
 
-    if df_filtered.empty:
-        return pd.DataFrame()
+#Gabungkan pattern alergen jadi satu regex untuk filtering
+def compile_allergen_regex(allergies: Optional[List[str]]) -> Optional[str]:
+    if not allergies:
+        return None
+    
+    patterns = []
+    for allergen in allergies:
+        key = allergen.strip().lower()
+        if not key:
+            continue
+        
+        if key in ALLERGEN_PATTERNS:
+            # Gunakan pattern predefined
+            patterns.append(ALLERGEN_PATTERNS[key])
+        else:
+            # Fallback: escape user input dan buat word boundary
+            escaped = re.escape(key)
+            patterns.append(rf'\b{escaped}\b')
+    
+    if not patterns:
+        return None
+    
+    # Gabungkan dengan OR (|)
+    combined = '|'.join(f'({p})' for p in patterns)
+    
+    logger.debug(f"Compiled allergen regex: {combined[:200]}...")
+    return combined
 
-    idx_filtered = df_filtered.index
-    norm_filtered = norm_df.loc[idx_filtered]
 
-    similarities = calc_similarity(user_profile, norm_filtered, features)
-    df_filtered = df_filtered.copy()
-    df_filtered['similarity'] = similarities
-    top_foods = df_filtered.sort_values(by='similarity', ascending=False).head(n)
-    return top_foods
+#Filter makanan yang mengandung alergen berdasarkan regex pattern
+def exclude_allergens_regex(df: pd.DataFrame, 
+                           allergies: Optional[List[str]], 
+                           col: str = "Nama_Bahan") -> pd.DataFrame:
+    if not allergies or df.empty:
+        return df
+    
+    pattern = compile_allergen_regex(allergies)
+    if pattern is None:
+        return df
+    
+    # Hitung jumlah baris awal
+    initial_count = len(df)
+    
+    # Filter: ambil yang TIDAK match (negasi ~)
+    mask = df[col].astype(str).str.contains(pattern, case=False, regex=True, na=False)
+    df_filtered = df[~mask].copy()
+    
+    # Log jumlah yang dihapus
+    removed_count = initial_count - len(df_filtered)
+    if removed_count > 0:
+        logger.info(f"Removed {removed_count} items containing allergens: {allergies}")
+        # Debug: tampilkan beberapa contoh yang dihapus
+        if removed_count <= 5:
+            removed_items = df[mask][col].tolist()
+            logger.debug(f"Removed items: {removed_items}")
+    
+    return df_filtered
 
-# Ambil info nutrisi berdasarkan porsi (bukan 100g, tapi sudah dikalikan porsi)
-def get_food_nutrition(name, portion, raw_df):
-    row = raw_df[raw_df['Nama_Bahan'] == name].iloc[0]
-    scale = portion / 100
+
+#Validasi tidak ada alergen yang lolos filter
+def validate_no_allergen(df: pd.DataFrame, 
+                        allergies: Optional[List[str]], 
+                        col: str = "Nama_Bahan") -> bool:
+    if not allergies or df.empty:
+        return True
+    
+    pattern = compile_allergen_regex(allergies)
+    if pattern is None:
+        return True
+    
+    # Cek apakah ada yang match (seharusnya tidak ada)
+    matches = df[col].astype(str).str.contains(pattern, case=False, regex=True, na=False)
+    leaked_count = matches.sum()
+    
+    if leaked_count > 0:
+        leaked_items = df[matches][col].tolist()
+        logger.warning(f"⚠️ VALIDATION FAILED: {leaked_count} allergen(s) leaked!")
+        logger.warning(f"Leaked items: {leaked_items[:10]}")
+        return False
+    
+    logger.debug(f"✓ Validation passed: No allergens found in {len(df)} items")
+    return True
+
+#Wrapper untuk kompatibilitas dengan kode lama
+def exclude_allergens(df: pd.DataFrame, allergies: Optional[List[str]]) -> pd.DataFrame:
+    return exclude_allergens_regex(df, allergies, col="Nama_Bahan")
+
+#Hitung nutrisi makanan berdasarkan porsi yang ditentukan
+def get_food_nutrition(name: str, portion_grams: float, raw_df: pd.DataFrame) -> Dict:
+    row = raw_df[raw_df['Nama_Bahan'] == name]
+    if row.empty:
+        # fallback kosong jika tidak ketemu
+        return {
+            "name": name, "category": None, "portion": round(float(portion_grams), 2),
+            "calories": 0.0, "carbs": 0.0, "protein": 0.0, "fat": 0.0, "fiber": 0.0
+        }
+    row = row.iloc[0].fillna(0)
+    scale = float(portion_grams) / 100.0
     return {
         "name": name,
-        "category": row["Jenis Makanan"],
-        "portion": round(portion, 2),
-        "calories": round(row["Energi (kal)"] * scale, 2),
-        "carbs": round(row["Karbohidrat (g)"] * scale, 2),
-        "protein": round(row["Protein (g)"] * scale, 2),
-        "fat": round(row["Lemak (g)"] * scale, 2),
-        "fiber": round(row["Serat (g)"] * scale, 2)
+        "category": row.get("Jenis Makanan", None),
+        "portion": round(float(portion_grams), 2),
+        "calories": round(float(row["Energi (kal)"]) * scale, 2),
+        "carbs": round(float(row["Karbohidrat (g)"]) * scale, 2),
+        "protein": round(float(row["Protein (g)"]) * scale, 2),
+        "fat": round(float(row["Lemak (g)"]) * scale, 2),
+        "fiber": round(float(row["Serat (g)"]) * scale, 2)
     }
 
-# Kombinasi paket makanan pokok + lauk + sayur (top n=2, exclude makanan dobel di 1 jadwal & jadwal lain)
-def combine_foods(top_pokok, top_lauk, top_sayur, used_foods, n=2):
-    combos = []
-    for _, pokok in top_pokok.iterrows():
-        if pokok['Nama_Bahan'] in used_foods:
-            continue
-        for _, lauk in top_lauk.iterrows():
-            if lauk['Nama_Bahan'] in used_foods or lauk['Nama_Bahan'] == pokok['Nama_Bahan']:
-                continue
-            for _, sayur in top_sayur.iterrows():
-                if (sayur['Nama_Bahan'] in used_foods or
-                    sayur['Nama_Bahan'] == pokok['Nama_Bahan'] or
-                    sayur['Nama_Bahan'] == lauk['Nama_Bahan']):
-                    continue
-                avg_sim = np.mean([pokok['similarity'], lauk['similarity'], sayur['similarity']])
-                combos.append({
-                    'pokok': pokok,
-                    'lauk': lauk,
-                    'sayur': sayur,
-                    'avg_similarity': avg_sim
-                })
+#Hitung porsi optimal makanan menggunakan Least Squares (A×x=b) dengan constraint min-max
+def solve_portions_least_squares(items: List[pd.Series], target_vec: np.ndarray,
+                                 min_g: float = 30.0, max_g: float = 400.0) -> np.ndarray:
+    X = np.column_stack([i[FEATURES].astype(float).to_numpy() / 100.0 for i in items])
+    y = target_vec.astype(float)
+    w, *_ = np.linalg.lstsq(X, y, rcond=None)
+    w = np.maximum(w, 0.0)
+    w = np.clip(w, min_g, max_g)
     
-    combos_sorted = sorted(combos, key=lambda x: x['avg_similarity'], reverse=True)
-    return combos_sorted[:n]
+    return w
 
-# Hitung porsi gram agar kalori paket sesuai target
-def calculate_portions(combo, target_calories):
-    cal_pokok = combo['pokok']['Energi (kal)']
-    cal_lauk = combo['lauk']['Energi (kal)']
-    cal_sayur = combo['sayur']['Energi (kal)']
-    total_cal_per_100g = cal_pokok + cal_lauk + cal_sayur
-    if total_cal_per_100g == 0:
-        return 100, 100, 100
-    porsi_total = target_calories / total_cal_per_100g * 100
-    return round(porsi_total, 2), round(porsi_total, 2), round(porsi_total, 2)
+#Hitung porsi optimal untuk satu item dengan closed-form: w=(x·y)/(x·x)
+def single_item_best_portion(item: pd.Series, target_vec: np.ndarray,
+                             min_g: float = 30.0, max_g: float = 400.0) -> float:
+    x = (item[FEATURES].astype(float).to_numpy() / 100.0)
+    y = target_vec.astype(float)
+    denom = float(np.dot(x, x)) if float(np.dot(x, x)) > 0 else 1.0
+    w = float(np.dot(x, y) / denom)
+    w = max(w, 0.0)
+    w = float(np.clip(w, min_g, max_g))
+    
+    return w
 
-# Rekomendasi pagi/siang (pakai top 2, exclude makanan yang sudah dipakai)
-def recommend_morning_afternoon(raw_df, norm_df, user_profile, target_calories, features, used_foods):
-    filters_pokok = {'Jenis Makanan': 'Makanan pokok', 'Mentahan / Olahan': 'Olahan', 'Tipe Pokok': 'Sederhana'}
-    top_pokok = select_top_n_foods(raw_df, norm_df, user_profile, features, n=5, filters=filters_pokok, exclude_foods=used_foods)
+#Hitung RMSE untuk evaluasi akurasi nutrisi (semakin kecil semakin baik)
+def rmse_vec(pred: np.ndarray, tgt: np.ndarray) -> float:
+    return float(np.sqrt(np.mean((pred - tgt) ** 2)))
 
-    filters_lauk = {'Jenis Makanan': 'Lauk', 'Mentahan / Olahan': 'Olahan'}
-    top_lauk = select_top_n_foods(raw_df, norm_df, user_profile, features, n=5, filters=filters_lauk, exclude_foods=used_foods)
+#Terapkan filter kategori pada DataFrame (mendukung value tunggal atau list)
+def _apply_filters(df: pd.DataFrame, filters: Optional[Dict[str, object]]) -> pd.DataFrame:
+    if not filters:
+        return df
+    out = df
+    for col, val in filters.items():
+        if isinstance(val, (list, tuple, set)):
+            out = out[out[col].isin(list(val))]
+        else:
+            out = out[out[col] == val]
+    return out
 
-    filters_sayur = {'Jenis Makanan': 'Sayur', 'Mentahan / Olahan': 'Olahan'}
-    top_sayur = select_top_n_foods(raw_df, norm_df, user_profile, features, n=5, filters=filters_sayur, exclude_foods=used_foods)
+#Buat fallback filter kalau kandidat kosong (lepas Tipe Pokok & Mentahan/Olahan bertahap)
+def _fallback_relax(df: pd.DataFrame, filters: Dict[str, object]) -> List[Dict[str, object]]:
+    plans = []
+    base = dict(filters)
+    if 'Tipe Pokok' in base:
+        f1 = dict(base); f1.pop('Tipe Pokok', None); plans.append(f1)
+    if 'Mentahan / Olahan' in base:
+        f2 = dict(base); f2.pop('Mentahan / Olahan', None); plans.append(f2)
+    if 'Tipe Pokok' in base or 'Mentahan / Olahan' in base:
+        f3 = dict(base); f3.pop('Tipe Pokok', None); f3.pop('Mentahan / Olahan', None); plans.append(f3)
+    return plans
 
-    # Kombinasikan dan pastikan tidak ada makanan yang sama dalam 1 jadwal atau sudah dipakai jadwal sebelumnya
-    combos = combine_foods(top_pokok, top_lauk, top_sayur, used_foods, n=5)  # Get more combinations to choose from
+#Pilih kandidat makanan berdasarkan filter, alergi, exclude, lalu ranking berdasarkan kedekatan kalori
+def choose_candidates(raw_df: pd.DataFrame,
+                      filters: Dict[str, object],
+                      allergies: Optional[List[str]],
+                      exclude_foods: Optional[set],
+                      target_calories: float,
+                      k: int = 6,
+                      seed: Optional[int] = None) -> pd.DataFrame:
+    rng = np.random.default_rng(seed)
+    df = _apply_filters(raw_df, filters)
+    df = exclude_allergens(df, allergies)
+    if exclude_foods:
+        df = df[~df['Nama_Bahan'].str.lower().isin({x.lower() for x in exclude_foods})]
+
+    if df.empty:
+        # coba fallback pelonggaran filter
+        for f in _fallback_relax(raw_df, filters):
+            tmp = _apply_filters(raw_df, f)
+            tmp = exclude_allergens(tmp, allergies)
+            if exclude_foods:
+                tmp = tmp[~tmp['Nama_Bahan'].str.lower().isin({x.lower() for x in exclude_foods})]
+            if not tmp.empty:
+                df = tmp
+                break
+
+    if df.empty:
+        return df
+
+    df = df.sample(frac=1.0, random_state=int(rng.integers(0, 1_000_000))).reset_index(drop=True)
+    df['_cal'] = pd.to_numeric(df['Energi (kal)'], errors='coerce').fillna(0.0)
+    df['_score'] = (df['_cal'] - target_calories) ** 2
+    df = df.sort_values('_score', kind='mergesort').head(k).reset_index(drop=True)
+    return df
+
+#Rekomendasi Pagi/Siang: Pokok+Lauk+Sayur, hitung porsi pakai Least Squares, ranking pakai RMSE
+def recommend_morning_afternoon(raw_df: pd.DataFrame,
+                                target_vec: np.ndarray,
+                                used_foods: set,
+                                allergies: Optional[List[str]] = None,
+                                seed: Optional[int] = None) -> List[Dict]:
+    target_cal = float(target_vec[0])
+
+    base_excl = set(used_foods)
+
+    pk = choose_candidates(
+        raw_df,
+        filters={'Jenis Makanan': 'Makanan pokok', 'Mentahan / Olahan': 'Olahan', 'Tipe Pokok': 'Sederhana'},
+        allergies=allergies,
+        exclude_foods=base_excl,
+        target_calories=target_cal / 3.0,
+        k=8,
+        seed=seed
+    )
+
+    lk = choose_candidates(
+        raw_df,
+        filters={'Jenis Makanan': 'Lauk', 'Mentahan / Olahan': 'Olahan'},
+        allergies=allergies,
+        exclude_foods=base_excl,
+        target_calories=target_cal / 3.0,
+        k=8,
+        seed=seed
+    )
+
+    sy = choose_candidates(
+        raw_df,
+        filters={'Jenis Makanan': 'Sayur', 'Mentahan / Olahan': 'Olahan'},
+        allergies=allergies,
+        exclude_foods=base_excl,
+        target_calories=target_cal / 3.0,
+        k=8,
+        seed=seed
+    )
+
+    if pk.empty or lk.empty or sy.empty:
+        return []
+
     recommendations = []
     foods_used_this_schedule = set()
 
-    for c in combos:
-        food_set = {c['pokok']['Nama_Bahan'], c['lauk']['Nama_Bahan'], c['sayur']['Nama_Bahan']}
-        # Cegah kombinasi dengan makanan dobel dalam 1 jadwal maupun dengan jadwal lain
-        if not foods_used_this_schedule.intersection(food_set):
-            p_pokok, p_lauk, p_sayur = calculate_portions(c, target_calories)
-            recommendations.append({
-                'pokok': c['pokok']['Nama_Bahan'],
-                'lauk': c['lauk']['Nama_Bahan'],
-                'sayur': c['sayur']['Nama_Bahan'],
-                'portion_pokok': p_pokok,
-                'portion_lauk': p_lauk,
-                'portion_sayur': p_sayur,
-                'avg_similarity': round(c['avg_similarity'], 4)
-            })
-            foods_used_this_schedule.update(food_set)
-            used_foods.update(food_set)
-        if len(recommendations) >= 2:  # Ambil 2 rekomendasi terbaik
-            break
-    return recommendations
+    for _, p in pk.head(3).iterrows():
+        for _, l in lk.head(3).iterrows():
+            for _, s in sy.head(3).iterrows():
+                names = {str(p['Nama_Bahan']), str(l['Nama_Bahan']), str(s['Nama_Bahan'])}
+                if foods_used_this_schedule.intersection(names) or used_foods.intersection(names):
+                    continue
 
-# Rekomendasi sore/malam (top 2, exclude makanan yang sudah dipakai)
-def recommend_evening(raw_df, norm_df, user_profile, target_calories, features, used_foods):
-    filters = {'Jenis Makanan': 'Makanan pokok', 'Tipe Pokok': 'Lengkap', 'Mentahan / Olahan': 'Olahan'}
-    top_pokok = select_top_n_foods(raw_df, norm_df, user_profile, features, n=5, filters=filters, exclude_foods=used_foods)
+                items = [p, l, s]
+                w = solve_portions_least_squares(items, target_vec)
+                X = np.column_stack([i[FEATURES].astype(float).to_numpy() / 100.0 for i in items])
+                pred = X @ w
+                err = rmse_vec(pred, target_vec)
+
+                recommendations.append((err, p, l, s, w))
+
+    recommendations.sort(key=lambda x: x[0])
+
+    out = []
+    for err, p, l, s, w in recommendations:
+        names = {str(p['Nama_Bahan']), str(l['Nama_Bahan']), str(s['Nama_Bahan'])}
+        if foods_used_this_schedule.intersection(names):
+            continue
+
+        out.append({
+            "Pokok": get_food_nutrition(p['Nama_Bahan'], w[0], raw_df),
+            "Lauk":  get_food_nutrition(l['Nama_Bahan'], w[1], raw_df),
+            "Sayur": get_food_nutrition(s['Nama_Bahan'], w[2], raw_df),
+            "avg_similarity": None,
+            "fit_rmse": round(float(err), 2)
+        })
+        foods_used_this_schedule.update(names)
+        used_foods.update(names)
+        if len(out) >= 1:
+            break
+
+    return out
+
+#Rekomendasi Sore/Malam: Makanan pokok tipe Lengkap (fallback Olahan), porsi closed-form
+def recommend_evening(raw_df: pd.DataFrame,
+                      target_vec: np.ndarray,
+                      used_foods: set,
+                      allergies: Optional[List[str]] = None,
+                      seed: Optional[int] = None) -> List[Dict]:
+    target_cal = float(target_vec[0])
+    base_excl = set(used_foods)
+
+    top = choose_candidates(
+        raw_df,
+        filters={'Jenis Makanan': 'Makanan pokok', 'Tipe Pokok': 'Lengkap', 'Mentahan / Olahan': 'Olahan'},
+        allergies=allergies,
+        exclude_foods=base_excl,
+        target_calories=target_cal,
+        k=10,
+        seed=seed
+    )
+    if top.empty:
+        top = choose_candidates(
+            raw_df,
+            filters={'Jenis Makanan': 'Makanan pokok', 'Mentahan / Olahan': 'Olahan'},
+            allergies=allergies,
+            exclude_foods=base_excl,
+            target_calories=target_cal,
+            k=10,
+            seed=seed
+        )
+
+    if top.empty:
+        return []
 
     recommendations = []
-    for _, food in top_pokok.iterrows():
-        if food['Nama_Bahan'] in used_foods:
+    for _, f in top.iterrows():
+        name = str(f['Nama_Bahan'])
+        if name in used_foods:
             continue
-        cal = food['Energi (kal)']
-        portion = round(target_calories / cal * 100, 2) if cal > 0 else 100
-        recommendations.append({
-            'pokok_lengkap': food['Nama_Bahan'],
-            'portion': portion,
-            'similarity': round(food['similarity'], 4)
-        })
-        used_foods.add(food['Nama_Bahan'])
-        if len(recommendations) >= 2:  # Ambil 2 rekomendasi terbaik
-            break
-    return recommendations
+        w = single_item_best_portion(f, target_vec)
+        X = (f[FEATURES].astype(float).to_numpy() / 100.0)
+        pred = X * w
+        err = rmse_vec(pred, target_vec)
+        recommendations.append((err, f, w))
 
-# Rekomendasi snack buah (top 2, exclude makanan yang sudah dipakai)
-def recommend_snack(raw_df, norm_df, user_profile, target_calories, features, used_foods):
-    filters = {'Jenis Makanan': 'Buah'}
-    top_buah = select_top_n_foods(raw_df, norm_df, user_profile, features, n=5, filters=filters, exclude_foods=used_foods)
+    recommendations.sort(key=lambda x: x[0])
+
+    out = []
+    for err, f, w in recommendations:
+        out.append({
+            "Pokok": get_food_nutrition(f['Nama_Bahan'], w, raw_df),
+            "Lauk": None,
+            "Sayur": None,
+            "avg_similarity": None,
+            "fit_rmse": round(float(err), 2)
+        })
+        used_foods.add(str(f['Nama_Bahan']))
+        if len(out) >= 1:
+            break
+
+    return out
+
+#Rekomendasi Snack: Buah, porsi closed-form
+def recommend_snack(raw_df: pd.DataFrame,
+                    target_vec: np.ndarray,
+                    used_foods: set,
+                    allergies: Optional[List[str]] = None,
+                    seed: Optional[int] = None) -> List[Dict]:
+    target_cal = float(target_vec[0])
+    base_excl = set(used_foods)
+
+    fruits = choose_candidates(
+        raw_df,
+        filters={'Jenis Makanan': 'Buah'},
+        allergies=allergies,
+        exclude_foods=base_excl,
+        target_calories=target_cal,
+        k=12,
+        seed=seed
+    )
+    if fruits.empty:
+        return []
 
     recommendations = []
-    for _, food in top_buah.iterrows():
-        if food['Nama_Bahan'] in used_foods:
+    for _, f in fruits.iterrows():
+        name = str(f['Nama_Bahan'])
+        if name in used_foods:
             continue
-        cal = food['Energi (kal)']
-        portion = round(target_calories / cal * 100, 2) if cal > 0 else 100
-        recommendations.append({
-            'snack': food['Nama_Bahan'],
-            'portion': portion,
-            'similarity': round(food['similarity'], 4)
-        })
-        used_foods.add(food['Nama_Bahan'])
-        if len(recommendations) >= 2:  # Ambil 2 rekomendasi terbaik
-            break
-    return recommendations
+        w = single_item_best_portion(f, target_vec)
+        X = (f[FEATURES].astype(float).to_numpy() / 100.0)
+        pred = X * w
+        err = rmse_vec(pred, target_vec)
+        recommendations.append((err, f, w))
 
-# Fungsi utama: generate rekomendasi dengan kebutuhan GIZI PER JADWAL (top 2 tiap jadwal, no kembar)
-def generate_recommendations_per_jadwal(raw_file, norm_pickle, scaler_pickle, jadwal_nutrients_dict):
+    recommendations.sort(key=lambda x: x[0])
+
+    out = []
+    for err, f, w in recommendations:
+        out.append({
+            "Pokok": None,
+            "Lauk": None,
+            "Sayur": None,
+            "Buah": get_food_nutrition(f['Nama_Bahan'], w, raw_df),
+            "avg_similarity": None,
+            "fit_rmse": round(float(err), 2)
+        })
+        used_foods.add(str(f['Nama_Bahan']))
+        if len(out) >= 1:
+            break
+
+    return out
+
+#Generate rekomendasi menu per jadwal makan (Pagi, Siang, Sore/Malam, Snack1, Snack2)
+def generate_recommendations_per_jadwal(raw_file: str,
+                                        jadwal_nutrients_dict: Dict[str, Dict[str, float]],
+                                        allergies: Optional[List[str]] = None,
+                                        exclude_foods: Optional[List[str]] = None,
+                                        seed: Optional[int] = None) -> Dict[str, List[Dict]]:
     raw_df = load_raw_data(raw_file)
-    norm_df = load_normalized_data(norm_pickle)
-    scaler = load_scaler(scaler_pickle)
-    features = ['Energi (kal)', 'Protein (g)', 'Lemak (g)', 'Karbohidrat (g)', 'Serat (g)']
 
-    output = {}
-    used_foods = set()  # Kumpulan makanan yang sudah pernah dipakai di seluruh jadwal
+    for col in FEATURES:
+        raw_df[col] = pd.to_numeric(raw_df[col], errors='coerce').fillna(0.0)
 
-    # Sekarang, gunakan data dari jadwal_nutrients_dict yang dikirimkan dari app.py
+    output: Dict[str, List[Dict]] = {}
+    used_foods = set(x.strip() for x in (exclude_foods or []) if x and x.strip())
+
+    rng = np.random.default_rng(seed)
+
     for schedule, user_nutrients in jadwal_nutrients_dict.items():
-        user_profile_raw = pd.DataFrame([user_nutrients])
-        user_profile_norm = user_profile_raw.copy()
-        user_profile_norm[features] = scaler.transform(user_profile_raw[features])
-        target_calories = user_nutrients['Energi (kal)']
+        target_vec = np.array([
+            user_nutrients['Energi (kal)'],
+            user_nutrients['Protein (g)'],
+            user_nutrients['Lemak (g)'],
+            user_nutrients['Karbohidrat (g)'],
+            user_nutrients['Serat (g)']
+        ], dtype=float)
 
-        # Menentukan rekomendasi makanan berdasarkan jadwal
         if schedule in ['Pagi', 'Siang']:
-            recs = recommend_morning_afternoon(raw_df, norm_df, user_profile_norm.iloc[0], target_calories, features, used_foods)
-            enriched_meals = []
-            for r in recs:
-                pokok_info = get_food_nutrition(r['pokok'], r['portion_pokok'], raw_df)
-                lauk_info = get_food_nutrition(r['lauk'], r['portion_lauk'], raw_df)
-                sayur_info = get_food_nutrition(r['sayur'], r['portion_sayur'], raw_df)
-                enriched_meals.append({
-                    "Pokok": pokok_info,
-                    "Lauk": lauk_info,
-                    "Sayur": sayur_info,
-                    "avg_similarity": r['avg_similarity']
-                })
-            output[schedule] = enriched_meals
-
+            recs = recommend_morning_afternoon(
+                raw_df=raw_df,
+                target_vec=target_vec,
+                used_foods=used_foods,
+                allergies=allergies,
+                seed=int(rng.integers(0, 1_000_000))
+            )
         elif schedule == 'Sore/Malam':
-            recs = recommend_evening(raw_df, norm_df, user_profile_norm.iloc[0], target_calories, features, used_foods)
-            enriched_meals = []
-            for r in recs:
-                pokok_info = get_food_nutrition(r['pokok_lengkap'], r['portion'], raw_df)
-                enriched_meals.append({
-                    "Pokok": pokok_info,  # Ganti dari "Pokok Lengkap" ke "Pokok"
-                    "Lauk": None,
-                    "Sayur": None,
-                    "avg_similarity": r['similarity']
-                })
-            output[schedule] = enriched_meals
+            recs = recommend_evening(
+                raw_df=raw_df,
+                target_vec=target_vec,
+                used_foods=used_foods,
+                allergies=allergies,
+                seed=int(rng.integers(0, 1_000_000))
+            )
+        else:
+            recs = recommend_snack(
+                raw_df=raw_df,
+                target_vec=target_vec,
+                used_foods=used_foods,
+                allergies=allergies,
+                seed=int(rng.integers(0, 1_000_000))
+            )
 
-        else:  # Snack 1 & Snack 2
-            recs = recommend_snack(raw_df, norm_df, user_profile_norm.iloc[0], target_calories, features, used_foods)
-            enriched_meals = []
-            for r in recs:
-                snack_info = get_food_nutrition(r['snack'], r['portion'], raw_df)
-                enriched_meals.append({
-                    "Pokok": None,
-                    "Lauk": None,
-                    "Sayur": None,
-                    "Buah": snack_info,
-                    "avg_similarity": r['similarity']
-                })
-            output[schedule] = enriched_meals
+        output[schedule] = recs
 
-    # Output hasil rekomendasi dalam format JSON (Opsional, jika ingin menyimpan)
-    with open('output.json', 'w', encoding='utf-8') as f:
-        json.dump(output, f, indent=4, ensure_ascii=False)
+    try:
+        with open('output.json', 'w', encoding='utf-8') as f:
+            json.dump(output, f, indent=4, ensure_ascii=False)
+    except Exception:
+        pass
 
     return output

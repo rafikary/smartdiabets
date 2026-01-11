@@ -1,252 +1,316 @@
 from flask import Flask, render_template, request
-from model import generate_recommendations_per_jadwal  # Mengimpor fungsi dari model.py
+from model import generate_recommendations_per_jadwal
 from datetime import datetime
 import logging
 import numpy as np
+import os
 
-# Setup logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# Fungsi untuk menghitung BBI (Broca)
-def calculate_bbi(height, gender):
-    logger.debug(f"Calculating BBI for height={height}, gender={gender}")
-    if (gender == "pria" and height >= 160) or (gender == "wanita" and height >= 150):
-        return 0.9 * (height - 100)
-    return height - 100
+VALID_ACT = {"rest", "light", "moderate", "heavy", "very_heavy"}
 
-# Fungsi untuk klasifikasi status gizi
-def classify_nutrition_status(weight, bbi):
-    percentage = (weight / bbi) * 100
-    logger.debug(f"Nutrition status: weight={weight}, bbi={bbi}, percentage={percentage}")
+# mapping dari value form (indo / english) ke internal code
+ACTIVITY_MAP = {
+    # sangat ringan / istirahat
+    "istirahat": "rest",
+    "sangat_ringan": "rest",
+    "rest": "rest",
+
+    # ringan
+    "ringan": "light",
+    "light": "light",
+
+    # sedang
+    "sedang": "moderate",
+    "moderate": "moderate",
+
+    # berat
+    "berat": "heavy",
+    "heavy": "heavy",
+
+    # sangat berat
+    "sangat_berat": "very_heavy",
+    "very_heavy": "very_heavy",
+}
+
+#Normalisasi input aktivitas dari form ke kode internal (rest/light/moderate/heavy/very_heavy)
+def normalize_activity(raw: str) -> str:
+    if not raw:
+        return "light"
+    raw = raw.strip().lower()
+    act = ACTIVITY_MAP.get(raw, raw)
+    return act if act in VALID_ACT else "light"
+
+#Cek keberadaan file yang diperlukan
+def ensure_files(*paths: str):
+    missing = [p for p in paths if not os.path.exists(p)]
+    if missing:
+        raise FileNotFoundError(f"File hilang: {', '.join(missing)}")
+
+#Ambil data alergi dari form (checkbox atau toggle)
+def parse_allergies(form) -> list:
+    kw_check = ['kacang', 'susu', 'seafood', 'telur', 'kedelai', 'gluten']
+    from_checkboxes = [a.strip().lower()
+                       for a in form.getlist('allergies') if a.strip()]
+    from_toggles = [k for k in kw_check if form.get(f'allergy_{k}') == 'on']
+    merged = from_checkboxes + from_toggles
+
+    seen = set()
+    cleaned = []
+    for x in merged:
+        t = x.strip().lower()
+        if t and t not in seen:
+            seen.add(t)
+            cleaned.append(t)
+
+    logger.debug(f"Allergies parsed: {cleaned}")
+    return cleaned
+
+#Parse makanan yang dikecualikan dari form (untuk fitur Ganti Menu)
+def parse_exclude_foods(form) -> list:
+    raw = form.get('exclude_foods', '')
+    parts = [p.strip() for p in raw.split(',')] if raw else []
+    seen, out = set(), []
+    for p in parts:
+        if p and p.lower() not in seen:
+            seen.add(p.lower())
+            out.append(p)
+    logger.debug(f"Exclude foods parsed: {out}")
+    return out
+
+#Hitung Berat Badan Ideal dengan Rumus Broca (Pria: 0.9×(TB-100), Wanita: 0.85×(TB-100))
+def calculate_bbi(height: float, gender: str) -> float:
+    if gender == "pria":
+        return 0.9 * (height - 100)
+    else:
+        return 0.85 * (height - 100)
+
+#Klasifikasi status gizi berdasarkan %BB/BBI (<90%: Kurus, 90-110%: Normal, >110%: Gemuk)
+def classify_nutrition_status(weight: float, bbi: float):
+    percentage = (weight / bbi) * 100 if bbi > 0 else 0
     if percentage < 90:
         return "Kurus", percentage
     elif 90 <= percentage <= 110:
         return "Normal", percentage
-    else:
-        return "Gemuk", percentage
+    return "Gemuk", percentage
 
-# Fungsi untuk menghitung kalori dasar (PERKENI)
-def calculate_base_calories(bbi, gender):
-    calories = bbi * 30 if gender == "pria" else bbi * 25
-    logger.debug(f"Base calories: bbi={bbi}, gender={gender}, calories={calories}")
-    return calories
+#Hitung energi basal (Pria: 30×BBI, Wanita: 25×BBI kkal/hari)
+def calculate_base_calories(bbi: float, gender: str) -> float:
+    return bbi * (30 if gender == "pria" else 25)
 
-# Fungsi untuk koreksi usia dan aktivitas
-def apply_corrections(calories, age, activity):
-    logger.debug(f"Applying corrections: calories={calories}, age={age}, activity={activity}")
-    # Koreksi usia
-    if 40 <= age <= 49:
+#Koreksi kalori berdasarkan usia dan tingkat aktivitas fisik (PAL)
+def apply_corrections(calories: float, age: int, activity: str) -> float:
+    
+    if age < 40:
+        calories *= 1.00
+    elif 40 <= age < 50:
         calories *= 0.95
-    elif 50 <= age <= 69:
+    elif 50 <= age < 60:
         calories *= 0.90
-    elif age > 70:
+    elif 60 <= age < 70:
+        calories *= 0.85
+    else:
         calories *= 0.80
-    # Koreksi aktivitas
-    activity_corrections = {
-        "rest": 1.1,
-        "light": 1.2,
-        "moderate": 1.3,
-        "heavy": 1.4,
-        "very_heavy": 1.5
-    }
-    return calories * activity_corrections[activity]
 
-# Fungsi untuk cek batas minimum kalori
-def check_minimum_calories(calories, gender, activity):
-    logger.debug(f"Checking minimum calories: calories={calories}, gender={gender}, activity={activity}")
-    min_calories = {"pria": (1200, 1600), "wanita": (1000, 1200)}
-    low, high = min_calories[gender]
+    pal_values = {
+        "rest": 1.20,
+        "light": 1.375,
+        "moderate": 1.55,
+        "heavy": 1.725,
+        "very_heavy": 1.90,
+    }
+    act_norm = normalize_activity(activity)
+    return calories * pal_values.get(act_norm, 1.375)
+
+#Cek dan enforce batas minimum kalori aman (Wanita: 1000-1200, Pria: 1200-1600 kkal)
+def check_minimum_calories(calories: float, gender: str):
+    min_cal = {"pria": (1200, 1600), "wanita": (1000, 1200)}
+    low, high = min_cal[gender]
+    warning = None
+
     if calories < low:
-        warning = f"Kebutuhan kalori asli ({calories:.1f} kalori) di bawah batas minimum ({low}–{high} kalori untuk {gender})."
-        if activity in ["moderate", "heavy", "very_heavy"]:
-            return high, warning
-        return low, warning
-    return calories, None
+        warning = (
+            f"Kebutuhan kalori terhitung {calories:.1f} kkal, "
+            f"di bawah batas minimum aman ({low}–{high} kkal untuk {gender}). "
+            f"Disesuaikan ke {low} kkal."
+        )
+        calories = low
+    elif calories < high:
+        warning = (
+            f"Kebutuhan kalori berada di batas bawah rentang aman "
+            f"({low}–{high} kkal untuk {gender})."
+        )
 
-# Fungsi untuk distribusi kalori ke jadwal (Diet 3J)
-def distribute_calories(calories):
-    distribution = {
-        "Pagi": calories * 0.2,
-        "Siang": calories * 0.3,
-        "Sore/Malam": calories * 0.25,
-        "Snack 1": calories * 0.1,
-        "Snack 2": calories * 0.15
-    }
-    logger.debug(f"Distribution: {distribution}")
-    return distribution
+    return calories, warning
 
-# Fungsi untuk menghitung gizi per jadwal
-def calculate_nutrients(calories):
+#Distribusi kalori ke 5 jadwal makan (Pagi 20%, Siang 30%, Sore 25%, Snack1 10%, Snack2 15%)
+def distribute_calories(cal: float) -> dict:
     return {
-        "karbohidrat": (calories * 0.6) / 4,  # 60%
-        "lemak": (calories * 0.25) / 9,       # 25%
-        "protein": (calories * 0.15) / 4,      # 15%
-        "fiber": (calories * 0.014)  
+        "Pagi": cal * 0.20,
+        "Siang": cal * 0.30,
+        "Sore/Malam": cal * 0.25,
+        "Snack 1": cal * 0.10,
+        "Snack 2": cal * 0.15,
     }
 
-# Fungsi untuk menghitung RMSE (ini masih untuk rmse saja)
-def calculate_rmse(actual_values, predicted_values):
-    differences = np.array(actual_values) - np.array(predicted_values)  # Selisih antara nilai aktual dan nilai prediksi
-    squared_differences = differences ** 2  # Kuadratkan selisihnya
-    mean_squared_difference = squared_differences.mean()  # Rata-rata kuadrat selisih
-    rmse = np.sqrt(mean_squared_difference)  # Akar kuadrat dari rata-rata kuadrat selisih
-    return rmse
+#Hitung target makronutrien per jadwal (Karbo 55%, Protein 15%, Lemak 30%, Serat 14g/1000kkal)
+def calculate_nutrients(cal: float) -> dict:
+    return {
+        "karbohidrat": (cal * 0.55) / 4.0,
+        "protein": (cal * 0.15) / 4.0,
+        "lemak": (cal * 0.30) / 9.0,
+        "fiber": (cal * 0.014),
+    }
 
-def sum_meal_nutrients(meal_list):
-    total = {"kalori": 0, "protein": 0, "lemak": 0, "karbohidrat": 0, "serat": 0}
+#Hitung RMSE untuk evaluasi akurasi nutrisi
+def calculate_rmse(actual_values, predicted_values) -> float:
+    diff = np.array(actual_values) - np.array(predicted_values)
+    return float(np.sqrt((diff ** 2).mean()))
+
+#Jumlahkan nutrisi total dari semua makanan dalam menu
+def sum_meal_nutrients(meal_list: list) -> dict:
+    total = {"kalori": 0.0, "protein": 0.0,
+             "lemak": 0.0, "karbohidrat": 0.0, "serat": 0.0}
     for food in meal_list:
-        for kategori in ['Pokok', 'Lauk', 'Sayur', 'Buah']:
-            if food.get(kategori):
-                total["kalori"] += food[kategori].get("calories", 0)
-                total["protein"] += food[kategori].get("protein", 0)
-                total["lemak"] += food[kategori].get("lemak", 0)
-                total["karbohidrat"] += food[kategori].get("carbs", 0)
-                total["serat"] += food[kategori].get("fiber", 0)
+        for kat in ['Pokok', 'Lauk', 'Sayur', 'Buah']:
+            item = food.get(kat)
+            if not item:
+                continue
+            total["kalori"] += float(item.get("calories", 0) or 0)
+            total["protein"] += float(item.get("protein", 0) or 0)
+            total["lemak"] += float(item.get("fat", 0) or 0)
+            total["karbohidrat"] += float(item.get("carbs", 0) or 0)
+            total["serat"] += float(item.get("fiber", 0) or 0)
     return total
 
-# Route utama
 @app.route('/')
 def home():
-    logger.debug("Accessing home route")
     return render_template('index.html')
 
-# Route untuk form kalkulator
+
 @app.route('/calculator')
 def calculator():
-    logger.debug("Accessing calculator route")
     return render_template('calculator.html')
 
-# Route untuk hasil perhitungan
+@app.route('/blog')
+def blog():
+    return render_template('blog.html')
+
 @app.route('/outputs', methods=['POST'])
 def output():
     try:
-        logger.debug("Processing outputs route")
-        
-        # Input dari form
         name = request.form['name']
         age = int(request.form['age'])
         gender = request.form['gender']
         weight = float(request.form['weight'])
         height = float(request.form['height'])
-        activity_level = request.form['activity']
 
-        # Perhitungan kalori
+        act_raw = request.form['activity']
+        activity_level = normalize_activity(act_raw)
+
+        allergies = parse_allergies(request.form)
+        exclude_foods = parse_exclude_foods(request.form)
+        swap_meal = request.form.get('swap_meal', '')
+
         bbi = calculate_bbi(height, gender)
         status, percentage = classify_nutrition_status(weight, bbi)
         base_calories = calculate_base_calories(bbi, gender)
         calories = apply_corrections(base_calories, age, activity_level)
-        final_calories, warning = check_minimum_calories(calories, gender, activity_level)
+        final_calories, warning = check_minimum_calories(calories, gender)
 
-        # Distribusi kalori per jadwal (setelah koreksi minimum)
         distribution = distribute_calories(final_calories)
-        # Nutrisi aktual per jadwal (setelah koreksi minimum)
-        nutrients = {meal_time: calculate_nutrients(cal) for meal_time, cal in distribution.items()}
+        nutrients = {mt: calculate_nutrients(kal) for mt, kal in distribution.items()}
 
-        # Menyusun jadwal nutrisi berdasarkan distribusi kalori dan gizi
         jadwal_nutrients_dict = {
-            'Pagi': {
-                'Energi (kal)': distribution['Pagi'],
-                'Protein (g)': nutrients['Pagi']['protein'],
-                'Lemak (g)': nutrients['Pagi']['lemak'],
-                'Karbohidrat (g)': nutrients['Pagi']['karbohidrat'],
-                'Serat (g)': nutrients['Pagi']['fiber']
-            },
-            'Siang': {
-                'Energi (kal)': distribution['Siang'],
-                'Protein (g)': nutrients['Siang']['protein'],
-                'Lemak (g)': nutrients['Siang']['lemak'],
-                'Karbohidrat (g)': nutrients['Siang']['karbohidrat'],
-                'Serat (g)': nutrients['Siang']['fiber']
-            },
-            'Sore/Malam': {
-                'Energi (kal)': distribution['Sore/Malam'],
-                'Protein (g)': nutrients['Sore/Malam']['protein'],
-                'Lemak (g)': nutrients['Sore/Malam']['lemak'],
-                'Karbohidrat (g)': nutrients['Sore/Malam']['karbohidrat'],
-                'Serat (g)': nutrients['Sore/Malam']['fiber']
-            },
-            'Snack 1': {
-                'Energi (kal)': distribution['Snack 1'],
-                'Protein (g)': nutrients['Snack 1']['protein'],
-                'Lemak (g)': nutrients['Snack 1']['lemak'],
-                'Karbohidrat (g)': nutrients['Snack 1']['karbohidrat'],
-                'Serat (g)': nutrients['Snack 1']['fiber']
-            },
-            'Snack 2': {
-                'Energi (kal)': distribution['Snack 2'],
-                'Protein (g)': nutrients['Snack 2']['protein'],
-                'Lemak (g)': nutrients['Snack 2']['lemak'],
-                'Karbohidrat (g)': nutrients['Snack 2']['karbohidrat'],
-                'Serat (g)': nutrients['Snack 2']['fiber']
-            }
+            mt: {
+                'Energi (kal)': distribution[mt],
+                'Protein (g)': nutrients[mt]['protein'],
+                'Lemak (g)': nutrients[mt]['lemak'],
+                'Karbohidrat (g)': nutrients[mt]['karbohidrat'],
+                'Serat (g)': nutrients[mt]['fiber'],
+            } for mt in distribution.keys()
         }
 
-        # Mengambil rekomendasi makanan dari model.py
         raw_file = 'clean_food_processed_no_scaling.xlsx'
-        norm_pickle = 'data_normalized.pkl'
-        scaler_pickle = 'minmax_scaler.pkl'
-        recommendations = generate_recommendations_per_jadwal(raw_file, norm_pickle, scaler_pickle, jadwal_nutrients_dict)
+        ensure_files(raw_file)
 
-        # === Evaluasi RMSE antara kebutuhan gizi (target) dan total gizi makanan rekomendasi (realisasi) ===
+        try:
+            meals = generate_recommendations_per_jadwal(
+                raw_file, jadwal_nutrients_dict,
+                allergies=allergies,
+                exclude_foods=exclude_foods
+            )
+        except TypeError:
+            meals = generate_recommendations_per_jadwal(
+                raw_file, jadwal_nutrients_dict
+            )
+
         rmse_per_jadwal = {}
-        for meal_time in distribution:
-            total_meal = sum_meal_nutrients(recommendations[meal_time])
-            target = nutrients[meal_time]
-            rmse_per_jadwal[meal_time] = {
-                "kalori": calculate_rmse([total_meal["kalori"]], [distribution[meal_time]]),
-                "protein": calculate_rmse([total_meal["protein"]], [target["protein"]]),
-                "lemak": calculate_rmse([total_meal["lemak"]], [target["lemak"]]),
-                "karbohidrat": calculate_rmse([total_meal["karbohidrat"]], [target["karbohidrat"]]),
-                "serat": calculate_rmse([total_meal["serat"]], [target["fiber"]])
+        for mt in distribution:
+            total_meal = sum_meal_nutrients(meals.get(mt, []))
+            target = nutrients[mt]
+            rmse_per_jadwal[mt] = {
+                "kalori": calculate_rmse(
+                    [total_meal["kalori"]], [distribution[mt]]),
+                "protein": calculate_rmse(
+                    [total_meal["protein"]], [target["protein"]]),
+                "lemak": calculate_rmse(
+                    [total_meal["lemak"]], [target["lemak"]]),
+                "karbohidrat": calculate_rmse(
+                    [total_meal["karbohidrat"]], [target["karbohidrat"]]),
+                "serat": calculate_rmse(
+                    [total_meal["serat"]], [target["fiber"]]),
             }
 
-        print("=== RMSE Evaluasi Rekomendasi ===")
-        for meal_time, nilai in rmse_per_jadwal.items():
-            print(f"RMSE {meal_time}:")
-            print(f"  Kalori: {nilai['kalori']:.2f}")
-            print(f"  Protein: {nilai['protein']:.2f}")
-            print(f"  Lemak: {nilai['lemak']:.2f}")
-            print(f"  Karbohidrat: {nilai['karbohidrat']:.2f}")
-            print(f"  Serat: {nilai['serat']:.2f}")
+        for mt, v in rmse_per_jadwal.items():
+            logger.info(
+                f"RMSE {mt}: Kal {v['kalori']:.2f} Prot {v['protein']:.2f} "
+                f"Lem {v['lemak']:.2f} Karbo {v['karbohidrat']:.2f} Serat {v['serat']:.2f}"
+            )
 
-        # Format tanggal
         date_today = datetime.now().strftime("%d %B %Y")
-
-        # Format tampilan untuk front-end
         gender_display = "Laki-laki" if gender == "pria" else "Perempuan"
-        activity_display = {
+        activity_display_map = {
             "rest": "Istirahat",
             "light": "Ringan",
             "moderate": "Sedang",
             "heavy": "Berat",
-            "very_heavy": "Sangat Berat"
-        }[activity_level]
+            "very_heavy": "Sangat Berat",
+        }
+        activity_display = activity_display_map.get(activity_level, "Ringan")
 
-        # Kirim data ke outputs.html TANPA hasil evaluasi RMSE
-        return render_template('outputs.html', 
-                              name=name,
-                              age=age,
-                              gender_display=gender_display,
-                              weight=weight,
-                              height=height,
-                              activity_level=activity_display,
-                              caloric_needs=final_calories,
-                              date_today=date_today,
-                              status=status,
-                              percentage=percentage,
-                              warning=warning,
-                              bbi=bbi,
-                              distribution=distribution,
-                              nutrients=nutrients,
-                              meals=recommendations)
+        active_meal = swap_meal if swap_meal else 'Pagi'
+        exclude_foods_str = ', '.join(exclude_foods)
+
+        return render_template(
+            'outputs.html',
+            name=name,
+            age=age,
+            gender_display=gender_display,
+            weight=weight,
+            height=height,
+            activity_level=activity_display,
+            date_today=date_today,
+            bbi=bbi,
+            status=status,
+            percentage=percentage,
+            caloric_needs=final_calories,
+            warning=warning,
+            distribution=distribution,
+            nutrients=nutrients,
+            meals=meals,
+            allergies=allergies,
+            exclude_foods=exclude_foods_str,
+            active_meal=active_meal,
+            rmse_per_jadwal=rmse_per_jadwal,
+        )
 
     except Exception as e:
-        logger.error(f"Error in outputs route: {str(e)}")
+        logger.exception("Error in outputs route")
         return f"Error: {str(e)}", 500
-
 
 if __name__ == "__main__":
     logger.info("Starting Flask application...")
