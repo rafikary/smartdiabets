@@ -1,587 +1,762 @@
-<!doctype html>
-<html lang="id" data-theme="light">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>SmartDiabets — Rekomendasi Menu Ramah Gula Darah</title>
+{% extends "base.html" %}
 
-  <!-- Bootstrap & Icons -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+{% block title %}SmartDiabets — Rekomendasi Menu Ramah Gula Darah{% endblock %}
 
+{% block extra_css %}
   <style>
-    /* ===================== DESIGN TOKENS (single source) ===================== */
+    /* ===================== DESIGN TOKENS ===================== */
     :root{
-      --brand:#047857; --brand-soft:#22c55e; --accent:#fb923c;
-      --ink:#022c22; --ink-soft:#134e4a; --muted:#6b7280;
-      --paper:#f4faf7; --card:#ffffffef; --border:#00000010;
-      --shadow-soft:0 26px 60px rgba(15,118,110,.18);
-      --shadow-card:0 18px 40px rgba(15,23,42,.14);
-      --ring:0 0 0 .25rem rgba(34,197,94,.3);
-      --hero-grad: radial-gradient(1200px 600px at 10% 10%, rgba(34,197,94,.16), transparent 60%),
-                   radial-gradient(1000px 500px at 90% 40%, rgba(56,189,248,.16), transparent 60%),
-                   linear-gradient(135deg, #ecfdf5, #eff6ff);
+      --brand:#047857; --brand-mid:#059669; --brand-soft:#10b981; --brand-glow:#34d399;
+      --accent:#f59e0b; --accent2:#38bdf8;
+      --ink:#0a1628; --ink-soft:#1e3a5f; --muted:#64748b;
+      --paper:#f8fafc; --card:#fff; --border:rgba(0,0,0,.07);
+      --shadow-soft:0 20px 60px rgba(4,120,87,.15);
+      --shadow-card:0 8px 32px rgba(15,23,42,.10);
+      --shadow-hover:0 24px 64px rgba(4,120,87,.22);
+      --ring:0 0 0 .25rem rgba(52,211,153,.35);
+      --hero-mesh: 
+        radial-gradient(ellipse 80% 60% at 15% 20%, rgba(16,185,129,.22) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 80% at 85% 70%, rgba(56,189,248,.18) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 50% at 50% 100%, rgba(4,120,87,.12) 0%, transparent 60%),
+        linear-gradient(160deg, #ecfdf5 0%, #f0f9ff 50%, #f8fafc 100%);
       --ink-hero:#064e3b;
-      --nav-bg:rgba(15,23,42,.96);
-      --radius-xl:28px; --radius-md:22px;
+      --radius-xl:24px; --radius-lg:18px; --radius-md:14px;
+      --transition: all .25s cubic-bezier(.4,0,.2,1);
     }
-
     html[data-theme="dark"]{
-      --paper:#020617; --ink:#e5e7eb; --ink-soft:#e2e8f0; --muted:#9ca3af;
-      --card:#020617f5; --border:#ffffff1a;
-      --shadow-soft:0 30px 80px rgba(0,0,0,.75);
-      --shadow-card:0 18px 40px rgba(0,0,0,.7);
-      --hero-grad: radial-gradient(1200px 600px at 10% 10%, rgba(34,197,94,.18), transparent 60%),
-                   radial-gradient(1000px 500px at 90% 40%, rgba(56,189,248,.18), transparent 60%),
-                   linear-gradient(135deg, #020617, #022c22);
-      --ink-hero:#e0f2fe;
-      --nav-bg:#020617f0;
+      --paper:#070e1a; --ink:#e2e8f0; --ink-soft:#cbd5e1; --muted:#94a3b8;
+      --card:#0f1829; --border:rgba(255,255,255,.08);
+      --shadow-soft:0 20px 80px rgba(0,0,0,.6);
+      --shadow-card:0 8px 32px rgba(0,0,0,.5);
+      --shadow-hover:0 24px 64px rgba(16,185,129,.18);
+      --hero-mesh:
+        radial-gradient(ellipse 80% 60% at 15% 20%, rgba(16,185,129,.22) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 80% at 85% 70%, rgba(56,189,248,.15) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 50% at 50% 100%, rgba(4,120,87,.18) 0%, transparent 60%),
+        linear-gradient(160deg, #070e1a 0%, #091325 50%, #070e1a 100%);
+      --ink-hero:#d1fae5;
     }
-
     html[data-theme="dark"]{ color-scheme: dark; }
     html[data-theme="light"]{ color-scheme: light; }
 
     /* ===================== GLOBAL ===================== */
     *,*::before,*::after{box-sizing:border-box}
-    body{
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      color:var(--ink); background:var(--paper); overflow-x:hidden
-    }
-    a{color:inherit}
+    body{ font-family:'Plus Jakarta Sans',Inter,system-ui,sans-serif; color:var(--ink); background:var(--paper); overflow-x:hidden }
+    a{ color:inherit; text-decoration:none }
     .text-muted-2{ color:var(--muted) }
-    .container-xl{width:min(1200px,92%)}
-
+    .container-xl{ width:min(1200px,92%); margin-inline:auto }
     .layer{ position:absolute; inset:0; }
 
-    /* NAVBAR */
-    .navbar-custom{ background:var(--nav-bg); backdrop-filter: blur(12px); border-bottom:1px solid var(--border) }
-    .navbar-brand{ font-family:'Playfair Display',serif; font-weight:700; color:#fff; letter-spacing:.03em; font-size:1.35rem }
-    .nav-link{ color:#eaf6f6; font-weight:500 }
-    .nav-link .bi{margin-right:.4rem}
-    .nav-link.active,.nav-link:hover{ color:var(--accent) }
-    .theme-toggle{
-      border:1px solid rgba(255,255,255,.18); color:#fff; background:transparent;
-      border-radius:999px; padding:.45rem .9rem; display:flex; align-items:center; gap:.35rem
-    }
-
-    /* HERO */
+    /* ===================== HERO ===================== */
     .hero{
-      position:relative; display:flex; align-items:center;
+      position:relative; min-height:88vh;
+      display:flex; align-items:center;
       background:var(--paper); color:var(--ink-hero);
-      overflow:hidden; padding:4rem 0 2rem;
+      overflow:hidden; padding:3rem 0 2rem;
     }
-    .hero::before{
-      content:""; position:absolute; inset:0; background:var(--hero-grad); opacity:1;
+    .hero-bg{
+      position:absolute; inset:0; background:var(--hero-mesh); z-index:0;
     }
-    .grain:after{
-      content:""; position:absolute; inset:0; pointer-events:none; opacity:.06; mix-blend-mode:overlay;
-      background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><circle cx="8" cy="12" r="1" fill="white" opacity=".14"/></svg>');
+    /* Decorative blobs */
+    .hero-blob{
+      position:absolute; border-radius:50%; pointer-events:none; z-index:0;
+      filter:blur(72px); opacity:.55;
+    }
+    .hero-blob-1{
+      width:500px; height:500px; top:-80px; left:-100px;
+      background:radial-gradient(circle, rgba(16,185,129,.4), transparent 70%);
+      animation: blobPulse 9s ease-in-out infinite;
+    }
+    .hero-blob-2{
+      width:400px; height:400px; bottom:-60px; right:-60px;
+      background:radial-gradient(circle, rgba(56,189,248,.35), transparent 70%);
+      animation: blobPulse 12s ease-in-out infinite reverse;
+    }
+    .hero-blob-3{
+      width:250px; height:250px; top:40%; left:45%;
+      background:radial-gradient(circle, rgba(245,158,11,.2), transparent 70%);
+      animation: blobPulse 7s ease-in-out infinite;
+    }
+    @keyframes blobPulse{
+      0%,100%{ transform:scale(1) translate(0,0); }
+      33%{ transform:scale(1.12) translate(20px,-15px); }
+      66%{ transform:scale(.92) translate(-10px,10px); }
     }
 
-    /* bubbles background hero (AKTIF) */
-    .bubbles{ position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; opacity:.22; display:block }
+    /* bubbles */
+    .bubbles{ position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; opacity:.18 }
     .bubble{
       position:absolute; bottom:-140px; border-radius:50%;
-      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.75), rgba(255,255,255,.25) 60%, rgba(255,255,255,.1));
-      box-shadow: inset 0 1px 2px rgba(255,255,255,.5), 0 10px 30px rgba(0,0,0,.18);
-      animation: floatUp var(--dur, 14s) linear infinite, sway var(--sway, 6s) ease-in-out infinite;
-      filter: blur(var(--blur, 0px));
-      transform: translateY(var(--ty,0)) scale(var(--scale,1));
+      background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.8), rgba(255,255,255,.2) 60%, rgba(255,255,255,.05));
+      box-shadow:inset 0 1px 2px rgba(255,255,255,.6), 0 10px 30px rgba(0,0,0,.14);
+      animation:floatUp var(--dur,14s) linear infinite, sway var(--sway,6s) ease-in-out infinite;
+      filter:blur(var(--blur,0px));
     }
     @keyframes floatUp{
       from{ transform:translateY(0) translateX(0) scale(var(--scale,1)); opacity:0 }
-      12%{ opacity:.85 }
+      10%{ opacity:.9 }
       to{ transform:translateY(-120vh) translateX(0) scale(var(--scale,1)); opacity:0 }
     }
     @keyframes sway{
-      0%,100%{ transform: translateY(var(--ty,0)) translateX(-18px) scale(var(--scale,1)) }
-      50%{ transform: translateY(var(--ty,0)) translateX(18px) scale(var(--scale,1)) }
+      0%,100%{ margin-left:-18px }
+      50%{ margin-left:18px }
     }
 
+    /* eyebrow pill */
     .eyebrow{
-      display:inline-flex; align-items:center; gap:.5rem;
-      padding:.6rem 1.2rem; border-radius:999px;
-      background:rgba(34,197,94,0.1); color:var(--brand);
-      font-size:.85rem; font-weight:600; margin-bottom:1.5rem;
-      border:1px solid rgba(34,197,94,0.18)
+      display:inline-flex; align-items:center; gap:.55rem;
+      padding:.55rem 1.1rem; border-radius:999px;
+      background:linear-gradient(135deg, rgba(16,185,129,.14), rgba(56,189,248,.10));
+      color:var(--brand-mid); font-size:.82rem; font-weight:700; letter-spacing:.04em;
+      border:1px solid rgba(16,185,129,.25); margin-bottom:1rem;
+      backdrop-filter:blur(8px);
     }
+    .eyebrow-dot{ width:8px; height:8px; border-radius:50%; background:var(--brand-soft); display:inline-block; animation:pulse-dot 2s ease infinite }
+    @keyframes pulse-dot{ 0%,100%{ transform:scale(1); opacity:1 } 50%{ transform:scale(1.5); opacity:.5 } }
 
+    /* title */
     .hero-title{
-      font-family:'Inter',system-ui,-apple-system,sans-serif;
-      font-size:clamp(2.5rem,5vw,4rem);
-      line-height:1.1; font-weight:800; margin-bottom:1.2rem;
-      letter-spacing:-0.03em; color:var(--ink-hero)
+      font-family:'Poppins',system-ui,sans-serif;
+      font-size:clamp(2.8rem,5.5vw,4.6rem);
+      line-height:1.08; font-weight:800; margin-bottom:.8rem;
+      letter-spacing:-.04em; color:var(--ink);
     }
-    .hero-title span.gradient-text{
-      background:linear-gradient(135deg,#059669,#10b981);
-      -webkit-background-clip:text; background-clip:text; color:transparent
+    .hero-title .line2{
+      background:linear-gradient(130deg, var(--brand-mid) 0%, var(--brand-glow) 45%, var(--accent2) 100%);
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+      display:inline-block;
     }
-    .hero-sub{ color:var(--muted); line-height:1.7; max-width:520px; font-size:1.05rem; margin-bottom:2rem }
+    .hero-sub{
+      color:var(--muted); line-height:1.75; max-width:500px;
+      font-size:1.05rem; margin-bottom:1.3rem; font-weight:400;
+    }
+    html[data-theme="dark"] .hero-sub{ color:#94a3b8 }
 
-    .hero-cta{ display:flex; flex-wrap:wrap; gap:1rem; align-items:center; margin-bottom:2rem }
+    /* CTA buttons */
+    .hero-cta{ display:flex; flex-wrap:wrap; gap:.9rem; align-items:center; margin-bottom:1.4rem }
     .btn-primary-cta{
-      background:linear-gradient(135deg,var(--brand),var(--brand-soft));
-      border:none; color:#fff; font-weight:700; border-radius:12px;
-      padding:1rem 2rem; font-size:.95rem; box-shadow:var(--shadow-soft);
-      transition: all 0.28s ease
+      background:linear-gradient(135deg, var(--brand) 0%, var(--brand-mid) 50%, var(--brand-soft) 100%);
+      background-size:200% auto;
+      border:none; color:#fff; font-weight:700; border-radius:var(--radius-lg);
+      padding:1rem 2.2rem; font-size:.95rem;
+      box-shadow:0 8px 32px rgba(4,120,87,.35), 0 2px 8px rgba(4,120,87,.2);
+      transition:var(--transition); position:relative; overflow:hidden;
     }
-    .btn-primary-cta:hover{ transform:translateY(-3px); box-shadow:0 20px 60px rgba(15,118,110,.2) }
+    .btn-primary-cta::after{
+      content:""; position:absolute; inset:0;
+      background:linear-gradient(135deg, rgba(255,255,255,.18), transparent);
+      opacity:0; transition:opacity .22s;
+    }
+    .btn-primary-cta:hover{
+      background-position:right center;
+      transform:translateY(-3px);
+      box-shadow:0 16px 48px rgba(4,120,87,.4), 0 4px 16px rgba(4,120,87,.25);
+      color:#fff;
+    }
+    .btn-primary-cta:hover::after{ opacity:1 }
     .btn-ghost{
-      border-radius:12px; padding:.95rem 1.8rem; border:2px solid var(--border);
-      background:var(--card); color:var(--ink); transition: all 0.22s ease
+      border-radius:var(--radius-lg); padding:.95rem 1.9rem;
+      border:1.5px solid var(--border);
+      background:rgba(255,255,255,.7);
+      color:var(--ink); transition:var(--transition);
+      backdrop-filter:blur(8px); font-weight:600;
+    }
+    .btn-ghost:hover{
+      background:rgba(16,185,129,.08); border-color:rgba(16,185,129,.30);
+      color:var(--brand-mid); transform:translateY(-2px);
+    }
+    html[data-theme="dark"] .btn-ghost{
+      background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.12); color:var(--ink)
+    }
+    html[data-theme="dark"] .btn-ghost:hover{
+      background:rgba(16,185,129,.12); border-color:rgba(16,185,129,.3); color:#34d399
     }
 
-    .info-badge{
+    /* stat badges */
+    .hero-stats{ display:flex; flex-wrap:wrap; gap:.75rem }
+    .stat-badge{
       display:inline-flex; align-items:center; gap:.5rem;
-      padding:.6rem 1.2rem; border-radius:999px;
-      background:rgba(16,185,129,0.08);
-      border:1px solid rgba(16,185,129,0.12);
-      color:var(--brand); font-size:.85rem; font-weight:600; transition:all 0.22s
+      padding:.55rem 1.1rem; border-radius:var(--radius-md);
+      background:rgba(255,255,255,.75);
+      border:1px solid rgba(16,185,129,.14);
+      color:var(--ink); font-size:.82rem; font-weight:600;
+      transition:var(--transition);
+      backdrop-filter:blur(8px);
+      box-shadow:0 2px 12px rgba(0,0,0,.06);
     }
-    .info-badge:hover{ transform:translateY(-2px) }
+    .stat-badge:hover{ transform:translateY(-3px); box-shadow:0 8px 24px rgba(4,120,87,.15) }
+    .stat-badge .badge-icon{
+      width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+      background:linear-gradient(135deg, var(--brand-mid), var(--brand-soft));
+      color:#fff; font-size:.9rem;
+    }
+    html[data-theme="dark"] .stat-badge{
+      background:rgba(255,255,255,.06); border-color:rgba(16,185,129,.18); color:var(--ink)
+    }
+    html[data-theme="dark"] .stat-badge:hover{ box-shadow:0 8px 24px rgba(0,0,0,.4) }
 
-    .hero-food-container{ position:relative; width:100%; max-width:520px; margin:0 auto; perspective:1500px }
+    /* food image */
+    .hero-visual{ position:relative; z-index:1 }
+    .hero-ring{
+      position:absolute; border-radius:50%; pointer-events:none;
+    }
+    .hero-ring-1{
+      width:480px; height:480px; top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      border:2px dashed rgba(16,185,129,.18);
+      animation:spinSlow 30s linear infinite;
+    }
+    .hero-ring-2{
+      width:380px; height:380px; top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      border:1px solid rgba(56,189,248,.14);
+      animation:spinSlow 20s linear infinite reverse;
+    }
+    @keyframes spinSlow{ to{ transform:translate(-50%,-50%) rotate(360deg) } }
+    .hero-food-container{ position:relative; width:100%; max-width:500px; margin:0 auto; perspective:1500px }
     .hero-food-img{
       width:100%; height:auto;
-      filter:drop-shadow(0 24px 48px rgba(0,0,0,0.16));
+      filter:drop-shadow(0 28px 56px rgba(4,120,87,.25)) drop-shadow(0 8px 20px rgba(0,0,0,.1));
       animation:float3d 7.5s ease-in-out infinite;
-      transition:transform .2s ease
+      transition:transform .2s ease; position:relative; z-index:2;
     }
-    @keyframes float3d { 0%,100%{ transform:translateY(0) } 25%{ transform:translateY(-24px) } 50%{ transform:translateY(0) } 75%{ transform:translateY(-16px) } }
-
+    /* Floating micro-cards around food */
+    .hero-float-card{
+      position:absolute; z-index:3;
+      background:rgba(255,255,255,.92); border:1px solid rgba(16,185,129,.18);
+      border-radius:14px; padding:.5rem .9rem; font-size:.78rem; font-weight:700;
+      color:var(--brand); box-shadow:0 8px 28px rgba(0,0,0,.12);
+      backdrop-filter:blur(12px); display:flex; align-items:center; gap:.4rem;
+      animation:floatCard 4s ease-in-out infinite;
+      white-space:nowrap;
+    }
+    .hero-float-card.card-cal{  top:12%;   right:8px;   animation-delay:0s;   animation-duration:4s; }
+    .hero-float-card.card-2{    bottom:14%; right:8px;   animation-delay:.9s;  animation-duration:5s; }
+    .hero-float-card.card-3{    top:28%;   left:8px;    animation-delay:1.7s; animation-duration:4.5s;}
+    .hero-float-card.card-4{    bottom:8%;  left:8px;   animation-delay:2.4s; animation-duration:6s; }
+    .hero-float-card.card-cal i{ color:#f59e0b; }
+    .hero-float-card.card-2 i  { color:#06b6d4; }
+    .hero-float-card.card-3 i  { color:#8b5cf6; }
+    .hero-float-card.card-4 i  { color:#f43f5e; }
+    html[data-theme="dark"] .hero-float-card{
+      background:rgba(15,24,41,.9); border-color:rgba(16,185,129,.3); color:#34d399
+    }
+    @keyframes floatCard{
+      0%,100%{ transform:translateY(0) }
+      50%{ transform:translateY(-8px) }
+    }
+    @keyframes float3d{ 0%,100%{ transform:translateY(0) } 25%{ transform:translateY(-22px) } 50%{ transform:translateY(0) } 75%{ transform:translateY(-14px) } }
     .tilt{ transform-style:preserve-3d; will-change:transform }
 
-    /* ===================== SECTIONS BAWAH ===================== */
+    /* ===================== TIPS SECTION ===================== */
+    .tips-section{
+      padding:2.5rem 0; position:relative; overflow:hidden;
+      background:var(--paper); z-index:1;
+    }
+    /* continuous mesh connecting with hero */
+    .tips-section::before{
+      content:"";
+      position:absolute; inset:0; pointer-events:none; z-index:0;
+      background:
+        radial-gradient(ellipse 70% 60% at 90% 10%, rgba(16,185,129,.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 5% 90%, rgba(56,189,248,.07) 0%, transparent 60%);
+    }
+
+    .section-eyebrow{
+      display:inline-flex; align-items:center; gap:.5rem;
+      font-size:.75rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+      color:var(--brand-mid);
+    }
+    .section-eyebrow::before, .section-eyebrow::after{
+      content:""; width:20px; height:2px;
+      background:linear-gradient(90deg, transparent, var(--brand-mid));
+      border-radius:2px; flex-shrink:0;
+    }
+    .section-eyebrow::after{
+      background:linear-gradient(90deg, var(--brand-mid), transparent);
+    }
     .section-title{
-      font-family:'Playfair Display',serif;
-      color:var(--ink);
-      font-size:clamp(1.6rem,3vw,2.2rem);
+      font-family:'Poppins',system-ui,sans-serif;
+      font-size:clamp(1.9rem,3.5vw,2.8rem);
+      font-weight:800; letter-spacing:-.035em;
+      color:var(--ink); line-height:1.15; margin:0;
+    }
+    .section-title .grad{
+      background:linear-gradient(130deg, var(--brand-mid), var(--brand-glow));
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+    }
+    .section-subtitle{ color:var(--muted); font-size:.95rem; max-width:480px; line-height:1.75; margin:0 auto }
+
+    /* tip cards */
+    .tip-card{
+      background:var(--card); border-radius:var(--radius-xl);
+      border:1px solid var(--border);
+      padding:2rem 1.7rem; height:100%;
+      box-shadow:var(--shadow-card);
+      transition:var(--transition); position:relative; overflow:hidden; cursor:default;
+    }
+    .tip-card::before{
+      content:""; position:absolute; bottom:-60px; right:-60px;
+      width:160px; height:160px; border-radius:50%; opacity:.07;
+      background:var(--tip-color, var(--brand-soft));
+      transition:all .4s ease; transform:scale(1);
+    }
+    .tip-card:hover{ transform:translateY(-8px); box-shadow:var(--shadow-hover); border-color:rgba(16,185,129,.18) }
+    .tip-card:hover::before{ transform:scale(1.8); opacity:.12 }
+
+    .tip-icon-wrap{
+      width:60px; height:60px; border-radius:18px; display:flex; align-items:center; justify-content:center;
+      font-size:1.5rem; margin-bottom:1.2rem;
+      background:linear-gradient(135deg, var(--tip-color,var(--brand-mid)), var(--tip-color2,var(--brand-glow)));
+      color:#fff; box-shadow:0 8px 24px rgba(0,0,0,.15);
+      flex-shrink:0;
+    }
+    .tip-card h5{
+      font-family:'Poppins',sans-serif; font-weight:700; font-size:1.05rem;
+      color:var(--ink); margin-bottom:.65rem;
+    }
+    .tip-card p{ color:var(--muted); font-size:.9rem; line-height:1.7; margin-bottom:1rem }
+    .tip-tag{
+      display:inline-flex; align-items:center; gap:.3rem;
+      font-size:.75rem; font-weight:700; padding:.3rem .75rem; border-radius:8px;
+      background:rgba(var(--tip-rgb,4,120,87),.09); color:var(--tip-color,var(--brand));
+      letter-spacing:.03em;
+    }
+    html[data-theme="dark"] .tip-card{ background:var(--card); border-color:rgba(255,255,255,.07) }
+    html[data-theme="dark"] .tip-card:hover{ border-color:rgba(16,185,129,.2) }
+
+    /* ===================== KALKULATOR SECTION ===================== */
+    .calc-section{
+      padding:2.5rem 0 3rem; position:relative; overflow:hidden;
+    }
+    .calc-section::before{
+      content:""; position:absolute; inset:0; z-index:0;
+      background:
+        radial-gradient(ellipse 80% 60% at 90% 10%, rgba(16,185,129,.10) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 5% 90%, rgba(56,189,248,.07) 0%, transparent 60%),
+        var(--paper);
+    }
+    /* Mesh overlay */
+    .calc-section::after{
+      content:""; position:absolute; inset:0; z-index:0; opacity:1;
+      background:none;
+    }
+    /* Grid dot pattern */
+    .calc-dots{
+      position:absolute; inset:0; z-index:0; opacity:.04;
+      background-image:radial-gradient(rgba(4,120,87,.8) 1px, transparent 1px);
+      background-size:32px 32px;
     }
 
-    .services{
-      background:linear-gradient(160deg, #0b2e2e, #1c605d);
-      position:relative;
-      color:#e9fbfb;
+    .calc-badge{
+      display:inline-flex; align-items:center; gap:.5rem;
+      font-size:.78rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+      color:var(--brand-mid); border:1px solid rgba(4,120,87,.2);
+      background:rgba(4,120,87,.08); border-radius:999px;
+      padding:.4rem 1rem; backdrop-filter:blur(8px); margin-bottom:.8rem;
     }
-    .services:before{
-      content:""; position:absolute; inset:0; opacity:.08;
-      background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><path d="M0,0 Q60,30 120,0 L120,120 Q60,90 0,120Z" fill="white"/></svg>');
+    .calc-title{
+      font-family:'Poppins',sans-serif; font-size:clamp(1.7rem,3.2vw,2.5rem);
+      font-weight:800; color:var(--ink); letter-spacing:-.04em; line-height:1.1; margin-bottom:.8rem;
+    }
+    .calc-title span{ color:var(--brand-mid) }
+    .calc-sub{ color:var(--muted); font-size:1rem; line-height:1.7; max-width:550px; margin:0 auto }
+
+    .calc-card{
+      background:var(--card); border:1px solid var(--border);
+      border-radius:var(--radius-xl); padding:2rem 1.7rem; height:100%;
+      transition:var(--transition); position:relative; overflow:hidden;
+      box-shadow:var(--shadow-card);
+    }
+    .calc-card::before{
+      content:""; position:absolute; inset:0; opacity:0;
+      background:linear-gradient(135deg, rgba(16,185,129,.06), transparent);
+      transition:opacity .35s ease;
+    }
+    .calc-card:hover{ transform:translateY(-8px); box-shadow:var(--shadow-hover); border-color:rgba(16,185,129,.25) }
+    .calc-card:hover::before{ opacity:1 }
+
+    .calc-icon-wrap{
+      width:58px; height:58px; border-radius:16px;
+      background:linear-gradient(135deg, var(--ci-from,#34d399), var(--ci-to,#10b981));
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.4rem; color:#fff; margin-bottom:1.2rem;
+      box-shadow:0 8px 20px rgba(4,120,87,.2); flex-shrink:0;
+    }
+    .calc-card h5{ font-family:'Poppins',sans-serif; font-weight:700; color:var(--ink); font-size:1.05rem; margin-bottom:.6rem }
+    .calc-card p{ color:var(--muted); font-size:.88rem; line-height:1.7; margin-bottom:1.2rem }
+    .btn-calc-link{
+      display:inline-flex; align-items:center; gap:.4rem;
+      font-size:.85rem; font-weight:700; color:var(--brand-mid);
+      border:1px solid rgba(4,120,87,.25); border-radius:10px;
+      padding:.5rem 1.1rem; transition:var(--transition);
+    }
+    .btn-calc-link:hover{ background:rgba(4,120,87,.07); border-color:var(--brand-mid); color:var(--brand); gap:.7rem }
+
+    /* Step numbers */
+    .step-num{
+      position:absolute; top:1.2rem; right:1.4rem;
+      font-size:3.5rem; font-weight:900; color:rgba(4,120,87,.06);
+      font-family:'Poppins',sans-serif; line-height:1; user-select:none;
     }
 
-    footer{ background:#020617; color:#cbd5e1 }
-
+    /* ===================== MOBILE NAV ===================== */
     .bottom-nav{
       position:sticky; bottom:0; z-index:1020; display:none;
-      background:var(--card); border-top:1px solid var(--border); backdrop-filter: blur(10px);
+      background:rgba(255,255,255,.92); border-top:1px solid var(--border);
+      backdrop-filter:blur(20px);
+    }
+    html[data-theme="dark"] .bottom-nav{
+      background:rgba(7,14,26,.95); border-color:rgba(255,255,255,.08)
     }
     .bottom-nav a{
       flex:1; text-align:center; padding:.6rem .4rem; color:var(--muted);
-      text-decoration:none; font-size:.78rem;
+      font-size:.78rem; border-radius:0;
     }
-    .bottom-nav a.active{ color:var(--brand); font-weight:700; background:rgba(34,197,94,.06) }
+    .bottom-nav a.active{ color:var(--brand-mid); font-weight:700; background:rgba(16,185,129,.06) }
 
-    @media (max-width: 768px){
+    /* ===================== RESPONSIVE ===================== */
+    @media(max-width:768px){
       .bottom-nav{ display:flex }
-      .hero{ padding:4rem 0 1.5rem }
-      .hero-title{ font-size:2.2rem; margin-bottom:1rem }
-      .hero-sub{ font-size:1rem; margin-bottom:1.5rem }
-      .hero-cta{ margin-bottom:1.5rem }
-      .btn-primary-cta, .btn-ghost{ padding:.85rem 1.5rem; font-size:.9rem }
-      .hero-food-container{ max-width:350px; margin:1.5rem auto 0 }
-      .info-badge{ padding:.5rem 1rem; font-size:.8rem }
+      .hero{ padding:2.5rem 0 1.5rem; min-height:auto }
+      .hero-title{ font-size:2.4rem }
+      .hero-food-container{ max-width:320px; margin:1.5rem auto 0 }
+      .hero-ring-1,.hero-ring-2{ display:none }
+      .hero-float-card{ display:none }
+      .tips-section,.calc-section{ padding:2rem 0 2.5rem }
     }
-
-    @media (prefers-reduced-motion: reduce){
-      .hero-food-img,.bubble{ animation:none !important; }
+    @media(prefers-reduced-motion:reduce){
+      .hero-food-img,.bubble,.hero-blob{ animation:none !important }
     }
   </style>
-</head>
-<body>
+{% endblock %}
 
-  <!-- NAV -->
-  <nav class="navbar navbar-expand-lg navbar-custom navbar-dark fixed-top" aria-label="Navigasi utama">
-    <div class="container-xl">
-      <a class="navbar-brand" href="#home"><i class="bi bi-activity me-2"></i>SmartDiabets</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigasi">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div id="nav" class="collapse navbar-collapse">
-        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-          <li class="nav-item"><a class="nav-link active" href="#home"><i class="bi bi-house-heart"></i>Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="#tips"><i class="bi bi-heart-pulse"></i>Tips Kesehatan</a></li>
-          <li class="nav-item"><a class="nav-link" href="/calculator"><i class="bi bi-calculator"></i>Kalkulator</a></li>
-          <li class="nav-item"><a class="nav-link" href="/blog"><i class="bi bi-journal-text"></i>Artikel</a></li>
-          <li class="nav-item ms-lg-2">
-            <button class="theme-toggle" id="themeToggle" type="button" title="Dark/Light">
-              <i class="bi bi-moon-stars" id="themeIcon"></i><span class="d-none d-md-inline" id="themeText">Mode</span>
-            </button>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
-
-  <!-- HERO -->
-  <section id="home" class="hero grain">
+{% block content %}
+  <!-- ========================== HERO ========================== -->
+  <section id="home" class="hero">
+    <!-- Layered backgrounds -->
+    <div class="hero-bg"></div>
+    <div class="hero-blob hero-blob-1"></div>
+    <div class="hero-blob hero-blob-2"></div>
+    <div class="hero-blob hero-blob-3"></div>
     <div class="bubbles" aria-hidden="true" id="bubbles"></div>
-    <canvas id="sparks" class="layer" aria-hidden="true" style="z-index:0; opacity:.45;"></canvas>
+    <canvas id="sparks" class="layer" aria-hidden="true" style="z-index:1; opacity:.5;"></canvas>
 
-    <div class="container-xl position-relative py-5" style="z-index:1">
-      <div class="row align-items-center gy-5">
-        <!-- LEFT -->
+    <div class="container-xl position-relative py-2" style="z-index:2">
+      <div class="row align-items-center gy-4">
+
+        <!-- LEFT: Copy -->
         <div class="col-lg-6">
           <div class="eyebrow">
+            <span class="eyebrow-dot"></span>
             <i class="bi bi-heart-pulse"></i>
-            Rekomendasi menu harian untuk diabetes tipe 2
+            Panduan gizi diabetes tipe 2 · PERKENI 2024
           </div>
 
           <h1 class="hero-title">
-            Hidup Sehat,<br>
-            <span class="gradient-text">Lawan Diabetes</span>
+            Makan Sehat,<br>
+            <span class="line2">Lawan Diabetes</span>
           </h1>
           <p class="hero-sub">
-            Rekomendasi menu harian yang tepat untuk diabetes tipe 2. Hitung kebutuhan kalori dan dapatkan menu seimbang sesuai pedoman gizi.
+            Rekomendasi menu harian personal untuk diabetes tipe 2 — hitung kalori, atur preferensi, dan dapatkan porsi yang tepat berdasarkan sains.
           </p>
 
           <div class="hero-cta">
             <a href="/calculator" class="btn btn-primary-cta">
-              <i class="bi bi-calculator me-2"></i>MULAI KALKULATOR
+              <i class="bi bi-calculator me-2"></i>Mulai Kalkulator
             </a>
             <a href="#tips" class="btn btn-ghost">
-              <i class="bi bi-heart-pulse me-1"></i>Lihat Tips Kesehatan
+              <i class="bi bi-lightbulb me-1"></i>Tips Kesehatan
             </a>
           </div>
 
-          <div class="d-flex flex-wrap gap-2">
-            <div class="info-badge"><i class="bi bi-clock-history"></i><span>5x jadwal per hari</span></div>
-            <div class="info-badge"><i class="bi bi-database"></i><span>1489+ menu</span></div>
-            <div class="info-badge"><i class="bi bi-shield-check"></i><span>Filter alergi</span></div>
+          <div class="hero-stats">
+            <div class="stat-badge">
+              <span class="badge-icon"><i class="bi bi-clock-history"></i></span>
+              5× jadwal / hari
+            </div>
+            <div class="stat-badge">
+              <span class="badge-icon"><i class="bi bi-database"></i></span>
+              1.489+ menu
+            </div>
+            <div class="stat-badge">
+              <span class="badge-icon"><i class="bi bi-shield-check"></i></span>
+              Filter alergi
+            </div>
           </div>
         </div>
 
-        <!-- RIGHT -->
-        <div class="col-lg-6">
+        <!-- RIGHT: Visual -->
+        <div class="col-lg-6 hero-visual">
+          <div class="hero-ring hero-ring-1"></div>
+          <div class="hero-ring hero-ring-2"></div>
+
+          <!-- Float cards — positioned relative to hero-visual col -->
+          <div class="hero-float-card card-cal">
+            <i class="bi bi-flame"></i> Cek kebutuhan kalorimu!
+          </div>
+          <div class="hero-float-card card-2">
+            <i class="bi bi-rulers"></i> Atur porsi yang pas
+          </div>
+          <div class="hero-float-card card-3">
+            <i class="bi bi-journal-check"></i> Menu sesuai kondisimu
+          </div>
+          <div class="hero-float-card card-4">
+            <i class="bi bi-heart-pulse-fill"></i> Jaga pola makan sehat
+          </div>
+
           <div class="hero-food-container">
             <img src="{{ url_for('static', filename='img/foods-removebg-preview.png') }}"
                  alt="Menu Makanan Sehat untuk Diabetes"
-                 class="hero-food-img"
+                 class="hero-food-img tilt"
                  id="heroFoodImg"
                  loading="lazy">
           </div>
         </div>
+
       </div>
     </div>
   </section>
 
-  <!-- TIPS KESEHATAN -->
-  <section id="tips" class="py-5" style="background:var(--paper)">
-    <div class="container-xl">
+  <!-- ========================== TIPS KESEHATAN ========================== -->
+  <section id="tips" class="tips-section">
+    <div class="container-xl position-relative" style="z-index:1">
+
+      <!-- Header -->
       <div class="text-center mb-4">
-        <h2 class="section-title">Tips Kesehatan</h2>
-        <p class="text-muted-2">Panduan singkat, visual, dan aplikatif untuk keseharian.</p>
+        <div class="section-eyebrow justify-content-center mb-2">Tips Kesehatan</div>
+        <h2 class="section-title">Kebiasaan <span class="grad">kecil,</span><br>dampak besar</h2>
+        <p class="section-subtitle mt-2 mx-auto">Tiga pilar utama diet diabetes yang direkomendasikan para ahli gizi — praktis diterapkan setiap hari.</p>
       </div>
+
+      <!-- Cards -->
       <div class="row g-4">
+
+        <!-- Card 1: Gula -->
         <div class="col-md-4">
-          <article class="tilt card-3d p-4 h-100" data-tilt>
-            <div class="d-flex align-items-center gap-3 mb-2">
-              <div class="mini-icon"><i class="bi bi-droplet-half"></i></div>
-              <h5 class="mb-0">Batasi Gula Tambahan</h5>
+          <article class="tip-card tilt" data-tilt
+                   style="--tip-color:#10b981; --tip-color2:#34d399; --tip-rgb:16,185,129;">
+            <div class="tip-icon-wrap">
+              <i class="bi bi-droplet-half"></i>
             </div>
-            <p class="text-muted-2">Target &lt; 50 g/hari. Periksa label: sirup fruktosa, sukrosa, maltosa, dll. Ganti minuman manis dengan air putih atau infused water.</p>
+            <h5>Batasi Gula Tambahan</h5>
+            <p>Target &lt; 50 g/hari. Periksa label: sirup fruktosa, sukrosa, maltosa. Ganti minuman manis dengan air putih atau infused water.</p>
+            <span class="tip-tag"><i class="bi bi-check-circle"></i> Prioritas Tinggi</span>
           </article>
         </div>
+
+        <!-- Card 2: Karbo -->
         <div class="col-md-4">
-          <article class="tilt card-3d p-4 h-100" data-tilt>
-            <div class="d-flex align-items-center gap-3 mb-2">
-              <div class="mini-icon"><i class="bi bi-activity"></i></div>
-              <h5 class="mb-0">Atur Porsi Karbo</h5>
+          <article class="tip-card tilt" data-tilt
+                   style="--tip-color:#f59e0b; --tip-color2:#fbbf24; --tip-rgb:245,158,11;">
+            <div class="tip-icon-wrap" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)">
+              <i class="bi bi-activity"></i>
             </div>
-            <p class="text-muted-2">Pilih karbo kompleks seperti nasi merah, oats, dan umbi. Kombinasi serat + protein memperlambat pelepasan glukosa.</p>
+            <h5>Atur Porsi Karbo</h5>
+            <p>Pilih karbo kompleks: nasi merah, oats, umbi. Kombinasi serat + protein memperlambat pelepasan glukosa ke darah.</p>
+            <span class="tip-tag" style="background:rgba(245,158,11,.09); color:#d97706;">
+              <i class="bi bi-check-circle"></i> Gizi Seimbang
+            </span>
           </article>
         </div>
+
+        <!-- Card 3: Garam & Lemak -->
         <div class="col-md-4">
-          <article class="tilt card-3d p-4 h-100" data-tilt>
-            <div class="d-flex align-items-center gap-3 mb-2">
-              <div class="mini-icon"><i class="bi bi-shield-check"></i></div>
-              <h5 class="mb-0">Cek Garam &amp; Lemak</h5>
+          <article class="tip-card tilt" data-tilt
+                   style="--tip-color:#38bdf8; --tip-color2:#7dd3fc; --tip-rgb:56,189,248;">
+            <div class="tip-icon-wrap" style="background:linear-gradient(135deg,#0ea5e9,#38bdf8)">
+              <i class="bi bi-shield-check"></i>
             </div>
-            <p class="text-muted-2">Sodium &lt; 2 g/hari. Pilih lemak tak jenuh (alpukat, kacang, ikan). Batasi gorengan dan makanan olahan tinggi garam.</p>
+            <h5>Cek Garam &amp; Lemak</h5>
+            <p>Sodium &lt; 2 g/hari. Pilih lemak tak jenuh (alpukat, kacang, ikan). Batasi gorengan dan makanan olahan tinggi garam.</p>
+            <span class="tip-tag" style="background:rgba(56,189,248,.09); color:#0284c7;">
+              <i class="bi bi-check-circle"></i> Jantung Sehat
+            </span>
           </article>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- KALKULATOR -->
-  <section id="kalkulator" class="services py-5">
-    <div class="container-xl position-relative">
-      <div class="text-center mb-5">
-        <h2 class="section-title text-white"><i class="bi bi-calculator me-2"></i>Kalkulator</h2>
-        <p class="text-white-50 mb-0">Hitung kebutuhan energi &amp; gizi harian, lalu dapatkan rekomendasi porsi yang lebih pas.</p>
+  <!-- ========================== KALKULATOR ========================== -->
+  <section id="kalkulator" class="calc-section">
+    <div class="calc-dots"></div>
+
+    <div class="container-xl position-relative" style="z-index:1">
+
+      <!-- Header -->
+      <div class="text-center mb-3">
+        <div class="calc-badge"><i class="bi bi-stars"></i> Fitur Utama</div>
+        <h2 class="calc-title">Kalkulator <span>Cerdas</span></h2>
+        <p class="calc-sub">Tiga langkah sederhana menuju pola makan yang lebih sehat dan terukur.</p>
       </div>
+
+      <!-- Feature cards -->
       <div class="row g-4 position-relative" style="z-index:1">
+
+        <!-- Step 1 -->
         <div class="col-lg-4">
-          <div class="card-3d p-4 h-100 bg-white bg-opacity-10 border-0 text-white tilt" data-tilt>
-            <div class="d-flex align-items-center gap-3 mb-2">
-              <i class="bi bi-rulers fs-1 text-warning"></i>
-              <h5 class="mb-0">Profil &amp; TDEE</h5>
+          <div class="calc-card tilt" data-tilt>
+            <span class="step-num">01</span>
+            <div class="calc-icon-wrap" style="--ci-from:#34d399; --ci-to:#059669;">
+              <i class="bi bi-rulers"></i>
             </div>
-            <p class="text-white-50">Masukkan tinggi, berat, usia, dan aktivitas. Sistem menghitung kebutuhan energi total (TDEE) sebagai target kalori harian.</p>
-            <a href="/calculator" class="btn btn-outline-light rounded-pill mt-auto">Buka Kalkulator</a>
+            <h5>Profil &amp; TDEE</h5>
+            <p>Masukkan tinggi, berat, usia, dan aktivitas. Sistem menghitung kebutuhan energi total (TDEE) sebagai target kalori harian.</p>
+            <a href="/calculator" class="btn-calc-link">
+              Buka Kalkulator <i class="bi bi-arrow-right"></i>
+            </a>
           </div>
         </div>
+
+        <!-- Step 2 -->
         <div class="col-lg-4">
-          <div class="card-3d p-4 h-100 bg-white bg-opacity-10 border-0 text-white tilt" data-tilt>
-            <div class="d-flex align-items-center gap-3 mb-2">
-              <i class="bi bi-sliders2 fs-1 text-warning"></i>
-              <h5 class="mb-0">Preferensi &amp; Alergi</h5>
+          <div class="calc-card tilt" data-tilt>
+            <span class="step-num">02</span>
+            <div class="calc-icon-wrap" style="--ci-from:#6ee7b7; --ci-to:#10b981;">
+              <i class="bi bi-sliders2"></i>
             </div>
-            <p class="text-white-50">Tandai alergi (kacang, susu, seafood, gluten) dan preferensi (rendah garam/gula, tinggi protein) agar menu lebih aman.</p>
-            <a href="/calculator" class="btn btn-outline-light rounded-pill mt-auto">Atur Preferensi</a>
+            <h5>Preferensi &amp; Alergi</h5>
+            <p>Tandai alergi (kacang, susu, seafood, gluten) dan preferensi (rendah garam/gula, tinggi protein) agar menu lebih aman.</p>
+            <a href="/calculator" class="btn-calc-link">
+              Atur Preferensi <i class="bi bi-arrow-right"></i>
+            </a>
           </div>
         </div>
+
+        <!-- Step 3 -->
         <div class="col-lg-4">
-          <div class="card-3d p-4 h-100 bg-white bg-opacity-10 border-0 text-white tilt" data-tilt>
-            <div class="d-flex align-items-center gap-3 mb-2">
-              <i class="bi bi-repeat fs-1 text-warning"></i>
-              <h5 class="mb-0">Regresi Linier</h5>
+          <div class="calc-card tilt" data-tilt>
+            <span class="step-num">03</span>
+            <div class="calc-icon-wrap" style="--ci-from:#a7f3d0; --ci-to:#34d399;">
+              <i class="bi bi-cpu"></i>
             </div>
-            <p class="text-white-50">Sistem menyesuaikan porsi tiap menu agar makro &amp; kalori mendekati target — tinggal klik <strong>Ganti Menu</strong> jika ingin alternatif.</p>
-            <a href="/calculator" class="btn btn-outline-light rounded-pill mt-auto">Lihat Hasil</a>
+            <h5>Optimasi Porsi</h5>
+            <p>Sistem menyesuaikan porsi tiap menu menggunakan <strong style="color:var(--brand-mid)">Least Squares Optimization</strong> agar nutrisi mendekati target harian.</p>
+            <a href="/calculator" class="btn-calc-link">
+              Lihat Hasil <i class="bi bi-arrow-right"></i>
+            </a>
           </div>
         </div>
+
       </div>
     </div>
   </section>
-
-  <!-- FOOTER -->
-  <footer class="pt-5">
-    <div class="container-xl pb-4">
-      <div class="row g-4">
-        <div class="col-lg-4">
-          <h5 class="mb-2" style="font-family:'Playfair Display',serif;color:#e2e8f0">SmartDiabets</h5>
-          <p class="text-muted-2">Sistem rekomendasi makanan cerdas — porsi optimal via Regresi Linier, aman &amp; personal untuk penyandang DM tipe 2.</p>
-          <div class="d-flex gap-3">
-            <a class="text-muted-2 fs-4" href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
-            <a class="text-muted-2 fs-4" href="#" aria-label="TikTok"><i class="bi bi-tiktok"></i></a>
-            <a class="text-muted-2 fs-4" href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
-          </div>
-        </div>
-        <div class="col-6 col-lg-2">
-          <h6 class="text-light">Menu</h6>
-          <ul class="list-unstyled small">
-            <li><a href="#home" class="text-muted-2 text-decoration-none"><i class="bi bi-house-heart me-1"></i>Home</a></li>
-            <li><a href="#tips" class="text-muted-2 text-decoration-none"><i class="bi bi-heart-pulse me-1"></i>Tips Kesehatan</a></li>
-            <li><a href="/calculator" class="text-muted-2 text-decoration-none"><i class="bi bi-calculator me-1"></i>Kalkulator</a></li>
-          </ul>
-        </div>
-        <div class="col-6 col-lg-3">
-          <h6 class="text-light">Kontak</h6>
-          <p class="small text-muted-2 mb-1"><i class="bi bi-envelope me-1"></i>hello@smartdiabets.app</p>
-          <p class="small text-muted-2 mb-1"><i class="bi bi-geo-alt me-1"></i>Jakarta, Indonesia</p>
-        </div>
-        <div class="col-lg-3">
-          <div class="card-3d p-3 mb-3">
-            <div class="d-flex align-items-center gap-3">
-              <div class="mini-icon"><i class="bi bi-heart-pulse"></i></div>
-              <div>
-                <div class="fw-bold">Regresi Linier</div>
-                <div class="small text-muted-2">Porsi optimal, hasil gizi lebih mendekati target yang kamu butuhkan.</div>
-              </div>
-            </div>
-          </div>
-          <div class="small text-muted-2">© 2025 SmartDiabets. All rights reserved.</div>
-        </div>
-      </div>
-    </div>
-  </footer>
 
   <!-- Mobile bottom nav -->
   <nav class="bottom-nav d-md-none" aria-label="Navigasi bawah">
-    <a href="#home" class="active"><i class="bi bi-house-heart fs-5 d-block"></i>Home</a>
+    <a href="/" class="active"><i class="bi bi-house-heart fs-5 d-block"></i>Home</a>
     <a href="#tips"><i class="bi bi-heart-pulse fs-5 d-block"></i>Tips</a>
     <a href="/calculator"><i class="bi bi-calculator fs-5 d-block"></i>Kalkulator</a>
   </nav>
+{% endblock %}
 
-  <!-- SCRIPTS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
+{% block extra_js %}
   <script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.8.1/dist/vanilla-tilt.min.js" defer></script>
 
   <script>
   window.addEventListener('DOMContentLoaded', () => {
-    // Smooth scroll untuk link #
-    document.querySelectorAll('a[href^="#"]').forEach(a=>{
-      a.addEventListener('click',e=>{
-        const id=a.getAttribute('href');
-        if(id.length>1){
-          const t=document.querySelector(id);
-          if(t){ e.preventDefault(); t.scrollIntoView({behavior:'smooth',block:'start'}); }
+
+    /* ---- Smooth scroll ---- */
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const id = a.getAttribute('href');
+        if (id.length > 1) {
+          const t = document.querySelector(id);
+          if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
         }
       });
     });
 
-    // IntersectionObserver untuk aktifkan nav
-    const io=new IntersectionObserver((entries)=>{
-      entries.forEach(e=>{
-        const id='#'+e.target.id;
-        document.querySelectorAll('.nav-link, .bottom-nav a').forEach(l=>{
-          if(l.getAttribute('href')===id){
-            l.classList.toggle('active', e.isIntersecting);
-          }
+    /* ---- IntersectionObserver for active nav ---- */
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        const id = '#' + e.target.id;
+        document.querySelectorAll('.nav-link, .bottom-nav a').forEach(l => {
+          if (l.getAttribute('href') === id) l.classList.toggle('active', e.isIntersecting);
         });
       });
-    },{threshold:.6});
-    ['home','tips','kalkulator'].forEach(id=>{
-      const el=document.getElementById(id);
-      el && io.observe(el);
+    }, { threshold: .55 });
+    ['home','tips','kalkulator'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) io.observe(el);
     });
 
-    // Theme toggle (system/dark/light) -> selalu set data-theme ke resolved (dark/light)
-    const root=document.documentElement;
-    const KEY='smartdiabets-theme';
-    const btn=document.getElementById('themeToggle');
-    const icon=document.getElementById('themeIcon');
-
-    function applyTheme(pref){
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const resolved = (pref === 'system') ? (prefersDark ? 'dark' : 'light') : pref;
-      root.setAttribute('data-theme', resolved);
-      if(icon) icon.className = (resolved === 'dark') ? 'bi bi-brightness-high' : 'bi bi-moon-stars';
-      try{ localStorage.setItem(KEY, pref); }catch(e){}
-    }
-
-    const saved = (function(){ try{ return localStorage.getItem(KEY) }catch(e){ return null } })() || 'system';
-    applyTheme(saved);
-
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{
-      const cur = (function(){ try{ return localStorage.getItem(KEY) }catch(e){ return 'system' } })() || 'system';
-      if(cur === 'system') applyTheme('system');
-    });
-
-    btn?.addEventListener('click',()=>{
-      const cur = (function(){ try{ return localStorage.getItem(KEY) }catch(e){ return 'system' } })() || 'system';
-      const next = (cur==='system') ? 'dark' : (cur==='dark' ? 'light' : 'system');
-      applyTheme(next);
-    });
-
-    // Floating bubbles
-    const host=document.getElementById('bubbles');
-    if(host){
-      const N=18;
-      for(let i=0;i<N;i++){
-        const b=document.createElement('span');
-        b.className='bubble';
-        const size=Math.random()*80+28;
-        b.style.width=size+'px';
-        b.style.height=size+'px';
-        b.style.left=(Math.random()*100)+'%';
-        b.style.setProperty('--dur',(12+Math.random()*12)+'s');
-        b.style.setProperty('--sway',(5+Math.random()*6)+'s');
-        b.style.setProperty('--scale',0.9+Math.random()*0.6);
-        b.style.setProperty('--blur',(Math.random()*3)+'px');
-        b.style.setProperty('--ty',(Math.random()*20-10)+'px');
+    /* ---- Floating bubbles ---- */
+    const host = document.getElementById('bubbles');
+    if (host) {
+      for (let i = 0; i < 20; i++) {
+        const b = document.createElement('span');
+        b.className = 'bubble';
+        const size = Math.random() * 90 + 24;
+        b.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;`;
+        b.style.setProperty('--dur',  (11 + Math.random()*14) + 's');
+        b.style.setProperty('--sway', (4  + Math.random()*7)  + 's');
+        b.style.setProperty('--scale',0.85 + Math.random()*.6);
+        b.style.setProperty('--blur', (Math.random()*2.5) + 'px');
         host.appendChild(b);
       }
     }
 
-    // Enhanced 3D Parallax effect for food image
-    const foodImg = document.getElementById('heroFoodImg');
+    /* ---- 3D Parallax on food image ---- */
+    const foodImg       = document.getElementById('heroFoodImg');
     const foodContainer = document.querySelector('.hero-food-container');
-
-    if(foodImg && foodContainer){
-      foodContainer.addEventListener('mousemove', (e) => {
-        const rect = foodContainer.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-
-        const rotateX = ((y - centerY) / centerY) * 15;
-        const rotateY = ((x - centerX) / centerX) * -15;
-        const translateZ = 30;
-
-        foodImg.style.transform = `
-          perspective(1500px)
-          rotateX(${rotateX}deg)
-          rotateY(${rotateY}deg)
-          translateZ(${translateZ}px)
-          scale(1.05)
-        `;
+    if (foodImg && foodContainer) {
+      foodContainer.addEventListener('mousemove', e => {
+        const r  = foodContainer.getBoundingClientRect();
+        const rx = ((e.clientY - r.top  - r.height/2) / (r.height/2)) * 12;
+        const ry = ((e.clientX - r.left - r.width/2)  / (r.width/2))  * -12;
+        foodImg.style.transform = `perspective(1500px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(28px) scale(1.04)`;
       });
-
-      foodContainer.addEventListener('mouseleave', () => {
-        foodImg.style.transform = '';
-      });
-
-      foodImg.addEventListener('click', () => {
-        foodImg.style.animation = 'none';
-        foodImg.style.transform = 'perspective(1500px) rotateY(360deg) scale(1.1)';
-        setTimeout(() => {
-          foodImg.style.transform = '';
-          foodImg.style.animation = 'float3d 8s ease-in-out infinite';
-        }, 600);
-      });
+      foodContainer.addEventListener('mouseleave', () => { foodImg.style.transform = ''; });
     }
 
-    // Tilt init
-    const tiltEls=document.querySelectorAll('.tilt');
-    const initTilt=()=>{
-      if(window.VanillaTilt){
-        window.VanillaTilt.init(tiltEls,{max:14,speed:500,glare:true,"max-glare":.25});
+    /* ---- Vanilla Tilt ---- */
+    const initTilt = () => {
+      if (window.VanillaTilt) {
+        window.VanillaTilt.init(document.querySelectorAll('.tilt'), {
+          max: 12, speed: 500, glare: true, 'max-glare': .2
+        });
       }
     };
-    if(document.readyState==='complete'){ initTilt(); }
-    else{ window.addEventListener('load', initTilt); }
+    document.readyState === 'complete' ? initTilt() : window.addEventListener('load', initTilt);
 
-    // Sparks particle canvas
-    const sparks=document.getElementById('sparks');
-    const heroEl=document.querySelector('.hero');
-    if(sparks && heroEl){
-      const ctx=sparks.getContext('2d');
-      let W=heroEl.clientWidth,H=heroEl.clientHeight;
-      const DPR=Math.min(2,window.devicePixelRatio||1);
-      const N=80; const parts=[];
-      function resize(){
-        W=heroEl.clientWidth; H=heroEl.clientHeight;
-        sparks.width=W*DPR; sparks.height=H*DPR;
-        sparks.style.width=W+'px'; sparks.style.height=H+'px';
-        ctx.setTransform(DPR,0,0,DPR,0,0);
+    /* ---- Sparks particle canvas ---- */
+    const sparks  = document.getElementById('sparks');
+    const heroEl  = document.querySelector('.hero');
+    if (sparks && heroEl) {
+      const ctx = sparks.getContext('2d');
+      let W = heroEl.clientWidth, H = heroEl.clientHeight;
+      const DPR = Math.min(2, window.devicePixelRatio || 1);
+      const N = 80; const parts = [];
+      function resize() {
+        W = heroEl.clientWidth; H = heroEl.clientHeight;
+        sparks.width  = W * DPR; sparks.height = H * DPR;
+        sparks.style.width  = W + 'px'; sparks.style.height = H + 'px';
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
       }
-      function spawn(p){
-        p.x=Math.random()*W;
-        p.y=H+Math.random()*H*0.2;
-        p.vy=0.6+Math.random()*1.2;
-        p.vx=(Math.random()-0.5)*0.6;
-        p.r=1+Math.random()*2;
-        p.a=0.25+Math.random()*0.5;
-        p.h=Math.random()*360;
+      function spawn(p) {
+        p.x = Math.random() * W; p.y = H + Math.random() * H * .15;
+        p.vy = .5 + Math.random() * 1.2; p.vx = (Math.random() - .5) * .55;
+        p.r = .8 + Math.random() * 2; p.a = .2 + Math.random() * .45;
+        p.h = Math.random() * 360;
       }
-      for(let i=0;i<N;i++){ parts.push({}); spawn(parts[i]); }
-      function tick(){
-        ctx.clearRect(0,0,W,H);
-        for(const p of parts){
-          p.x+=p.vx; p.y-=p.vy;
-          if(p.y<-10||p.x<-10||p.x>W+10) spawn(p);
+      for (let i = 0; i < N; i++) { parts.push({}); spawn(parts[i]); }
+      function tick() {
+        ctx.clearRect(0, 0, W, H);
+        for (const p of parts) {
+          p.x += p.vx; p.y -= p.vy;
+          if (p.y < -10 || p.x < -10 || p.x > W + 10) spawn(p);
           ctx.beginPath();
-          ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-          ctx.fillStyle=`hsla(${p.h},90%,60%,${p.a})`;
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${p.h},90%,65%,${p.a})`;
           ctx.fill();
         }
         requestAnimationFrame(tick);
       }
       resize(); tick();
-      window.addEventListener('resize',resize);
+      window.addEventListener('resize', resize);
     }
   });
   </script>
-
-  <style>
-    .tilt:hover{
-      transform:translateY(-6px) scale(1.01);
-      transition:transform .18s ease;
-    }
-  </style>
-</body>
-</html>
+{% endblock %}

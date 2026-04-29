@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SmartDiabets - Rekomendasi Menu Diabetes{% endblock %}</title>
+
+    <!-- FOUC Prevention: apply theme BEFORE any CSS renders -->
+    <script>
+        (function(){
+            var raw = '';
+            try { raw = localStorage.getItem('smartdiabets-theme') || ''; } catch(e){}
+            // Sanitize: only accept 'light' or 'dark'. Anything else (including old 'system') → 'light'
+            var t = (raw === 'dark') ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Base Styles -->
+    <style>
+        /* ==================== DESIGN SYSTEM (Global Variables) ==================== */
+        :root {
+            /* Primary Colors */
+            --primary: #047857;
+            --primary-light: #10b981;
+            --primary-dark: #065f46;
+            --primary-soft: #d1fae5;
+            
+            /* Secondary Colors */
+            --secondary: #8b5cf6;
+            --accent: #f59e0b;
+            --accent-pink: #ec4899;
+            
+            /* Neutral Colors */
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            
+            /* Semantic Colors */
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            
+            /* Light Theme Variables */
+            --bg-primary: #ffffff;
+            --bg-secondary: var(--gray-50);
+            --text-primary: var(--gray-900);
+            --text-secondary: var(--gray-600);
+            --text-muted: var(--gray-500);
+            --border: var(--gray-200);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            
+            /* Typography */
+            --font-base: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            --font-display: 'Poppins', sans-serif;
+            
+            /* Spacing */
+            --navbar-height: 70px;
+            --footer-height: 200px;
+            
+            /* Radius */
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+            --radius-2xl: 1.5rem;
+            --radius-full: 9999px;
+            
+            /* Transitions */
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Dark Theme */
+        html[data-theme="dark"] {
+            --bg-primary: #111827;
+            --bg-secondary: #1f2937;
+            --text-primary: #f9fafb;
+            --text-secondary: #e5e7eb;
+            --text-muted: #9ca3af;
+            --border: rgba(255, 255, 255, 0.1);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* ==================== BASE STYLES ==================== */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: var(--font-base);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        main {
+            flex: 1;
+        }
+        
+        /* ==================== NAVBAR STYLES ==================== */
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            position: relative;
+            z-index: 1030;
+            height: var(--navbar-height);
+            overflow: hidden;
+            transition: height .3s ease, opacity .3s ease;
+            opacity: 1;
+        }
+        .navbar-custom.nav-collapsed {
+            height: 0;
+            opacity: 0;
+            border-bottom: none;
+            box-shadow: none;
+        }
+        
+        html[data-theme="dark"] .navbar-custom {
+            background: rgba(17, 24, 39, 0.95);
+        }
+        
+        .navbar-brand {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--primary) !important;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+        
+        .navbar-brand:hover {
+            color: var(--primary-dark) !important;
+            transform: translateY(-2px);
+        }
+        
+        .navbar-brand i {
+            font-size: 1.75rem;
+        }
+        
+        .nav-link {
+            color: var(--text-secondary) !important;
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 0.5rem 1rem !important;
+            border-radius: var(--radius-md);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav-link:hover {
+            color: var(--primary) !important;
+            background: var(--primary-soft);
+        }
+        
+        .nav-link.active {
+            color: var(--primary) !important;
+            background: var(--primary-soft);
+            font-weight: 700;
+        }
+        
+        .nav-link i {
+            font-size: 1.1rem;
+        }
+        
+        /* User Dropdown */
+        .user-dropdown {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .user-dropdown:hover {
+            background: var(--primary-soft);
+            border-color: var(--primary);
+        }
+        
+        html[data-theme="dark"] .user-dropdown:hover {
+            background: rgba(4, 120, 87, 0.2);
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+        
+        /* Dropdown Menu - Dark Mode Fix */
+        .dropdown-menu {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+            border-radius: var(--radius-lg);
+        }
+        
+        .dropdown-item {
+            color: var(--text-primary) !important;
+            transition: var(--transition);
+        }
+        
+        .dropdown-item:hover {
+            background: var(--primary-soft);
+            color: var(--primary) !important;
+        }
+        
+        html[data-theme="dark"] .dropdown-item:hover {
+            background: rgba(4, 120, 87, 0.2);
+        }
+        
+        .dropdown-divider {
+            border-color: var(--border);
+        }
+        
+        /* Auth Buttons */
+        .btn-login, .btn-register {
+            padding: 0.5rem 1.25rem;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-login {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+        
+        .btn-login:hover {
+            background: var(--primary);
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .btn-register {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white !important;
+            box-shadow: var(--shadow);
+        }
+        
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            color: white !important;
+        }
+        
+        /* Theme Toggle */
+        .theme-toggle {
+            background: var(--bg-primary);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-full);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-primary);
+        }
+        
+        .theme-toggle:hover {
+            border-color: var(--primary);
+            background: var(--primary-soft);
+            transform: rotate(20deg);
+        }
+        
+        html[data-theme="dark"] .theme-toggle:hover {
+            background: rgba(4, 120, 87, 0.2);
+        }
+        
+        /* ==================== FOOTER STYLES ==================== */
+        footer {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border);
+            padding: 2.5rem 0 0;
+            margin-top: 0;
+            transition: background .3s, color .3s;
+            position: relative;
+            overflow: hidden;
+        }
+        footer::before {
+            content: "";
+            position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, #047857, #10b981, #38bdf8, #6366f1, #047857);
+            background-size: 200% auto;
+            animation: footerGrad 5s linear infinite;
+        }
+        @keyframes footerGrad { to { background-position: 200% center; } }
+
+        html[data-theme="dark"] footer {
+            background: #080f1e;
+            border-top-color: rgba(255,255,255,.06);
+        }
+
+        .footer-brand-logo {
+            width: 44px; height: 44px; border-radius: 14px;
+            background: linear-gradient(135deg, #047857, #10b981);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; color: #fff; margin-right: .75rem;
+            box-shadow: 0 4px 16px rgba(4,120,87,.3); flex-shrink: 0;
+        }
+        .footer-brand-name {
+            font-family: var(--font-display);
+            font-size: 1.2rem; font-weight: 800;
+            color: var(--text-primary); letter-spacing: -.02em;
+        }
+        html[data-theme="dark"] .footer-brand-name { color: #f1f5f9; }
+
+        .footer-desc {
+            color: var(--text-muted);
+            font-size: .88rem; line-height: 1.7;
+            margin: .9rem 0 1.2rem;
+            max-width: 280px;
+        }
+        html[data-theme="dark"] .footer-desc { color: #6b7280; }
+
+        .footer-social-btn {
+            width: 38px; height: 38px; border-radius: 10px;
+            display: inline-flex; align-items: center; justify-content: center;
+            background: rgba(4,120,87,.08);
+            border: 1px solid rgba(4,120,87,.14);
+            color: var(--text-muted);
+            font-size: 1rem; transition: all .22s ease;
+            text-decoration: none;
+        }
+        .footer-social-btn:hover {
+            background: linear-gradient(135deg, #047857, #10b981);
+            border-color: transparent; color: #fff;
+            transform: translateY(-3px); box-shadow: 0 8px 20px rgba(4,120,87,.3);
+        }
+        html[data-theme="dark"] .footer-social-btn {
+            background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.1); color: #6b7280;
+        }
+
+        .footer-col-title {
+            font-family: var(--font-display);
+            font-weight: 700; font-size: .9rem; letter-spacing: .01em;
+            color: var(--text-primary); margin-bottom: 1.1rem;
+            display: flex; align-items: center; gap: .5rem;
+        }
+        .footer-col-title::after {
+            content: ""; flex: 1; height: 1px;
+            background: linear-gradient(90deg, var(--border), transparent);
+        }
+        html[data-theme="dark"] .footer-col-title { color: #f1f5f9; }
+
+        footer ul.footer-links { list-style: none; padding: 0; margin: 0; }
+        footer ul.footer-links li { margin-bottom: .45rem; }
+        footer ul.footer-links a {
+            color: var(--text-muted);
+            text-decoration: none; font-size: .875rem;
+            display: inline-flex; align-items: center; gap: .4rem;
+            transition: all .2s ease;
+        }
+        footer ul.footer-links a .link-dot {
+            width: 5px; height: 5px; border-radius: 50%;
+            background: var(--primary); opacity: 0;
+            transition: opacity .2s, transform .2s;
+            flex-shrink: 0;
+        }
+        footer ul.footer-links a:hover { color: var(--primary); transform: translateX(4px); }
+        footer ul.footer-links a:hover .link-dot { opacity: 1; transform: scale(1.4); }
+        html[data-theme="dark"] footer ul.footer-links a { color: #6b7280; }
+        html[data-theme="dark"] footer ul.footer-links a:hover { color: #34d399; }
+
+        .footer-contact-item {
+            display: flex; align-items: flex-start; gap: .65rem;
+            font-size: .875rem; color: var(--text-muted); margin-bottom: .7rem;
+        }
+        .footer-contact-icon {
+            width: 32px; height: 32px; border-radius: 9px;
+            background: rgba(4,120,87,.08); border: 1px solid rgba(4,120,87,.12);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--primary); font-size: .85rem; flex-shrink: 0;
+        }
+        html[data-theme="dark"] .footer-contact-icon {
+            background: rgba(52,211,153,.08); border-color: rgba(52,211,153,.15); color: #34d399;
+        }
+        html[data-theme="dark"] .footer-contact-item { color: #6b7280; }
+
+        .footer-bottom {
+            border-top: 1px solid var(--border);
+            padding: 1rem 0;
+            margin-top: 2rem;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: .75rem;
+            font-size: .82rem; color: var(--text-muted);
+        }
+        html[data-theme="dark"] .footer-bottom {
+            border-top-color: rgba(255,255,255,.06); color: #4b5563;
+        }
+        .footer-bottom-badge {
+            display: inline-flex; align-items: center; gap: .4rem;
+            padding: .3rem .8rem; border-radius: 999px;
+            background: rgba(4,120,87,.08); border: 1px solid rgba(4,120,87,.12);
+            color: var(--primary); font-size: .78rem; font-weight: 600;
+        }
+        html[data-theme="dark"] .footer-bottom-badge {
+            background: rgba(52,211,153,.08); border-color: rgba(52,211,153,.15); color: #34d399;
+        }
+        
+        /* ==================== UTILITIES ==================== */
+
+        /* ===== Dark Mode — Bootstrap override fixes ===== */
+        html[data-theme="dark"] { color-scheme: dark; }
+        html[data-theme="light"] { color-scheme: light; }
+
+        /* Bootstrap .text-muted hardcodes color, override for dark */
+        html[data-theme="dark"] .text-muted { color: var(--text-muted) !important; }
+
+        /* Bootstrap form controls inherit color-scheme but need explicit bg */
+        html[data-theme="dark"] .form-control,
+        html[data-theme="dark"] .form-select,
+        html[data-theme="dark"] input,
+        html[data-theme="dark"] select,
+        html[data-theme="dark"] textarea {
+          background-color: var(--bg-secondary);
+          color: var(--text-primary);
+          border-color: var(--border);
+        }
+
+        /* Bootstrap card/bg overrides */
+        html[data-theme="dark"] .bg-white { background-color: var(--bg-primary) !important; }
+        html[data-theme="dark"] .bg-light  { background-color: var(--bg-secondary) !important; }
+        html[data-theme="dark"] .border    { border-color: var(--border) !important; }
+        html[data-theme="dark"] .text-dark { color: var(--text-primary) !important; }
+        html[data-theme="dark"] .text-secondary { color: var(--text-secondary) !important; }
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .container-custom {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        /* Flash Messages - Dark Mode Support */
+        .alert {
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--success);
+            color: var(--text-primary);
+        }
+        
+        .alert-danger, .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--danger);
+            color: var(--text-primary);
+        }
+        
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: var(--warning);
+            color: var(--text-primary);
+        }
+        
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--info);
+            color: var(--text-primary);
+        }
+        
+        .alert i {
+            color: inherit;
+        }
+        
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 992px) {
+            .navbar-collapse {
+                background: var(--bg-primary);
+                border-radius: var(--radius-lg);
+                padding: 1rem;
+                margin-top: 1rem;
+                border: 1px solid var(--border);
+            }
+            
+            .nav-link {
+                margin: 0.25rem 0;
+            }
+        }
+
+        /* ==================== GLOBAL FORM CONTROLS ==================== */
+        /* Override Bootstrap — semua input/select konsisten light & dark */
+        .form-control,
+        .form-select {
+            background: var(--bg-secondary);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-lg);
+            color: var(--text-primary);
+            font-family: var(--font-base);
+            font-size: .93rem;
+            padding: .75rem 1rem;
+            transition: border-color .2s, box-shadow .2s, background .2s;
+        }
+        .form-control::placeholder { color: var(--text-muted); }
+        .form-control:focus,
+        .form-select:focus {
+            background: var(--bg-primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(4,120,87,.13);
+            color: var(--text-primary);
+            outline: none;
+        }
+        html[data-theme="dark"] .form-control,
+        html[data-theme="dark"] .form-select {
+            background: var(--bg-secondary);
+            border-color: var(--border);
+            color: var(--text-primary);
+            color-scheme: dark;
+        }
+        html[data-theme="dark"] .form-control:focus,
+        html[data-theme="dark"] .form-select:focus {
+            background: #1f2937;
+            border-color: var(--primary);
+        }
+        /* Bootstrap form-label */
+        .form-label {
+            font-weight: 600;
+            font-size: .875rem;
+            color: var(--text-primary);
+            margin-bottom: .45rem;
+        }
+        /* form-check (checkbox) */
+        .form-check-input {
+            background-color: var(--bg-secondary);
+            border-color: var(--border);
+        }
+        .form-check-input:checked {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        html[data-theme="dark"] .form-check-label { color: var(--text-secondary); }
+
+        /* ==================== AUTH PAGES (Login / Register) ==================== */
+        .auth-page {
+            min-height: calc(100vh - var(--navbar-height));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 1rem;
+            background: var(--bg-secondary);
+        }
+        html[data-theme="dark"] .auth-page {
+            background: linear-gradient(135deg, #0d1117 0%, #0f1f18 100%);
+        }
+
+        .auth-wrap {
+            width: 100%;
+            max-width: 460px;
+        }
+
+        /* Brand header above card */
+        .auth-brand {
+            text-align: center;
+            margin-bottom: .75rem;
+        }
+        .auth-brand-logo {
+            display: inline-flex; align-items: center; gap: .5rem;
+            font-family: var(--font-display);
+            font-weight: 800; font-size: 1.5rem;
+            color: var(--primary); text-decoration: none;
+        }
+        .auth-brand-logo:hover { color: var(--primary-dark); }
+        html[data-theme="dark"] .auth-brand-logo { color: #10b981; }
+
+        /* The card itself */
+        .auth-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 1.5rem;
+            padding: 1.75rem 2.25rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,.08);
+        }
+        html[data-theme="dark"] .auth-card {
+            background: #1a2535;
+            border-color: rgba(255,255,255,.08);
+            box-shadow: 0 8px 40px rgba(0,0,0,.45);
+        }
+
+        /* Title inside card */
+        .auth-title {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin-bottom: .3rem;
+        }
+        .auth-subtitle {
+            font-size: .85rem;
+            color: var(--text-muted);
+            margin-bottom: 1.1rem;
+        }
+
+        /* Input group with icon */
+        .auth-field { margin-bottom: .7rem; }
+        .auth-field .form-label {
+            display: flex; align-items: center; gap: .4rem;
+            font-weight: 600; font-size: .83rem;
+            color: var(--text-secondary); margin-bottom: .4rem;
+        }
+        .auth-field .form-label i { color: var(--primary); }
+
+        /* Submit button */
+        .btn-auth {
+            width: 100%;
+            padding: .7rem 1rem;
+            background: linear-gradient(135deg, #059669, #047857);
+            border: none;
+            border-radius: var(--radius-lg);
+            color: white;
+            font-weight: 800; font-size: .95rem;
+            letter-spacing: .01em;
+            cursor: pointer;
+            transition: all .25s;
+            box-shadow: 0 6px 18px rgba(4,120,87,.28);
+            display: flex; align-items: center; justify-content: center; gap: .5rem;
+        }
+        .btn-auth:hover {
+            background: linear-gradient(135deg, #10b981, #059669);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(4,120,87,.38);
+            color: white;
+        }
+        .btn-auth:active { transform: none; }
+
+        /* Divider */
+        .auth-divider {
+            display: flex; align-items: center; gap: .75rem;
+            margin: .75rem 0; color: var(--text-muted); font-size: .8rem;
+        }
+        .auth-divider::before,
+        .auth-divider::after {
+            content: ''; flex: 1;
+            height: 1px; background: var(--border);
+        }
+
+        /* Footer links */
+        .auth-footer {
+            margin-top: .6rem;
+            text-align: center;
+            font-size: .85rem;
+            color: var(--text-muted);
+        }
+        .auth-footer a {
+            color: var(--primary);
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+        html[data-theme="dark"] .auth-footer a { color: #34d399; }
+
+        /* ==================== PAGE HERO (for all inner pages) ==================== */
+        .page-hero {
+            background: linear-gradient(135deg,
+                rgba(4,120,87,.07) 0%,
+                rgba(16,185,129,.05) 50%,
+                rgba(59,130,246,.05) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 2.5rem 0 2rem;
+        }
+        html[data-theme="dark"] .page-hero {
+            background: linear-gradient(135deg,
+                rgba(4,120,87,.14) 0%,
+                rgba(16,185,129,.09) 50%,
+                rgba(59,130,246,.07) 100%);
+        }
+        .page-hero h1 { color: var(--text-primary); }
+
+        /* ==================== SHARED CARD ==================== */
+        .card-base {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 1.1rem;
+            box-shadow: var(--shadow);
+        }
+        html[data-theme="dark"] .card-base {
+            background: #1a2535;
+            border-color: rgba(255,255,255,.08);
+        }
+
+        /* ==================== SHARED BADGE ==================== */
+        .badge-tech {
+            display: inline-flex; align-items: center; gap: .4rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: .3rem .85rem;
+            font-size: .78rem; font-weight: 700;
+            color: var(--text-secondary);
+        }
+        html[data-theme="dark"] .badge-tech {
+            background: rgba(255,255,255,.05);
+        }
+
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- ==================== NAVBAR ==================== -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container-fluid container-custom">
+            <!-- Logo -->
+            <a class="navbar-brand" href="{{ url_for('home') }}">
+                <i class="bi bi-heart-pulse-fill"></i>
+                <span>SmartDiabets</span>
+            </a>
+            
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Nav Items -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <!-- Public Menu -->
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'home' %}active{% endif %}" href="{{ url_for('home') }}">
+                            <i class="bi bi-house-fill"></i>
+                            Beranda
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'blog' %}active{% endif %}" href="{{ url_for('blog') }}">
+                            <i class="bi bi-newspaper"></i>
+                            Artikel & Tips
+                        </a>
+                    </li>
+                    
+                    <!-- Authenticated Menu (Non-Admin) -->
+                    {% if current_user.is_authenticated and not current_user.is_admin %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'calculator' %}active{% endif %}" href="{{ url_for('calculator') }}">
+                            <i class="bi bi-clipboard2-pulse-fill"></i>
+                            Kalkulator
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'user.profile' %}active{% endif %}" href="{{ url_for('user.profile') }}">
+                            <i class="bi bi-person-lines-fill"></i>
+                            Riwayat
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Admin Menu -->
+                    {% if current_user.is_authenticated and current_user.is_admin %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                            <i class="bi bi-speedometer2"></i>
+                            Dashboard Admin
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                
+                <!-- Right Side: Auth & Theme -->
+                <div class="d-flex align-items-center gap-2">
+                    {% if current_user.is_authenticated %}
+                        <!-- User Dropdown -->
+                        <div class="dropdown">
+                            <button class="user-dropdown dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <div class="user-avatar">
+                                    {{ current_user.username[0].upper() }}
+                                </div>
+                                <span class="d-none d-md-inline">{{ current_user.username }}</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('user.profile') if not current_user.is_admin else url_for('admin.dashboard') }}">
+                                        <i class="bi bi-person-circle me-2"></i>Profil
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{{ url_for('user.logout') if not current_user.is_admin else url_for('admin.logout') }}">
+                                        <i class="bi bi-box-arrow-right me-2"></i>Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <!-- Login/Register Buttons -->
+                        <a href="{{ url_for('user.login') }}" class="btn-login">
+                            <i class="bi bi-box-arrow-in-right"></i>
+                            Login
+                        </a>
+                        <a href="{{ url_for('user.register') }}" class="btn-register">
+                            <i class="bi bi-person-plus-fill"></i>
+                            Daftar
+                        </a>
+                    {% endif %}
+                    
+                    <!-- Theme Toggle -->
+                    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme">
+                        <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main>
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="container-custom mt-3">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            <i class="bi bi-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' }}-fill me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- ==================== FOOTER ==================== -->
+    <footer>
+        <div class="container-custom">
+            <div class="row g-4">
+
+                <!-- Brand Column -->
+                <div class="col-lg-4">
+                    <div class="d-flex align-items-center mb-0">
+                        <div class="footer-brand-logo">
+                            <i class="bi bi-heart-pulse-fill"></i>
+                        </div>
+                        <span class="footer-brand-name">SmartDiabets</span>
+                    </div>
+                    <p class="footer-desc">
+                        Sistem rekomendasi menu cerdas untuk penderita diabetes tipe 2 — berbasis Constrained Least Squares &amp; pedoman PERKENI 2024.
+                    </p>
+                    <div class="d-flex gap-2">
+                        <a href="#" class="footer-social-btn" aria-label="Facebook">
+                            <i class="bi bi-facebook"></i>
+                        </a>
+                        <a href="#" class="footer-social-btn" aria-label="Instagram">
+                            <i class="bi bi-instagram"></i>
+                        </a>
+                        <a href="#" class="footer-social-btn" aria-label="Twitter/X">
+                            <i class="bi bi-twitter-x"></i>
+                        </a>
+                        <a href="#" class="footer-social-btn" aria-label="YouTube">
+                            <i class="bi bi-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-6 col-lg-2">
+                    <div class="footer-col-title">Menu</div>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('home') }}"><span class="link-dot"></span>Beranda</a></li>
+                        <li><a href="{{ url_for('calculator') }}"><span class="link-dot"></span>Kalkulator</a></li>
+                        <li><a href="{{ url_for('blog') }}"><span class="link-dot"></span>Artikel</a></li>
+                        {% if current_user.is_authenticated %}
+                        <li><a href="{{ url_for('user.profile') }}"><span class="link-dot"></span>Profil</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-6 col-lg-3">
+                    <div class="footer-col-title">Sumber Daya</div>
+                    <ul class="footer-links">
+                        <li><a href="#"><span class="link-dot"></span>Panduan Pengguna</a></li>
+                        <li><a href="#"><span class="link-dot"></span>Tanya Jawab (FAQ)</a></li>
+                        <li><a href="#"><span class="link-dot"></span>Kebijakan Privasi</a></li>
+                        <li><a href="#"><span class="link-dot"></span>Kontak Kami</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact -->
+                <div class="col-lg-3">
+                    <div class="footer-col-title">Kontak</div>
+                    <div class="footer-contact-item">
+                        <span class="footer-contact-icon"><i class="bi bi-envelope"></i></span>
+                        <div>
+                            <div style="font-size:.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:.1rem">Email</div>
+                            hello@smartdiabets.app
+                        </div>
+                    </div>
+                    <div class="footer-contact-item">
+                        <span class="footer-contact-icon"><i class="bi bi-geo-alt"></i></span>
+                        <div>
+                            <div style="font-size:.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:.1rem">Lokasi</div>
+                            Jakarta, Indonesia
+                        </div>
+                    </div>
+                    <div class="footer-contact-item">
+                        <span class="footer-contact-icon"><i class="bi bi-clock"></i></span>
+                        <div>
+                            <div style="font-size:.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:.1rem">Dukungan</div>
+                            Senin – Jumat, 09:00–17:00
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <span>&copy; 2025 SmartDiabets by <strong>Rafika</strong>. Hak cipta dilindungi.</span>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="footer-bottom-badge">
+                        <i class="bi bi-heart-fill" style="font-size:.7rem"></i> Made for Indonesia
+                    </span>
+                    <span class="footer-bottom-badge">
+                        <i class="bi bi-shield-check" style="font-size:.8rem"></i> PERKENI 2024
+                    </span>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- ==================== SCRIPTS ==================== -->
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Theme Toggle Script -->
+    <script>
+        // Theme Toggle Logic
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const html = document.documentElement;
+        const THEME_KEY = 'smartdiabets-theme';
+
+        // Sanitize stored value — handle legacy 'system' from old index.html
+        function resolveTheme(raw) {
+            return (raw === 'dark') ? 'dark' : 'light';
+        }
+
+        // Apply on page load
+        const savedRaw = (function(){ try{ return localStorage.getItem(THEME_KEY); }catch(e){ return null; } })();
+        const savedTheme = resolveTheme(savedRaw);
+        // Migrate old 'system' value in storage
+        if (savedRaw !== savedTheme) {
+            try { localStorage.setItem(THEME_KEY, savedTheme); } catch(e){}
+        }
+        html.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+
+        // Toggle on click
+        themeToggle.addEventListener('click', () => {
+            const current = html.getAttribute('data-theme');
+            const next = (current === 'dark') ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            try { localStorage.setItem(THEME_KEY, next); } catch(e){}
+            updateThemeIcon(next);
+        });
+
+        function updateThemeIcon(theme) {
+            if (themeIcon) {
+                themeIcon.className = (theme === 'dark') ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+            }
+        }
+
+        // Hide navbar on scroll down, show when back at top
+        (function(){
+            const nav = document.querySelector('.navbar-custom');
+            if (!nav) return;
+            window.addEventListener('scroll', function(){
+                if (window.scrollY > 10) {
+                    nav.classList.add('nav-collapsed');
+                } else {
+                    nav.classList.remove('nav-collapsed');
+                }
+            }, { passive: true });
+        })();
+    </script>
+    
+    <!-- Extra Page Scripts -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Login - SmartDiabets{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-wrap">
+
+        <!-- Brand -->
+        <div class="auth-brand">
+            <a href="{{ url_for('home') }}" class="auth-brand-logo">
+                <i class="bi bi-heart-pulse-fill"></i> SmartDiabets
+            </a>
+        </div>
+
+        <!-- Card -->
+        <div class="auth-card">
+            <h2 class="auth-title">Selamat Datang</h2>
+            <p class="auth-subtitle">Masuk untuk mendapatkan rekomendasi makanan personal</p>
+
+            <!-- Flash messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show mb-3" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST">
+                <div class="auth-field">
+                    <label for="username" class="form-label">
+                        <i class="bi bi-person"></i> Username
+                    </label>
+                    <input type="text" class="form-control" id="username" name="username"
+                           placeholder="Masukkan username" required autofocus autocomplete="username">
+                </div>
+
+                <div class="auth-field">
+                    <label for="password" class="form-label">
+                        <i class="bi bi-lock"></i> Password
+                    </label>
+                    <input type="password" class="form-control" id="password" name="password"
+                           placeholder="Masukkan password" required autocomplete="current-password">
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="form-check mb-0">
+                        <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                        <label class="form-check-label" for="remember">Ingat saya</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-auth">
+                    <i class="bi bi-box-arrow-in-right"></i> Masuk Sekarang
+                </button>
+            </form>
+
+            <div class="auth-divider">atau</div>
+
+            <div class="auth-footer">
+                <p class="mb-2">Belum punya akun?
+                    <a href="{{ url_for('user.register') }}">Daftar di sini</a>
+                </p>
+                <p class="mb-0" style="font-size:.8rem;">
+                    Admin?
+                    <a href="{{ url_for('admin.login') }}" style="color:var(--text-muted);font-weight:600;">
+                        Login Admin
+                    </a>
+                </p>
+            </div>
+        </div>
+
+        <div class="text-center mt-2">
+            <a href="{{ url_for('home') }}" class="auth-footer" style="font-size:.83rem;">
+                <i class="bi bi-house-heart me-1"></i>Balik ke beranda dulu?
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

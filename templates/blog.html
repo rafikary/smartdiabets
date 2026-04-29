@@ -1,230 +1,452 @@
-<!doctype html>
-<html lang="id" data-theme="light">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Artikel & Edukasi – SmartDiabets</title>
+﻿{% extends "base.html" %}
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+{% block title %}Artikel & Edukasi - SmartDiabets{% endblock %}
 
-  <style>
-    :root{
-      --brand:#047857; --brand-soft:#22c55e; --accent:#fb923c;
-      --ink:#022c22; --muted:#6b7280;
-      --paper:#f4faf7; --card:#ffffffef; --border:#00000010;
-      --shadow:0 18px 50px rgba(15,118,110,.18);
-      --hero-grad: radial-gradient(1200px 600px at 10% 10%, rgba(34,197,94,.16), transparent 60%),
-                   radial-gradient(1000px 500px at 90% 40%, rgba(56,189,248,.16), transparent 60%),
-                   linear-gradient(135deg, #ecfdf5, #eff6ff);
-      --ink-hero:#064e3b;
-      --nav-bg:rgba(15,23,42,.96);
-    }
-    html[data-theme="dark"]{
-      --paper:#020617; --ink:#e5e7eb; --muted:#9ca3af;
-      --card:#020617f5; --border:#ffffff1a;
-      --nav-bg:#020617f0;
-      --ink-hero:#e0f2fe;
-      --hero-grad: radial-gradient(1200px 600px at 10% 10%, rgba(34,197,94,.18), transparent 60%),
-                   radial-gradient(1000px 500px at 90% 40%, rgba(56,189,248,.18), transparent 60%),
-                   linear-gradient(135deg, #020617, #022c22);
-    }
-    html[data-theme="dark"]{ color-scheme: dark; }
-    html[data-theme="light"]{ color-scheme: light; }
+{% block extra_css %}
+<style>
+  /* â”€â”€ TOKENS â”€â”€ */
+  :root{
+    --brand:#047857; --brand-mid:#059669; --brand-soft:#10b981; --brand-glow:#34d399;
+    --ink:#0a1628; --muted:#64748b;
+    --paper:#f8fafc; --card:#fff; --border:rgba(0,0,0,.07);
+    --shadow-card:0 4px 24px rgba(15,23,42,.08);
+    --shadow-hover:0 20px 56px rgba(4,120,87,.18);
+    --radius-xl:22px; --radius-lg:16px; --radius-md:12px;
+    --tr: all .25s cubic-bezier(.4,0,.2,1);
+    --hero-mesh:
+      radial-gradient(ellipse 80% 60% at 15% 20%, rgba(16,185,129,.18) 0%, transparent 55%),
+      radial-gradient(ellipse 60% 80% at 85% 70%, rgba(56,189,248,.14) 0%, transparent 55%),
+      linear-gradient(160deg, #ecfdf5 0%, #f0f9ff 50%, #f8fafc 100%);
+  }
+  html[data-theme="dark"]{
+    --paper:#070e1a; --ink:#e2e8f0; --muted:#94a3b8;
+    --card:#0f1829; --border:rgba(255,255,255,.08);
+    --shadow-card:0 4px 24px rgba(0,0,0,.4);
+    --shadow-hover:0 20px 56px rgba(16,185,129,.15);
+    --hero-mesh:
+      radial-gradient(ellipse 80% 60% at 15% 20%, rgba(16,185,129,.18) 0%, transparent 55%),
+      radial-gradient(ellipse 60% 80% at 85% 70%, rgba(56,189,248,.12) 0%, transparent 55%),
+      linear-gradient(160deg, #070e1a 0%, #091325 50%, #070e1a 100%);
+  }
 
-    *,*::before,*::after{box-sizing:border-box}
-    body{ font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; color:var(--ink); background:var(--paper); min-height:100vh; overflow-x:hidden }
-    a{color:inherit; text-decoration:none}
-    .text-muted-2{ color:var(--muted) }
-    .container-xl{width:min(1100px,92%)}
+  /* â”€â”€ HERO â”€â”€ */
+  .blog-hero{
+    position:relative; padding:3.5rem 0 3rem;
+    background:var(--paper); overflow:hidden;
+  }
+  .blog-hero-bg{
+    position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse 80% 60% at 15% 20%, rgba(16,185,129,.18) 0%, transparent 55%),
+      radial-gradient(ellipse 60% 80% at 85% 70%, rgba(56,189,248,.13) 0%, transparent 55%),
+      linear-gradient(160deg,#ecfdf5 0%,#f0f9ff 50%,#f8fafc 100%);
+  }
+  html[data-theme="dark"] .blog-hero-bg{
+    background:
+      radial-gradient(ellipse 80% 60% at 15% 20%, rgba(16,185,129,.18) 0%, transparent 55%),
+      radial-gradient(ellipse 60% 80% at 85% 70%, rgba(56,189,248,.11) 0%, transparent 55%),
+      linear-gradient(160deg,#070e1a 0%,#091325 50%,#070e1a 100%);
+  }
+  .blog-blob{
+    position:absolute; border-radius:50%; pointer-events:none;
+    filter:blur(72px); opacity:.45;
+  }
+  .blog-blob-1{
+    width:380px; height:380px; top:-80px; left:-60px;
+    background:radial-gradient(circle, rgba(16,185,129,.35), transparent 70%);
+    animation:blobP 10s ease-in-out infinite;
+  }
+  .blog-blob-2{
+    width:280px; height:280px; bottom:-50px; right:-30px;
+    background:radial-gradient(circle, rgba(56,189,248,.28), transparent 70%);
+    animation:blobP 14s ease-in-out infinite reverse;
+  }
+  @keyframes blobP{
+    0%,100%{ transform:scale(1) translate(0,0) }
+    50%{ transform:scale(1.1) translate(16px,-12px) }
+  }
+  .hero-grid-blog{ position:relative; z-index:1; text-align:center; max-width:680px; margin:0 auto; }
+  .hero-eyebrow{
+    display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
+    font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--brand-mid); margin-bottom:.9rem;
+  }
+  .hero-eyebrow::before,.hero-eyebrow::after{
+    content:""; width:20px; height:1.5px; border-radius:2px; flex-shrink:0;
+    background:linear-gradient(90deg,transparent,var(--brand-mid));
+  }
+  .hero-eyebrow::after{ background:linear-gradient(90deg,var(--brand-mid),transparent) }
+  .blog-page-title{
+    font-family:'Poppins',sans-serif;
+    font-size:clamp(2rem,4.5vw,3.2rem);
+    font-weight:900; letter-spacing:-.04em; line-height:1.1;
+    color:var(--ink); margin-bottom:.9rem;
+  }
+  .blog-page-title .grad{
+    background:linear-gradient(130deg,var(--brand-mid),var(--brand-glow));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .blog-hero-sub{
+    color:var(--muted); font-size:.97rem; line-height:1.75;
+    max-width:540px; margin:0 auto;
+  }
+  .hero-pills{ display:flex; flex-wrap:wrap; gap:.6rem; margin-top:1.5rem; justify-content:center; }
+  .hero-pill{
+    display:inline-flex; align-items:center; gap:.45rem;
+    padding:.42rem 1rem; border-radius:999px;
+    background:rgba(255,255,255,.75); border:1px solid rgba(16,185,129,.14);
+    color:var(--ink); font-size:.78rem; font-weight:600;
+    backdrop-filter:blur(8px); box-shadow:0 2px 10px rgba(0,0,0,.05);
+  }
+  .hero-pill i{ color:var(--brand-mid) }
+  html[data-theme="dark"] .hero-pill{
+    background:rgba(255,255,255,.06); border-color:rgba(16,185,129,.2); color:var(--ink);
+  }
 
-    .navbar-custom{background:var(--nav-bg); backdrop-filter:blur(10px); border-bottom:1px solid var(--border)}
-    .navbar-brand{font-family:'Playfair Display',serif; color:#fff; font-weight:700}
-    .nav-link{ color:#eaf6f6; font-weight:500 }
-    .nav-link .bi{margin-right:.4rem}
-    .nav-link.active,.nav-link:hover{ color:var(--accent) }
-    .theme-toggle{
-      border:1px solid rgba(255,255,255,.18); color:#fff; background:transparent;
-      border-radius:999px; padding:.45rem .8rem; display:flex; align-items:center; gap:.35rem
-    }
 
-    .hero-mini{ position:relative; padding:88px 0 40px; background:var(--hero-grad); color:var(--ink-hero); overflow:hidden }
-    .hero-title{ font-family:'Playfair Display',serif; font-size:clamp(2rem,3.5vw,2.7rem); margin:0 }
-    .gradient-text{ background:linear-gradient(90deg,#1fb99d 0%, #2cc9b1 35%, #6f8fff 70%, #9c7bff 100%); -webkit-background-clip:text; background-clip:text; color:transparent }
+  /* â”€â”€ BLOG SECTION â”€â”€ */
+  .blog-section{ padding:3rem 0 4rem; background:var(--paper) }
 
-    .card-3d{ border-radius:22px; background:var(--card); border:1px solid var(--border); box-shadow:var(--shadow); backdrop-filter: blur(10px); transition:transform .2s ease, box-shadow .2s ease }
-    .card-3d:hover{ transform:translateY(-6px); box-shadow:0 24px 60px rgba(2,6,23,.12) }
+  /* section header */
+  .sec-eyebrow{
+    display:inline-flex; align-items:center; gap:.5rem;
+    font-size:.75rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--brand-mid); margin-bottom:.6rem;
+  }
+  .sec-eyebrow::before,.sec-eyebrow::after{
+    content:""; width:18px; height:2px; border-radius:2px; flex-shrink:0;
+    background:linear-gradient(90deg,transparent,var(--brand-mid));
+  }
+  .sec-eyebrow::after{ background:linear-gradient(90deg,var(--brand-mid),transparent) }
+  .sec-title{
+    font-family:'Poppins',sans-serif; font-size:clamp(1.5rem,2.8vw,2rem);
+    font-weight:800; letter-spacing:-.03em; color:var(--ink); line-height:1.2;
+  }
+  .sec-title .grad{
+    background:linear-gradient(130deg,var(--brand-mid),var(--brand-glow));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
 
-    .blog-card{ height:100%; display:flex; flex-direction:column }
-    .badge-tag{ font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; padding:.25rem .7rem; border-radius:999px; background:rgba(34,197,94,0.08); color:var(--brand); font-weight:600 }
-    .blog-title{ font-size:1.05rem; font-weight:800; margin-top:.4rem; margin-bottom:.25rem }
-    .blog-meta{ font-size:.8rem; color:var(--muted) }
-    .blog-card p{ font-size:.9rem; margin-top:.4rem }
-    .blog-footer{ margin-top:auto; font-size:.85rem; display:flex; justify-content:space-between; align-items:center; color:var(--muted) }
+  /* â”€â”€ CARDS â”€â”€ */
+  .blog-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:1.4rem;
+  }
+  @media(max-width:900px){ .blog-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media(max-width:600px){ .blog-grid{ grid-template-columns:1fr; } }
+  .blog-card{
+    background:var(--card); border-radius:var(--radius-xl);
+    border:1px solid var(--border); overflow:hidden;
+    display:flex; flex-direction:column;
+    box-shadow:var(--shadow-card);
+    transition:var(--tr); position:relative;
+  }
+  .blog-card:hover{
+    transform:translateY(-8px);
+    box-shadow:var(--shadow-hover);
+    border-color:rgba(16,185,129,.2);
+  }
+  html[data-theme="dark"] .blog-card{ background:var(--card); border-color:rgba(255,255,255,.07) }
 
-    .chip{ display:inline-flex; align-items:center; gap:.3rem; padding:.28rem .7rem; border-radius:999px; background:rgba(0,0,0,.04); font-size:.78rem }
-    html[data-theme="dark"] .chip{ background:rgba(255,255,255,.06) }
-    .chip i{font-size:.9rem}
+  /* top accent bar per card */
+  .card-accent{
+    height:4px; width:100%;
+    background:linear-gradient(90deg, var(--ca-from,#10b981), var(--ca-to,#34d399));
+    flex-shrink:0;
+  }
 
-    footer{ background:#0b0f1a; color:#cbd5e1; margin-top:40px; padding:24px 0 }
-  </style>
-</head>
-<body>
+  .card-content{ padding:1.4rem 1.5rem 1.5rem; flex-grow:1; display:flex; flex-direction:column }
 
-  <nav class="navbar navbar-expand-lg navbar-custom navbar-dark fixed-top" aria-label="Navigasi utama">
-    <div class="container-xl">
-      <a class="navbar-brand" href="/"><i class="bi bi-activity me-2"></i>SmartDiabets</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigasi">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div id="nav" class="collapse navbar-collapse">
-        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-          <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house-heart"></i>Beranda</a></li>
-          <li class="nav-item"><a class="nav-link" href="/calculator"><i class="bi bi-calculator"></i>Kalkulator</a></li>
-          <li class="nav-item"><a class="nav-link active" href="/blog"><i class="bi bi-journal-text"></i>Artikel</a></li>
-          <li class="nav-item ms-lg-2">
-            <button class="theme-toggle" id="themeToggle" type="button" title="Dark/Light">
-              <i class="bi bi-moon-stars" id="themeIcon"></i><span class="d-none d-md-inline">Mode</span>
-            </button>
-          </li>
-        </ul>
+  /* icon + title row */
+  .card-top{ display:flex; align-items:flex-start; gap:1rem; margin-bottom:1rem }
+  .card-ico{
+    width:48px; height:48px; border-radius:14px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.3rem; color:#fff;
+    background:linear-gradient(135deg, var(--ca-from,#10b981), var(--ca-to,#34d399));
+    box-shadow:0 6px 16px rgba(4,120,87,.2);
+  }
+
+  .category-tag{
+    display:inline-flex; align-items:center; gap:.3rem;
+    padding:.28rem .75rem; border-radius:8px;
+    background:rgba(var(--cat-rgb,4,120,87),.09);
+    color:var(--ca-from, var(--brand-mid));
+    font-size:.7rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+    margin-bottom:.5rem; align-self:flex-start;
+  }
+
+  .blog-title{
+    font-family:'Poppins',sans-serif; font-weight:700; font-size:1rem;
+    color:var(--ink); line-height:1.45; margin:0;
+    transition:color .2s;
+  }
+  .blog-card:hover .blog-title{ color:var(--brand-mid) }
+
+  .blog-meta{
+    color:var(--muted); font-size:.8rem; margin:.75rem 0 .9rem;
+    display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;
+  }
+  .blog-meta i{ color:var(--brand-mid); font-size:.8rem }
+  .meta-dot{ width:3px; height:3px; border-radius:50%; background:var(--muted) }
+
+  .blog-excerpt{
+    color:var(--muted); font-size:.875rem; line-height:1.72;
+    flex-grow:1; margin-bottom:1.2rem;
+  }
+
+  .blog-footer{
+    display:flex; justify-content:space-between; align-items:center;
+    padding-top:1rem; border-top:1px solid var(--border); gap:.75rem;
+  }
+  .blog-type{
+    color:var(--muted); font-size:.78rem; font-weight:600;
+    display:flex; align-items:center; gap:.4rem;
+  }
+  .read-more{
+    display:inline-flex; align-items:center; gap:.4rem;
+    font-size:.82rem; font-weight:700; color:var(--brand-mid);
+    border:1px solid rgba(4,120,87,.22); border-radius:9px;
+    padding:.38rem .9rem; transition:var(--tr);
+  }
+  .read-more:hover{
+    background:rgba(4,120,87,.07); border-color:var(--brand-mid);
+    color:var(--brand); gap:.65rem;
+  }
+
+  /* â”€â”€ STATS â”€â”€ */
+  .stats-wrap{
+    margin-top:3rem; border-radius:var(--radius-xl);
+    background:linear-gradient(135deg, var(--brand) 0%, var(--brand-mid) 60%, #059669 100%);
+    padding:2.5rem 2rem; position:relative; overflow:hidden;
+  }
+  .stats-wrap::before{
+    content:""; position:absolute; inset:0; opacity:.08;
+    background-image:radial-gradient(rgba(255,255,255,.6) 1px, transparent 1px);
+    background-size:28px 28px;
+  }
+  .stat-item{ color:#fff; text-align:center; position:relative }
+  .stat-number{
+    font-family:'Poppins',sans-serif; font-size:2.4rem;
+    font-weight:900; line-height:1; color:#fff; margin-bottom:.3rem;
+  }
+  .stat-label{ font-size:.85rem; opacity:.8; font-weight:500 }
+  .stat-divider{
+    width:1px; background:rgba(255,255,255,.2); align-self:stretch; margin:0 auto;
+  }
+
+  /* â”€â”€ RESPONSIVE â”€â”€ */
+  @media(max-width:768px){
+    .blog-hero{ padding:2.5rem 0 2rem }
+    .blog-grid{ grid-template-columns:1fr; gap:1.1rem }
+    .stats-wrap{ padding:2rem 1.25rem }
+    .stat-number{ font-size:2rem }
+    .stat-divider{ display:none }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• HERO â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<section class="blog-hero">
+  <div class="blog-hero-bg"></div>
+  <div class="blog-blob blog-blob-1"></div>
+  <div class="blog-blob blog-blob-2"></div>
+  <div class="container position-relative" style="z-index:1">
+    <div class="hero-grid-blog">
+      <div class="hero-eyebrow">Edukasi &amp; Informasi</div>
+      <h1 class="blog-page-title">
+        Artikel &amp; Tips<br>
+        <span class="grad">SmartDiabets</span>
+      </h1>
+      <p class="blog-hero-sub">
+        Kumpulan tulisan ringkas tentang pola makan, nutrisi seimbang,<br>
+        dan tips praktis untuk penderita diabetes melitus tipe&nbsp;2.
+      </p>
+      <div class="hero-pills">
+        <span class="hero-pill"><i class="bi bi-journal-text"></i> 6 Artikel</span>
+        <span class="hero-pill"><i class="bi bi-clock"></i> 3&ndash;6 menit baca</span>
+        <span class="hero-pill"><i class="bi bi-shield-check"></i> PERKENI 2024</span>
       </div>
     </div>
-  </nav>
+  </div>
+</section>
 
-  <section class="hero-mini">
-    <div class="container-xl position-relative" style="z-index:1">
-      <h1 class="hero-title"><span class="gradient-text">Artikel & Edukasi</span> SmartDiabets</h1>
-      <p class="hero-sub">Kumpulan tulisan ringkas tentang pola makan, kontrol gula darah, dan tips praktis untuk penderita diabetes melitus tipe 2.</p>
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• ARTIKEL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<section class="blog-section">
+  <div class="container">
+
+    <!-- Section header -->
+    <div class="text-center mb-4">
+      <div class="sec-eyebrow justify-content-center">Semua Artikel</div>
+      <h2 class="sec-title">Bacaan pilihan untuk <span class="grad">hidup lebih sehat</span></h2>
     </div>
-  </section>
 
-  <main class="py-4">
-    <div class="container-xl">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="h5 mb-0">Terbaru</h2>
-        <span class="chip"><i class="bi bi-filter"></i> Kurasi untuk pemula</span>
-      </div>
+    <!-- Grid -->
+    <div class="blog-grid">
 
-      <div class="row g-4">
-        <div class="col-md-6 col-lg-4">
-          <article class="card-3d blog-card p-3">
-            <span class="badge-tag">Dasar Diabetes</span>
-            <h3 class="blog-title">Memahami Diet 3J untuk Diabetes Tipe 2</h3>
-            <div class="blog-meta"><i class="bi bi-clock"></i> 5 menit baca • Updated 2025</div>
-            <p>Ringkasan konsep Jadwal, Jumlah, dan Jenis makanan yang dipakai SmartDiabets sebagai dasar penyusunan menu harian.</p>
-            <div class="blog-footer">
-              <span><i class="bi bi-file-text"></i> Ringkasan konsep</span>
-              <a href="#" class="text-decoration-none">Baca selengkapnya <i class="bi bi-arrow-right-short"></i></a>
+      <!-- 1 -->
+      <article class="blog-card" style="--ca-from:#10b981;--ca-to:#34d399;--cat-rgb:16,185,129;">
+        <div class="card-accent"></div>
+        <div class="card-content">
+          <div class="card-top">
+            <div class="card-ico"><i class="bi bi-calendar3-week"></i></div>
+            <div>
+              <span class="category-tag">Dasar Diabetes</span>
+              <h3 class="blog-title">Memahami Diet 3J untuk Diabetes Tipe 2</h3>
             </div>
-          </article>
+          </div>
+          <div class="blog-meta">
+            <i class="bi bi-clock"></i> 5 menit baca
+            <span class="meta-dot"></span> Updated 2025
+          </div>
+          <p class="blog-excerpt">
+            Ringkasan konsep <strong>Jadwal, Jumlah, dan Jenis</strong> makanan yang dipakai 
+            SmartDiabets sebagai dasar penyusunan menu harian Anda.
+          </p>
+          <div class="blog-footer">
+            <span class="blog-type"><i class="bi bi-file-text"></i> Ringkasan konsep</span>
+            <a href="{{ url_for('blog_article_diet_3j') }}" class="read-more">Baca <i class="bi bi-arrow-right"></i></a>
+          </div>
         </div>
+      </article>
 
-        <div class="col-md-6 col-lg-4">
-          <article class="card-3d blog-card p-3">
-            <span class="badge-tag">Praktik Harian</span>
-            <h3 class="blog-title">Contoh Porsi Nasi yang Aman untuk Gula Darah</h3>
-            <div class="blog-meta"><i class="bi bi-clock"></i> 4 menit baca • Untuk pemula</div>
-            <p>Ilustrasi sederhana bagaimana SmartDiabets menghitung porsi nasi dan lauk agar total karbohidrat tetap terkontrol.</p>
-            <div class="blog-footer">
-              <span><i class="bi bi-egg-fried"></i> Porsi & plating</span>
-              <a href="#" class="text-decoration-none">Baca selengkapnya <i class="bi bi-arrow-right-short"></i></a>
+      <!-- 2 -->
+      <article class="blog-card" style="--ca-from:#059669;--ca-to:#10b981;--cat-rgb:5,150,105;">
+        <div class="card-accent"></div>
+        <div class="card-content">
+          <div class="card-top">
+            <div class="card-ico"><i class="bi bi-egg-fried"></i></div>
+            <div>
+              <span class="category-tag" style="background:rgba(5,150,105,.09); color:#059669;">Praktik Harian</span>
+              <h3 class="blog-title">Contoh Porsi Nasi yang Tepat untuk Penderita Diabetes</h3>
             </div>
-          </article>
+          </div>
+          <div class="blog-meta">
+            <i class="bi bi-clock"></i> 4 menit baca
+            <span class="meta-dot"></span> Untuk pemula
+          </div>
+          <p class="blog-excerpt">
+            Ilustrasi sederhana bagaimana SmartDiabets menghitung porsi nasi dan lauk 
+            agar total karbohidrat tetap terkontrol sepanjang hari.
+          </p>
+          <div class="blog-footer">
+            <span class="blog-type"><i class="bi bi-egg-fried"></i> Porsi & plating</span>
+            <a href="{{ url_for('blog_article_porsi_nasi') }}" class="read-more" style="color:#059669;border-color:rgba(5,150,105,.25);">Baca <i class="bi bi-arrow-right"></i></a>
+          </div>
         </div>
+      </article>
 
-        <div class="col-md-6 col-lg-4">
-          <article class="card-3d blog-card p-3">
-            <span class="badge-tag">Teknis Sistem</span>
-            <h3 class="blog-title">Bagaimana SmartDiabets Menggunakan Regresi Linier?</h3>
-            <div class="blog-meta"><i class="bi bi-clock"></i> 6 menit baca • Untuk yang penasaran “dalemannya”</div>
-            <p>Penjelasan ringan cara model menghitung porsi tiap menu agar energi, karbo, lemak, dan protein mendekati target gizi.</p>
-            <div class="blog-footer">
-              <span><i class="bi bi-cpu"></i> Penjelasan model</span>
-              <a href="#" class="text-decoration-none">Baca selengkapnya <i class="bi bi-arrow-right-short"></i></a>
+      <!-- 3 -->
+      <article class="blog-card" style="--ca-from:#047857;--ca-to:#059669;--cat-rgb:4,120,87;">
+        <div class="card-accent"></div>
+        <div class="card-content">
+          <div class="card-top">
+            <div class="card-ico"><i class="bi bi-cpu"></i></div>
+            <div>
+              <span class="category-tag" style="background:rgba(4,120,87,.09); color:#047857;">Teknis Sistem</span>
+              <h3 class="blog-title">Bagaimana SmartDiabets Menggunakan Least Squares Optimization?</h3>
             </div>
-          </article>
+          </div>
+          <div class="blog-meta">
+            <i class="bi bi-clock"></i> 6 menit baca
+            <span class="meta-dot"></span> Teknis model
+          </div>
+          <p class="blog-excerpt">
+            Penjelasan ringan cara model menghitung porsi tiap menu agar energi, karbo, lemak, 
+            dan protein mendekati target gizi harian Anda.
+          </p>
+          <div class="blog-footer">
+            <span class="blog-type"><i class="bi bi-calculator"></i> Penjelasan model</span>
+            <a href="#" class="read-more" style="color:#047857;border-color:rgba(4,120,87,.25);">Baca <i class="bi bi-arrow-right"></i></a>
+          </div>
         </div>
+      </article>
 
-        <div class="col-md-6 col-lg-4">
-          <article class="card-3d blog-card p-3">
-            <span class="badge-tag">Tips Praktis</span>
-            <h3 class="blog-title">Snack Ramah Diabetes: Buah Apa Saja yang Aman?</h3>
-            <div class="blog-meta"><i class="bi bi-clock"></i> 3 menit baca • Snack & camilan</div>
-            <p>Rekomendasi buah dan porsi yang lebih aman untuk jadwal snack 1 & 2 sesuai konsep distribusi kalori harian.</p>
-            <div class="blog-footer">
-              <span><i class="bi bi-apple"></i> Snack & buah</span>
-              <a href="#" class="text-decoration-none">Baca selengkapnya <i class="bi bi-arrow-right-short"></i></a>
+      <!-- 4 -->
+      <article class="blog-card" style="--ca-from:#34d399;--ca-to:#6ee7b7;--cat-rgb:52,211,153;">
+        <div class="card-accent"></div>
+        <div class="card-content">
+          <div class="card-top">
+            <div class="card-ico"><i class="bi bi-apple"></i></div>
+            <div>
+              <span class="category-tag" style="background:rgba(52,211,153,.09); color:#059669;">Tips Praktis</span>
+              <h3 class="blog-title">Snack Ramah Diabetes: Buah Apa Saja yang Aman?</h3>
             </div>
-          </article>
+          </div>
+          <div class="blog-meta">
+            <i class="bi bi-clock"></i> 3 menit baca
+            <span class="meta-dot"></span> Snack & camilan
+          </div>
+          <p class="blog-excerpt">
+            Rekomendasi buah dan porsi yang lebih aman untuk jadwal snack 1 & 2 
+            sesuai konsep distribusi kalori harian.
+          </p>
+          <div class="blog-footer">
+            <span class="blog-type"><i class="bi bi-apple"></i> Snack & buah</span>
+            <a href="#" class="read-more" style="color:#059669;border-color:rgba(52,211,153,.3);">Baca <i class="bi bi-arrow-right"></i></a>
+          </div>
         </div>
+      </article>
 
-        <div class="col-md-6 col-lg-4">
-          <article class="card-3d blog-card p-3">
-            <span class="badge-tag">Edukasi Pasien</span>
-            <h3 class="blog-title">Membaca Label Gizi Produk Kemasan</h3>
-            <div class="blog-meta"><i class="bi bi-clock"></i> 5 menit baca • Edukasi label</div>
-            <p>Cara cepat melihat gula tambahan, lemak jenuh, dan kalori per sajian agar tidak “kecolongan” saat belanja.</p>
-            <div class="blog-footer">
-              <span><i class="bi bi-upc-scan"></i> Label gizi</span>
-              <a href="#" class="text-decoration-none">Baca selengkapnya <i class="bi bi-arrow-right-short"></i></a>
+      <!-- 5 -->
+      <article class="blog-card" style="--ca-from:#0d9488;--ca-to:#10b981;--cat-rgb:13,148,136;">
+        <div class="card-accent"></div>
+        <div class="card-content">
+          <div class="card-top">
+            <div class="card-ico"><i class="bi bi-upc-scan"></i></div>
+            <div>
+              <span class="category-tag" style="background:rgba(13,148,136,.09); color:#0d9488;">Edukasi Pasien</span>
+              <h3 class="blog-title">Membaca Label Gizi Produk Kemasan</h3>
             </div>
-          </article>
+          </div>
+          <div class="blog-meta">
+            <i class="bi bi-clock"></i> 5 menit baca
+            <span class="meta-dot"></span> Edukasi label
+          </div>
+          <p class="blog-excerpt">
+            Cara cepat melihat gula tambahan, lemak jenuh, dan kalori per sajian 
+            agar tidak "kecolongan" saat belanja kebutuhan sehari-hari.
+          </p>
+          <div class="blog-footer">
+            <span class="blog-type"><i class="bi bi-upc-scan"></i> Label gizi</span>
+            <a href="#" class="read-more" style="color:#0d9488;border-color:rgba(13,148,136,.25);">Baca <i class="bi bi-arrow-right"></i></a>
+          </div>
         </div>
+      </article>
 
-        <div class="col-md-6 col-lg-4">
-          <article class="card-3d blog-card p-3">
-            <span class="badge-tag">Journey</span>
-            <h3 class="blog-title">Roadmap Pengembangan SmartDiabets</h3>
-            <div class="blog-meta"><i class="bi bi-clock"></i> 4 menit baca • Catatan pengembang</div>
-            <p>Highlight rencana ke depan: tracking menu harian, export ke PDF, integrasi dengan tenaga kesehatan, dan lain-lain.</p>
-            <div class="blog-footer">
-              <span><i class="bi bi-rocket-takeoff"></i> Roadmap</span>
-              <a href="#" class="text-decoration-none">Baca selengkapnya <i class="bi bi-arrow-right-short"></i></a>
+      <!-- 6 -->
+      <article class="blog-card" style="--ca-from:#065f46;--ca-to:#047857;--cat-rgb:6,95,70;">
+        <div class="card-accent"></div>
+        <div class="card-content">
+          <div class="card-top">
+            <div class="card-ico"><i class="bi bi-rocket-takeoff"></i></div>
+            <div>
+              <span class="category-tag" style="background:rgba(6,95,70,.09); color:#065f46;">Journey</span>
+              <h3 class="blog-title">Roadmap Pengembangan SmartDiabets</h3>
             </div>
-          </article>
+          </div>
+          <div class="blog-meta">
+            <i class="bi bi-clock"></i> 4 menit baca
+            <span class="meta-dot"></span> Developer note
+          </div>
+          <p class="blog-excerpt">
+            Highlight rencana ke depan: tracking menu harian, export ke PDF, 
+            integrasi dengan tenaga kesehatan, dan fitur-fitur lainnya.
+          </p>
+          <div class="blog-footer">
+            <span class="blog-type"><i class="bi bi-rocket-takeoff"></i> Roadmap</span>
+            <a href="#" class="read-more" style="color:#065f46;border-color:rgba(6,95,70,.25);">Baca <i class="bi bi-arrow-right"></i></a>
+          </div>
         </div>
-      </div>
-    </div>
-  </main>
+      </article>
 
-  <footer>
-    <div class="container-xl d-flex justify-content-between flex-wrap gap-2">
-      <span class="small">© 2025 SmartDiabets. Artikel ini bersifat edukatif dan tidak menggantikan konsultasi dengan dokter/dietisien.</span>
-      <a href="/calculator" class="small text-muted-2"><i class="bi bi-calculator me-1"></i>Kembali ke Kalkulator</a>
-    </div>
-  </footer>
+    </div><!-- /blog-grid -->
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const root = document.documentElement;
-      const KEY='smartdiabets-theme';
-      const btn=document.getElementById('themeToggle');
-      const icon=document.getElementById('themeIcon');
+  </div>
+</section>
 
-      function applyTheme(pref){
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const resolved = (pref === 'system') ? (prefersDark ? 'dark' : 'light') : pref;
-        root.setAttribute('data-theme', resolved);
-        if(icon) icon.className = (resolved === 'dark') ? 'bi bi-brightness-high' : 'bi bi-moon-stars';
-        try{ localStorage.setItem(KEY, pref) }catch(e){}
-      }
-      const saved = (function(){ try{ return localStorage.getItem(KEY) }catch(e){ return null } })() || 'system';
-      applyTheme(saved);
+{% endblock %}
 
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-        const cur = (function(){ try{ return localStorage.getItem(KEY) }catch(e){ return 'system' } })() || 'system';
-        if(cur === 'system') applyTheme('system');
-      });
-
-      btn?.addEventListener('click', () => {
-        const cur = (function(){ try{ return localStorage.getItem(KEY) }catch(e){ return 'system' } })() || 'system';
-        const next = (cur==='system') ? 'dark' : (cur==='dark' ? 'light' : 'system');
-        applyTheme(next);
-      });
-    });
-  </script>
-</body>
-</html>

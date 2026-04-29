@@ -1,0 +1,84 @@
+{% extends "admin/base.html" %}
+{% block title %}Upload Excel{% endblock %}
+{% block page_title %}Upload Data Makanan dari Excel{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-cloud-upload"></i> Upload File Excel</div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> <strong>Format Excel yang diperlukan:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Kolom wajib: <code>Nama_Bahan</code>, <code>Energi (kal)</code>, <code>Protein (g)</code>, <code>Lemak (g)</code>, <code>Karbohidrat (g)</code></li>
+                        <li>Kolom opsional: <code>BDD</code>, <code>Serat (g)</code>, <code>Kategori</code>, <code>Tipe_Pokok</code></li>
+                        <li>Format file: .xlsx atau .xls</li>
+                    </ul>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label for="file" class="form-label">Pilih File Excel</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".xlsx,.xls" required>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('admin.list_foods') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Batal
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-upload"></i> Upload & Import
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header"><i class="bi bi-download"></i> Template Excel</div>
+            <div class="card-body">
+                <p>Download template Excel untuk memudahkan import data:</p>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr>
+                            <th>Nama_Bahan</th>
+                            <th>BDD</th>
+                            <th>Energi (kal)</th>
+                            <th>Protein (g)</th>
+                            <th>Lemak (g)</th>
+                            <th>Karbohidrat (g)</th>
+                            <th>Serat (g)</th>
+                            <th>Kategori</th>
+                            <th>Tipe_Pokok</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Nasi Putih</td>
+                            <td>100</td>
+                            <td>180</td>
+                            <td>3.4</td>
+                            <td>0.3</td>
+                            <td>40.6</td>
+                            <td>0.3</td>
+                            <td>Pokok</td>
+                            <td>Sederhana</td>
+                        </tr>
+                        <tr>
+                            <td>Ayam Bakar</td>
+                            <td>100</td>
+                            <td>164</td>
+                            <td>26.2</td>
+                            <td>6.2</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>Lauk</td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

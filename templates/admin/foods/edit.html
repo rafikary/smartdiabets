@@ -1,0 +1,100 @@
+{% extends "admin/base.html" %}
+{% block title %}Edit Makanan{% endblock %}
+{% block page_title %}Edit Makanan{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-pencil"></i> Edit: {{ food.nama_bahan }}</div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Nama Makanan *</label>
+                            <input type="text" class="form-control" name="nama_bahan" value="{{ food.nama_bahan }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Kategori *</label>
+                            <select class="form-select" name="category_id" required id="category_id" onchange="toggleStapleType()">
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}" {% if cat.id == food.category_id %}selected{% endif %}>{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3" id="staple_type_wrapper">
+                            <label class="form-label">Tipe Pokok</label>
+                            <select class="form-select" name="staple_type_id" id="staple_type_id">
+                                <option value="">-</option>
+                                {% for st in staple_types %}
+                                <option value="{{ st.id }}" {% if food.staple_type_id == st.id %}selected{% endif %}>{{ st.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">BDD (%)</label>
+                            <input type="number" step="0.1" class="form-control" name="bdd" value="{{ food.bdd }}">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Energi (kkal) *</label>
+                            <input type="number" step="0.1" class="form-control" name="energi" value="{{ food.energi }}" required>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Protein (g) *</label>
+                            <input type="number" step="0.1" class="form-control" name="protein" value="{{ food.protein }}" required>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Lemak (g) *</label>
+                            <input type="number" step="0.1" class="form-control" name="lemak" value="{{ food.lemak }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Karbohidrat (g) *</label>
+                            <input type="number" step="0.1" class="form-control" name="karbohidrat" value="{{ food.karbohidrat }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Serat (g)</label>
+                            <input type="number" step="0.1" class="form-control" name="serat" value="{{ food.serat }}">
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Alergen</label>
+                            <div class="row">
+                                {% for allergen in common_allergens %}
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="allergens[]" value="{{ allergen }}" 
+                                               {% if allergen in current_allergens %}checked{% endif %} id="a{{ loop.index }}">
+                                        <label class="form-check-label" for="a{{ loop.index }}">{{ allergen|capitalize }}</label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('admin.list_foods') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Batal</a>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Update Makanan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function toggleStapleType() {
+    const categorySelect = document.getElementById('category_id');
+    const categoryText = categorySelect.options[categorySelect.selectedIndex].text;
+    const wrapper = document.getElementById('staple_type_wrapper');
+    const select = document.getElementById('staple_type_id');
+    if (categoryText === 'Pokok') {
+        wrapper.style.display = 'block';
+        select.required = true;
+    } else {
+        wrapper.style.display = 'none';
+        select.required = false;
+        select.value = '';
+    }
+}
+document.addEventListener('DOMContentLoaded', toggleStapleType);
+</script>
+{% endblock %}

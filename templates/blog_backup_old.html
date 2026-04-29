@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artikel & Edukasi - SmartDiabets</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            /* Colors */
+            --primary: #10b981;
+            --secondary: #8b5cf6;
+            --accent: #f59e0b;
+            --accent-pink: #ec4899;
+            
+            /* Neutral Colors */
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            
+            /* Spacing */
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --space-12: 3rem;
+            
+            /* Border Radius */
+            --radius: 0.5rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+            --radius-2xl: 2rem;
+            --radius-full: 9999px;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #fdf4ff 0%, #e0f2fe 50%, #ecfdf5 100%);
+            min-height: 100vh;
+            color: var(--gray-900);
+            line-height: 1.6;
+        }
+        
+        /* Header */
+        header {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--gray-200);
+            padding: 1.5rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 900;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #10b981 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: var(--gray-700);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+        
+        .nav-links a.active {
+            color: var(--primary);
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 4rem 0 3rem;
+            text-align: center;
+        }
+        
+        .page-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 900;
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #10b981 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--gray-600);
+            max-width: 800px;
+            margin: 0 auto 2rem;
+        }
+        
+        /* Badge */
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1.5rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-full);
+            font-weight: 700;
+            font-size: 0.875rem;
+            color: var(--gray-700);
+            margin-bottom: 2rem;
+        }
+        
+        .hero-badge::before {
+            content: '✨';
+            animation: sparkle 2s ease-in-out infinite;
+        }
+        
+        @keyframes sparkle {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+        
+        /* Blog Grid */
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            padding: 3rem 0;
+        }
+        
+        /* Blog Card */
+        .blog-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .blog-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--primary);
+        }
+        
+        .category-tag {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(139, 92, 246, 0.1));
+            border: 2px solid var(--primary);
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+        
+        .blog-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 800;
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: var(--gray-900);
+            line-height: 1.3;
+        }
+        
+        .blog-meta {
+            color: var(--gray-500);
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .blog-excerpt {
+            color: var(--gray-600);
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+        
+        .blog-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 2px solid var(--gray-200);
+        }
+        
+        .blog-type {
+            color: var(--gray-500);
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .read-more {
+            color: var(--primary);
+            font-weight: 700;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: gap 0.3s ease;
+        }
+        
+        .read-more:hover {
+            gap: 1rem;
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--gray-900);
+            color: var(--gray-300);
+            padding: 2rem 0;
+            margin-top: 4rem;
+        }
+        
+        footer .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        footer a {
+            color: var(--gray-400);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        footer a:hover {
+            color: var(--primary);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 2.5rem;
+            }
+            
+            .blog-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-links {
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav>
+                <a href="/" class="logo">
+                    <i class="fas fa-heartbeat"></i>
+                    SmartDiabets
+                </a>
+                <ul class="nav-links">
+                    <li><a href="/"><i class="fas fa-home"></i> Beranda</a></li>
+                    <li><a href="/calculator"><i class="fas fa-calculator"></i> Kalkulator</a></li>
+                    <li><a href="/blog" class="active"><i class="fas fa-book"></i> Artikel</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-badge">Edukasi & Informasi</div>
+            <h1 class="page-title">
+                <span class="gradient-text">Artikel & Edukasi</span><br>
+                SmartDiabets
+            </h1>
+            <p class="hero-subtitle">
+                Kumpulan tulisan ringkas tentang pola makan, kontrol gula darah, dan tips praktis untuk penderita diabetes melitus tipe 2.
+            </p>
+        </div>
+    </section>
+
+    <!-- Blog Grid -->
+    <main class="container">
+        <div class="blog-grid">
+            <!-- Article 1 -->
+            <article class="blog-card">
+                <span class="category-tag">Dasar Diabetes</span>
+                <h3 class="blog-title">Memahami Diet 3J untuk Diabetes Tipe 2</h3>
+                <div class="blog-meta">
+                    <i class="far fa-clock"></i> 5 menit baca • Updated 2025
+                </div>
+                <p class="blog-excerpt">
+                    Ringkasan konsep Jadwal, Jumlah, dan Jenis makanan yang dipakai SmartDiabets sebagai dasar penyusunan menu harian.
+                </p>
+                <div class="blog-footer">
+                    <span class="blog-type">
+                        <i class="fas fa-file-text"></i> Ringkasan konsep
+                    </span>
+                    <a href="#" class="read-more">
+                        Baca selengkapnya <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </article>
+
+            <!-- Article 2 -->
+            <article class="blog-card">
+                <span class="category-tag">Praktik Harian</span>
+                <h3 class="blog-title">Contoh Porsi Nasi yang Aman untuk Gula Darah</h3>
+                <div class="blog-meta">
+                    <i class="far fa-clock"></i> 4 menit baca • Untuk pemula
+                </div>
+                <p class="blog-excerpt">
+                    Ilustrasi sederhana bagaimana SmartDiabets menghitung porsi nasi dan lauk agar total karbohidrat tetap terkontrol.
+                </p>
+                <div class="blog-footer">
+                    <span class="blog-type">
+                        <i class="fas fa-utensils"></i> Porsi & plating
+                    </span>
+                    <a href="#" class="read-more">
+                        Baca selengkapnya <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </article>
+
+            <!-- Article 3 -->
+            <article class="blog-card">
+                <span class="category-tag">Teknis Sistem</span>
+                <h3 class="blog-title">Bagaimana SmartDiabets Menggunakan Regresi Linier?</h3>
+                <div class="blog-meta">
+                    <i class="far fa-clock"></i> 6 menit baca • Untuk yang penasaran "dalemannya"
+                </div>
+                <p class="blog-excerpt">
+                    Penjelasan ringan cara model menghitung porsi tiap menu agar energi, karbo, lemak, dan protein mendekati target gizi.
+                </p>
+                <div class="blog-footer">
+                    <span class="blog-type">
+                        <i class="fas fa-microchip"></i> Penjelasan model
+                    </span>
+                    <a href="#" class="read-more">
+                        Baca selengkapnya <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </article>
+
+            <!-- Article 4 -->
+            <article class="blog-card">
+                <span class="category-tag">Tips Praktis</span>
+                <h3 class="blog-title">Snack Ramah Diabetes: Buah Apa Saja yang Aman?</h3>
+                <div class="blog-meta">
+                    <i class="far fa-clock"></i> 3 menit baca • Snack & camilan
+                </div>
+                <p class="blog-excerpt">
+                    Rekomendasi buah dan porsi yang lebih aman untuk jadwal snack 1 & 2 sesuai konsep distribusi kalori harian.
+                </p>
+                <div class="blog-footer">
+                    <span class="blog-type">
+                        <i class="fas fa-apple-alt"></i> Snack & buah
+                    </span>
+                    <a href="#" class="read-more">
+                        Baca selengkapnya <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </article>
+
+            <!-- Article 5 -->
+            <article class="blog-card">
+                <span class="category-tag">Edukasi Pasien</span>
+                <h3 class="blog-title">Membaca Label Gizi Produk Kemasan</h3>
+                <div class="blog-meta">
+                    <i class="far fa-clock"></i> 5 menit baca • Edukasi label
+                </div>
+                <p class="blog-excerpt">
+                    Cara cepat melihat gula tambahan, lemak jenuh, dan kalori per sajian agar tidak "kecolongan" saat belanja.
+                </p>
+                <div class="blog-footer">
+                    <span class="blog-type">
+                        <i class="fas fa-barcode"></i> Label gizi
+                    </span>
+                    <a href="#" class="read-more">
+                        Baca selengkapnya <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </article>
+
+            <!-- Article 6 -->
+            <article class="blog-card">
+                <span class="category-tag">Journey</span>
+                <h3 class="blog-title">Roadmap Pengembangan SmartDiabets</h3>
+                <div class="blog-meta">
+                    <i class="far fa-clock"></i> 4 menit baca • Catatan pengembang
+                </div>
+                <p class="blog-excerpt">
+                    Highlight rencana ke depan: tracking menu harian, export ke PDF, integrasi dengan tenaga kesehatan, dan lain-lain.
+                </p>
+                <div class="blog-footer">
+                    <span class="blog-type">
+                        <i class="fas fa-rocket"></i> Roadmap
+                    </span>
+                    <a href="#" class="read-more">
+                        Baca selengkapnya <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </article>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 SmartDiabets. Artikel ini bersifat edukatif dan tidak menggantikan konsultasi dengan dokter/dietisien.</p>
+            <a href="/calculator">
+                <i class="fas fa-calculator"></i> Kembali ke Kalkulator
+            </a>
+        </div>
+    </footer>
+</body>
+</html>

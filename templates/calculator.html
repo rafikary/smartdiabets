@@ -1,448 +1,671 @@
-<!doctype html>
-<html lang="id" data-theme="light">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Kalkulator – SmartDiabets</title>
+﻿{% extends "base.html" %}
 
-  <!-- Bootstrap & Icons -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+{% block title %}Kalkulator Gizi - SmartDiabets{% endblock %}
 
-  <style>
-    :root{
-      --brand:#047857; --brand-2:#22c55e; --accent:#fb923c;
-      --ink:#022c22; --ink-soft:#134e4a; --muted:#6b7280;
-      --paper:#f4faf7; --card:#ffffffef; --border:#00000010;
-      --shadow:0 18px 50px rgba(15,118,110,.18); --ring:0 0 0 .25rem rgba(34,197,94,.3);
-      --hero-grad: radial-gradient(1200px 600px at 10% 10%, rgba(34,197,94,.16), transparent 60%),
-                   radial-gradient(1000px 500px at 90% 40%, rgba(56,189,248,.16), transparent 60%),
-                   linear-gradient(135deg, #ecfdf5, #eff6ff);
-      --ink-hero:#064e3b;
-      --nav-bg:rgba(15,23,42,.96);
-    }
-    html[data-theme="dark"]{
-      --paper:#020617; --ink:#e5e7eb; --ink-soft:#e2e8f0; --muted:#9ca3af;
-      --card:#020617f5; --border:#ffffff1a;
-      --nav-bg:#020617f0;
-      --ink-hero:#e0f2fe;
-      --hero-grad: radial-gradient(1200px 600px at 10% 10%, rgba(34,197,94,.18), transparent 60%),
-                   radial-gradient(1000px 500px at 90% 40%, rgba(56,189,248,.18), transparent 60%),
-                   linear-gradient(135deg, #020617, #022c22);
-    }
+{% block extra_css %}
+<style>
+  /* â”€â”€ TOKENS â”€â”€ */
+  :root{
+    --brand:#047857; --brand-mid:#059669; --brand-soft:#10b981; --brand-glow:#34d399;
+    --ink:#0a1628; --muted:#64748b;
+    --paper:#f8fafc; --card:#fff; --border:rgba(0,0,0,.07);
+    --shadow-card:0 4px 24px rgba(15,23,42,.08);
+    --shadow-hover:0 20px 56px rgba(4,120,87,.18);
+    --radius-xl:22px; --radius-lg:16px; --radius-md:12px;
+    --tr:all .25s cubic-bezier(.4,0,.2,1);
+  }
+  html[data-theme="dark"]{
+    --paper:#070e1a; --ink:#e2e8f0; --muted:#94a3b8;
+    --card:#0f1829; --border:rgba(255,255,255,.08);
+    --shadow-card:0 4px 24px rgba(0,0,0,.4);
+  }
 
-    html[data-theme="dark"]{ color-scheme: dark; }
-    html[data-theme="light"]{ color-scheme: light; }
+  /* â”€â”€ HERO â”€â”€ */
+  .calc-hero{
+    position:relative; padding:3.5rem 0 3rem;
+    background:var(--paper); overflow:hidden;
+  }
+  .calc-hero-bg{
+    position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse 80% 60% at 10% 20%, rgba(16,185,129,.18) 0%, transparent 55%),
+      radial-gradient(ellipse 60% 80% at 90% 70%, rgba(56,189,248,.13) 0%, transparent 55%),
+      linear-gradient(160deg,#ecfdf5 0%,#f0f9ff 50%,#f8fafc 100%);
+  }
+  html[data-theme="dark"] .calc-hero-bg{
+    background:
+      radial-gradient(ellipse 80% 60% at 10% 20%, rgba(16,185,129,.18) 0%, transparent 55%),
+      radial-gradient(ellipse 60% 80% at 90% 70%, rgba(56,189,248,.11) 0%, transparent 55%),
+      linear-gradient(160deg,#070e1a 0%,#091325 50%,#070e1a 100%);
+  }
+  .calc-blob{
+    position:absolute; border-radius:50%; pointer-events:none;
+    filter:blur(72px); opacity:.45;
+  }
+  .calc-blob-1{
+    width:380px; height:380px; top:-80px; left:-60px;
+    background:radial-gradient(circle, rgba(16,185,129,.35), transparent 70%);
+    animation:blobC 10s ease-in-out infinite;
+  }
+  .calc-blob-2{
+    width:280px; height:280px; bottom:-50px; right:-30px;
+    background:radial-gradient(circle, rgba(56,189,248,.28), transparent 70%);
+    animation:blobC 14s ease-in-out infinite reverse;
+  }
+  @keyframes blobC{
+    0%,100%{transform:scale(1) translate(0,0)}
+    50%{transform:scale(1.1) translate(14px,-10px)}
+  }
+  .hero-eyebrow{
+    display:inline-flex; align-items:center; gap:.5rem;
+    font-size:.75rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--brand-mid); margin-bottom:.85rem;
+  }
+  .hero-eyebrow::before,.hero-eyebrow::after{
+    content:""; width:18px; height:2px; border-radius:2px; flex-shrink:0;
+    background:linear-gradient(90deg,transparent,var(--brand-mid));
+  }
+  .hero-eyebrow::after{background:linear-gradient(90deg,var(--brand-mid),transparent)}
+  .calc-page-title{
+    font-family:'Poppins',sans-serif;
+    font-size:clamp(1.9rem,4vw,3rem);
+    font-weight:800; letter-spacing:-.04em; line-height:1.15;
+    color:var(--ink); margin-bottom:.75rem;
+  }
+  .calc-page-title .grad{
+    background:linear-gradient(130deg,var(--brand-mid),var(--brand-glow));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .calc-hero-sub{
+    color:var(--muted); font-size:.95rem; line-height:1.75; max-width:540px; margin:0 auto;
+  }
+  .hero-pills{
+    display:flex; flex-wrap:wrap; justify-content:center; gap:.6rem; margin-top:1.5rem;
+  }
+  .hero-pill{
+    display:inline-flex; align-items:center; gap:.4rem;
+    padding:.4rem .95rem; border-radius:999px;
+    background:rgba(255,255,255,.75); border:1px solid rgba(16,185,129,.14);
+    color:var(--ink); font-size:.78rem; font-weight:600;
+    backdrop-filter:blur(8px); box-shadow:0 2px 10px rgba(0,0,0,.05);
+  }
+  .hero-pill i{color:var(--brand-mid)}
+  html[data-theme="dark"] .hero-pill{
+    background:rgba(255,255,255,.06); border-color:rgba(16,185,129,.2);
+  }
 
-    *,*::before,*::after{box-sizing:border-box}
-    body{
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      color:var(--ink); background:var(--paper); min-height:100vh; overflow-x:hidden
-    }
-    a{color:inherit}
-    .text-muted-2{ color:var(--muted) }
-    .container-xl{width:min(1100px,92%)}
+  /* â”€â”€ LAYOUT â”€â”€ */
+  .calc-section{ background:var(--paper); padding:1.5rem 0 4rem }
 
-    .navbar-custom{background:var(--nav-bg); backdrop-filter: blur(10px); border-bottom:1px solid var(--border)}
-    .navbar-brand{font-family:'Playfair Display',serif; color:#fff; font-weight:700}
-    .nav-link{ color:#eaf6f6; font-weight:500 }
-    .nav-link .bi{margin-right:.4rem}
-    .nav-link.active,.nav-link:hover{ color:var(--accent) }
-    .theme-toggle{
-      border:1px solid rgba(255,255,255,.18); color:#fff; background:transparent;
-      border-radius:999px; padding:.45rem .8rem; display:flex; align-items:center; gap:.35rem
-    }
+  /* â”€â”€ SIDEBAR (info panel) â”€â”€ */
+  .calc-sidebar{ position:sticky; top:76px }
+  .info-card{
+    background:var(--card); border:1px solid var(--border);
+    border-radius:var(--radius-xl); padding:1.5rem;
+    box-shadow:var(--shadow-card); margin-bottom:1rem;
+  }
+  .info-card-title{
+    font-family:'Poppins',sans-serif; font-weight:700; font-size:.9rem;
+    color:var(--ink); display:flex; align-items:center; gap:.5rem; margin-bottom:1rem;
+  }
+  .info-card-title i{
+    width:32px; height:32px; border-radius:10px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg,#10b981,#047857); color:#fff; font-size:.9rem;
+  }
+  .step-item{
+    display:flex; gap:.75rem; margin-bottom:.9rem; align-items:flex-start;
+  }
+  .step-num{
+    width:24px; height:24px; border-radius:50%; flex-shrink:0;
+    background:rgba(4,120,87,.1); color:var(--brand-mid);
+    font-size:.72rem; font-weight:800;
+    display:flex; align-items:center; justify-content:center;
+  }
+  html[data-theme="dark"] .step-num{background:rgba(4,120,87,.22)}
+  .step-text{ font-size:.82rem; color:var(--muted); line-height:1.55 }
+  .step-text strong{ color:var(--ink); font-weight:700 }
+  html[data-theme="dark"] .step-text strong{ color:var(--ink) }
 
-    .hero-mini{
-      position:relative; padding:88px 0 48px; background:var(--hero-grad);
-      color:var(--ink-hero); overflow:hidden
-    }
-    .hero-mini::after{
-      content:""; position:absolute; inset:0; pointer-events:none; opacity:.12; mix-blend-mode:overlay;
-      background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><circle cx="8" cy="12" r="1" fill="white" opacity=".14"/></svg>');
-    }
-    .hero-title{ font-family:'Playfair Display',serif; font-size:clamp(1.9rem,3.5vw,2.6rem); margin:0 }
-    .gradient-text{ background:linear-gradient(90deg,#1fb99d 0%, #2cc9b1 35%, #6f8fff 70%, #9c7bff 100%); -webkit-background-clip:text; background-clip:text; color:transparent }
-    .hero-sub{ margin-top:.4rem; opacity:.95 }
+  /* â”€â”€ FORM CARD â”€â”€ */
+  .form-card{
+    background:var(--card); border:1px solid var(--border);
+    border-radius:var(--radius-xl); overflow:hidden;
+    box-shadow:var(--shadow-card);
+  }
+  .form-header{
+    padding:1.5rem 1.75rem 0; border-bottom:1px solid var(--border);
+    padding-bottom:1.25rem; margin-bottom:0;
+  }
+  .form-header-title{
+    font-family:'Poppins',sans-serif; font-weight:800; font-size:1.1rem;
+    color:var(--ink); display:flex; align-items:center; gap:.6rem;
+  }
+  .form-header-title i{
+    width:36px; height:36px; border-radius:11px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg,#10b981,#047857); color:#fff; font-size:1rem;
+  }
+  .form-body{ padding:1.5rem 1.75rem }
 
-    /* Bubbles */
-    .bubbles{ position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; opacity:.20; display:block }
-    .bubble{
-      position:absolute; bottom:-140px; border-radius:50%;
-      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.75), rgba(255,255,255,.25) 60%, rgba(255,255,255,.08));
-      box-shadow: inset 0 1px 2px rgba(255,255,255,.4), 0 10px 30px rgba(0,0,0,.12);
-      animation: floatUp var(--dur, 14s) linear infinite, sway var(--sway, 6s) ease-in-out infinite;
-      filter: blur(var(--blur, 0px));
-      transform: translateY(var(--ty,0)) scale(var(--scale,1));
-    }
-    @keyframes floatUp{
-      from{ transform:translateY(0) translateX(0) scale(var(--scale,1)); opacity:0 }
-      12%{ opacity:.75 }
-      to{ transform:translateY(-120vh) translateX(0) scale(var(--scale,1)); opacity:0 }
-    }
-    @keyframes sway{
-      0%,100%{ transform: translateY(var(--ty,0)) translateX(-18px) scale(var(--scale,1)) }
-      50%{ transform: translateY(var(--ty,0)) translateX(18px) scale(var(--scale,1)) }
-    }
+  /* form sections */
+  .fsec{
+    border-bottom:1px solid var(--border);
+    padding-bottom:1.5rem; margin-bottom:1.5rem;
+  }
+  .fsec:last-of-type{ border-bottom:none; margin-bottom:0 }
+  .fsec-label{
+    display:inline-flex; align-items:center; gap:.55rem;
+    font-size:.7rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--brand-mid); margin-bottom:1.1rem;
+  }
+  .fsec-label-num{
+    width:22px; height:22px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(135deg,#10b981,#047857); color:#fff;
+    font-size:.7rem; font-weight:800;
+    display:flex; align-items:center; justify-content:center;
+  }
 
-    .card-3d{
-      border-radius:16px; background:var(--card); border:1px solid var(--border);
-      box-shadow:var(--shadow); backdrop-filter: blur(10px); transition:transform .22s ease
-    }
-    .card-3d:hover{ transform:translateY(-4px) }
-    .card-head{ padding:20px; border-bottom:1px solid var(--border); background:rgba(255,255,255,.03) }
-    .card-body{ padding:22px }
+  /* inputs */
+  .f-label{
+    display:flex; align-items:center; gap:.4rem;
+    font-weight:600; font-size:.85rem; color:var(--ink); margin-bottom:.45rem;
+  }
+  .f-label i{ color:var(--brand-mid); font-size:.95rem }
+  .f-input,.f-select{
+    width:100%; padding:.72rem 1rem;
+    background:var(--paper); border:1.5px solid var(--border);
+    border-radius:var(--radius-md);
+    color:var(--ink); font-size:.92rem; font-family:var(--font-base);
+    transition:border-color .2s, box-shadow .2s, background .2s;
+    -webkit-appearance:none; appearance:none;
+  }
+  .f-input::placeholder{ color:var(--muted) }
+  .f-input:focus,.f-select:focus{
+    outline:none; border-color:var(--brand-mid);
+    background:var(--card);
+    box-shadow:0 0 0 3px rgba(4,120,87,.1);
+  }
+  html[data-theme="dark"] .f-input,
+  html[data-theme="dark"] .f-select{ color-scheme:dark }
+  .select-wrap{ position:relative }
+  .select-wrap::after{
+    content:'\F282'; font-family:'bootstrap-icons';
+    position:absolute; right:.9rem; top:50%; transform:translateY(-50%);
+    color:var(--muted); pointer-events:none; font-size:1rem;
+  }
+  .f-hint{
+    margin-top:.35rem; font-size:.76rem; color:var(--muted);
+    display:flex; align-items:center; gap:.3rem;
+  }
+  .f-unit{
+    display:inline-flex; align-items:center;
+    background:rgba(4,120,87,.08); color:var(--brand-mid);
+    font-size:.72rem; font-weight:700; padding:.15rem .55rem;
+    border-radius:6px; margin-left:.4rem;
+  }
+  html[data-theme="dark"] .f-unit{background:rgba(4,120,87,.2)}
 
-    .icon-badge{
-      width:40px;height:40px;border-radius:12px;
-      display:flex;align-items:center;justify-content:center;
-      background:rgba(34,197,94,.12); color:var(--brand); border:1px solid rgba(34,197,94,.18)
-    }
-    html[data-theme="dark"] .icon-badge{ color:#6ee7b7; background:rgba(34,197,94,.18) }
+  /* gender radio */
+  .gender-group{ display:flex; gap:.65rem }
+  .gender-opt{ flex:1 }
+  .gender-opt input[type="radio"]{ display:none }
+  .gender-opt label{
+    display:flex; align-items:center; justify-content:center; gap:.5rem;
+    padding:.7rem 1rem; border-radius:var(--radius-md);
+    background:var(--paper); border:1.5px solid var(--border);
+    color:var(--muted); font-weight:600; font-size:.88rem;
+    cursor:pointer; transition:var(--tr); user-select:none;
+  }
+  .gender-opt label:hover{ border-color:var(--brand-mid); color:var(--brand-mid) }
+  .gender-opt input[type="radio"]:checked + label{
+    background:linear-gradient(135deg,#059669,#047857);
+    border-color:#047857; color:#fff;
+    box-shadow:0 4px 14px rgba(4,120,87,.28);
+  }
 
-    /* FORM */
-    .form-label{ font-weight:600; color:var(--ink-soft) }
-    .form-control, .form-select{
-      border:1px solid #e6e7eb; border-radius:12px; padding:10px 12px;
-      background:var(--card); color:var(--ink); transition:.16s
-    }
-    html[data-theme="dark"] .form-control,
-    html[data-theme="dark"] .form-select{ border-color:rgba(255,255,255,.16) }
-    .form-control::placeholder{ color:var(--muted) }
-    .form-control:focus, .form-select:focus{ outline:none; box-shadow:var(--ring); border-color:var(--brand) }
-    .input-group-text{ background:var(--brand); color:#fff; border:1px solid var(--brand); border-radius:12px 0 0 12px }
+  /* pill checkboxes */
+  .pill-group{ display:flex; flex-wrap:wrap; gap:.5rem }
+  .pill-opt input[type="checkbox"]{ display:none }
+  .pill-opt label{
+    display:inline-flex; align-items:center; gap:.35rem;
+    padding:.45rem .9rem; border-radius:999px;
+    background:var(--paper); border:1.5px solid var(--border);
+    color:var(--muted); font-weight:600; font-size:.82rem;
+    cursor:pointer; transition:var(--tr); user-select:none;
+  }
+  .pill-opt label:hover{ border-color:var(--brand-mid); color:var(--brand-mid) }
+  .pill-opt input[type="checkbox"]:checked + label{
+    background:rgba(4,120,87,.09); border-color:var(--brand-mid);
+    color:var(--brand-mid); font-weight:700;
+  }
+  html[data-theme="dark"] .pill-opt input[type="checkbox"]:checked + label{
+    background:rgba(4,120,87,.22); color:#6ee7b7; border-color:#059669;
+  }
 
-    .section-label{ font-weight:700; color:var(--ink-soft) }
-    .hint{ font-size:.85rem; color:var(--muted) }
+  /* info banner */
+  .algo-banner{
+    background:linear-gradient(135deg,rgba(4,120,87,.07),rgba(16,185,129,.04));
+    border:1px solid rgba(4,120,87,.16); border-radius:var(--radius-md);
+    padding:1rem 1.2rem; margin-bottom:1.5rem;
+  }
+  html[data-theme="dark"] .algo-banner{
+    background:rgba(4,120,87,.1); border-color:rgba(4,120,87,.28);
+  }
+  .algo-banner p{ margin:0; font-size:.82rem; color:var(--muted); line-height:1.7 }
+  .algo-banner strong{ color:var(--brand-mid) }
 
-    .pill{
-      position:relative; display:inline-flex; align-items:center; gap:.5rem;
-      border:1px solid #e6e7eb; background:var(--card);
-      padding:.45rem .7rem; border-radius:999px; cursor:pointer; user-select:none
-    }
-    html[data-theme="dark"] .pill{ border-color:rgba(255,255,255,.16) }
-    .pill input{ position:absolute; inset:0; opacity:0 }
-    .pill .dot{ width:16px; height:16px; border-radius:50%; border:2px solid #cbd5e1; background:transparent }
-    .pill.active{ border-color:rgba(34,197,94,.45); box-shadow:0 0 0 .2rem rgba(34,197,94,.15) }
-    .pill input:checked + .dot{ background:var(--brand); border-color:var(--brand) }
+  /* submit */
+  .btn-calc{
+    width:100%; padding:.95rem;
+    background:linear-gradient(135deg,#059669,#047857);
+    color:#fff; border:none; border-radius:var(--radius-md);
+    font-family:'Poppins',sans-serif;
+    font-weight:800; font-size:1rem; letter-spacing:.01em;
+    cursor:pointer; transition:var(--tr);
+    box-shadow:0 8px 20px rgba(4,120,87,.28);
+    display:flex; align-items:center; justify-content:center; gap:.6rem;
+  }
+  .btn-calc:hover{
+    transform:translateY(-2px);
+    box-shadow:0 14px 32px rgba(4,120,87,.4);
+    background:linear-gradient(135deg,#10b981,#059669);
+  }
+  .btn-calc:active{ transform:none }
 
-    .btn-primary-cta{
-      background:linear-gradient(135deg,var(--brand),var(--brand-2));
-      border:none; color:#fff; font-weight:800; border-radius:999px;
-      padding:12px 18px
-    }
-    .btn-primary-cta.loading{ position:relative; color:transparent !important; pointer-events:none }
-    .btn-primary-cta.loading:after{
-      content:""; position:absolute; inset:0; margin:auto; width:20px; height:20px; border-radius:50%;
-      border:2px solid rgba(255,255,255,.35); border-top-color:#fff; animation:spin 1s linear infinite;
-    }
-    @keyframes spin{ to{ transform:rotate(360deg) } }
+  /* ── HERO VISUAL CARD ── */
+  .hero-visual-wrap{ position:relative; display:flex; justify-content:center; padding:22px 0 }
+  .hero-visual-card{
+    background:rgba(255,255,255,.85); backdrop-filter:blur(16px);
+    border:1px solid rgba(16,185,129,.15); border-radius:var(--radius-xl);
+    padding:1.5rem 1.75rem; box-shadow:0 24px 64px rgba(4,120,87,.14);
+    min-width:280px; max-width:320px; width:100%;
+    animation:floatCard 4s ease-in-out infinite;
+  }
+  html[data-theme="dark"] .hero-visual-card{
+    background:rgba(15,24,41,.85);
+    border-color:rgba(16,185,129,.2);
+    box-shadow:0 24px 64px rgba(0,0,0,.4);
+  }
+  @keyframes floatCard{
+    0%,100%{ transform:translateY(0) }
+    50%{ transform:translateY(-8px) }
+  }
+  .hero-vc-header{
+    display:flex; align-items:center; gap:.65rem;
+    padding-bottom:1rem; border-bottom:1px solid var(--border); margin-bottom:1rem;
+  }
+  .hero-vc-avatar{
+    width:40px; height:40px; border-radius:12px; flex-shrink:0;
+    background:linear-gradient(135deg,#10b981,#047857);
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:1.1rem;
+  }
+  .hero-vc-name{ font-weight:700; font-size:.88rem; color:var(--ink); line-height:1.2 }
+  .hero-vc-sub{ font-size:.72rem; color:var(--muted) }
+  .hero-vc-row{
+    display:flex; justify-content:space-between; margin-bottom:.65rem;
+  }
+  .hero-vc-item{ text-align:center }
+  .hero-vc-val{
+    font-family:'Poppins',sans-serif; font-weight:800; font-size:1.1rem;
+    color:var(--ink); line-height:1;
+  }
+  .hero-vc-lbl{ font-size:.68rem; color:var(--muted); margin-top:.15rem }
+  .hero-vc-bar-wrap{ margin-top:.9rem }
+  .hero-vc-bar-label{ display:flex; justify-content:space-between; font-size:.7rem; margin-bottom:.3rem; color:var(--muted) }
+  .hero-vc-bar-track{
+    height:6px; border-radius:999px;
+    background:var(--border); overflow:hidden; margin-bottom:.45rem;
+  }
+  .hero-vc-bar-fill{
+    height:100%; border-radius:999px;
+    background:linear-gradient(90deg,var(--ca,#10b981),var(--cb,#34d399));
+    transition:width .8s ease;
+  }
+  .hero-badge-tag{
+    display:inline-flex; align-items:center; gap:.35rem;
+    background:rgba(16,185,129,.1); border:1px solid rgba(16,185,129,.2);
+    color:var(--brand-mid); font-size:.72rem; font-weight:700;
+    padding:.3rem .75rem; border-radius:999px; margin-top:.9rem;
+  }
+  html[data-theme="dark"] .hero-badge-tag{ background:rgba(16,185,129,.15) }
 
-    .badge-info{
-      cursor:pointer; font-weight:700; font-size:.75rem;
-      display:inline-flex; align-items:center; gap:.35rem;
-      padding:.22rem .6rem; border-radius:999px;
-      border:1px solid rgba(251,146,60,.35);
-      background:rgba(251,146,60,.10); color:#c2410c;
-    }
+  /* floating mini badges */
+  .float-badge{
+    position:absolute; z-index:10;
+    background:rgba(255,255,255,.95); backdrop-filter:blur(12px);
+    border:1px solid rgba(16,185,129,.2); border-radius:12px;
+    padding:.5rem 1rem; box-shadow:0 8px 28px rgba(4,120,87,.15);
+    display:flex; align-items:center; gap:.45rem;
+    font-size:.76rem; font-weight:700; color:var(--ink); white-space:nowrap;
+  }
+  html[data-theme="dark"] .float-badge{ background:rgba(15,24,41,.95); border-color:rgba(16,185,129,.3); color:var(--ink) }
+  .float-badge i{ color:var(--brand-mid); font-size:.9rem }
+  .fb-1{ top:-18px; left:10px; animation:floatCard 5s ease-in-out infinite .5s }
+  .fb-2{ bottom:-18px; right:10px; animation:floatCard 5s ease-in-out infinite 1.2s }
 
-    @media (max-width:768px){ .card-body{ padding:18px } }
-  </style>
-</head>
-<body>
+  /* ── FEATURE STRIP ── */
+  .feature-strip{ background:var(--paper); padding:1.5rem 0 0 }
+  .feature-item{
+    display:flex; align-items:flex-start; gap:.9rem;
+    padding:1rem 1.2rem; border-radius:var(--radius-lg);
+    background:var(--card); border:1px solid var(--border);
+    box-shadow:var(--shadow-card); height:100%;
+  }
+  .feature-ico{
+    width:44px; height:44px; border-radius:13px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.2rem; color:#fff;
+  }
+  .feature-text-title{ font-weight:700; font-size:.88rem; color:var(--ink); margin-bottom:.2rem }
+  .feature-text-sub{ font-size:.78rem; color:var(--muted); line-height:1.55 }
 
-  <!-- NAV -->
-  <nav class="navbar navbar-expand-lg navbar-custom navbar-dark fixed-top" aria-label="Navigasi utama">
-    <div class="container-xl">
-      <a class="navbar-brand" href="/"><i class="bi bi-activity me-2"></i>SmartDiabets</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigasi">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div id="nav" class="collapse navbar-collapse">
-        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-          <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house-heart"></i>Beranda</a></li>
-          <li class="nav-item"><a class="nav-link active" href="/calculator"><i class="bi bi-calculator"></i>Kalkulator</a></li>
-          <li class="nav-item"><a class="nav-link" href="/blog"><i class="bi bi-journal-text"></i>Artikel</a></li>
-          <li class="nav-item ms-lg-2">
-            <button class="theme-toggle" id="themeToggle" type="button" title="Dark/Light">
-              <i class="bi bi-moon-stars" id="themeIcon"></i><span class="d-none d-md-inline" id="themeText">Mode</span>
-            </button>
-          </li>
-        </ul>
+  /* ── RESPONSIVE ── */
+  @media(max-width:992px){
+    .hero-visual-wrap{ display:none }
+  }
+  @media(max-width:768px){
+    .calc-hero{ padding:2.5rem 0 2rem }
+    .calc-blob-1,.calc-blob-2{ display:none }
+    .calc-sidebar{ position:static; margin-bottom:1.25rem }
+    .form-body{ padding:1.25rem }
+    .form-header{ padding:1.25rem 1.25rem .75rem }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- â•â•â•â•â•â•â•â•â•â•â• HERO â•â•â•â•â•â•â•â•â•â•â• -->
+<section class="calc-hero">
+  <div class="calc-hero-bg"></div>
+  <div class="calc-blob calc-blob-1"></div>
+  <div class="calc-blob calc-blob-2"></div>
+  <div class="container position-relative" style="z-index:1">
+    <div class="row align-items-center g-4">
+
+      <!-- LEFT: teks -->
+      <div class="col-lg-6 text-center text-lg-start">
+        <div class="hero-eyebrow">Gizi Cerdas untuk Diabetes</div>
+        <h1 class="calc-page-title">
+          Kalkulator<br><span class="grad">Kebutuhan Gizi</span>
+        </h1>
+        <p class="calc-hero-sub" style="margin:0">
+          Sudah tahu belum berapa porsi nasi yang aman untukmu hari ini?
+          Yuk, mulai kendalikan asupan makanmu &mdash; karena <strong style="color:var(--brand-mid)">porsi yang tepat</strong> adalah kunci kontrol gula darah.
+        </p>
+        <div class="hero-pills justify-content-center justify-content-lg-start">
+          <span class="hero-pill"><i class="bi bi-shield-check-fill"></i> PERKENI 2024</span>
+          <span class="hero-pill"><i class="bi bi-cpu-fill"></i> Broca + Least Squares</span>
+          <span class="hero-pill"><i class="bi bi-lightning-charge-fill"></i> Hasil Instan</span>
+        </div>
       </div>
-    </div>
-  </nav>
 
-  <!-- HERO MINI -->
-  <section class="hero-mini">
-    <div class="bubbles" id="bubbles" aria-hidden="true"></div>
-    <canvas id="sparks" aria-hidden="true" style="position:absolute; inset:0; z-index:0; opacity:.45;"></canvas>
+      <!-- RIGHT: preview card -->
+      <div class="col-lg-6 d-none d-lg-flex justify-content-center">
+        <div class="hero-visual-wrap">
 
-    <div class="container-xl position-relative" style="z-index:1">
-      <h1 class="hero-title"><span class="gradient-text">Kalkulator Kalori</span> & Gizi Harian</h1>
-      <p class="hero-sub">Mulai dari piringmu—tentukan kebutuhan energi & preferensi agar rekomendasi menu makin pas.</p>
-    </div>
-  </section>
+          <div class="float-badge fb-1">
+            <i class="bi bi-stars"></i> Cek porsimu yuk!
+          </div>
+          <div class="float-badge fb-2">
+            <i class="bi bi-lightning-charge-fill"></i> Mulai sekarang, gratis!
+          </div>
 
-  <!-- CONTENT -->
-  <main class="py-4">
-    <div class="container-xl">
-      <div class="card-3d" id="card">
-        <div class="card-head d-flex align-items-center gap-3">
-          <div class="icon-badge"><i class="bi bi-calculator"></i></div>
-          <div>
-            <div class="fw-bold" style="font-size:1.2rem">Profil & Preferensi</div>
-            <div class="text-muted-2">Broca + PERKENI + filter alergi</div>
+          <div class="hero-visual-card">
+            <div class="hero-vc-header">
+              <div class="hero-vc-avatar"><i class="bi bi-person-fill"></i></div>
+              <div>
+                <div class="hero-vc-name">Contoh Hasil Rekomendasi</div>
+                <div class="hero-vc-sub">Pria &bull; 45 th &bull; Aktif Sedang</div>
+              </div>
+            </div>
+
+            <div class="hero-vc-row">
+              <div class="hero-vc-item">
+                <div class="hero-vc-val" style="color:var(--brand-mid)">1.850</div>
+                <div class="hero-vc-lbl">kkal/hari</div>
+              </div>
+              <div class="hero-vc-item">
+                <div class="hero-vc-val">231g</div>
+                <div class="hero-vc-lbl">Karbo</div>
+              </div>
+              <div class="hero-vc-item">
+                <div class="hero-vc-val">69g</div>
+                <div class="hero-vc-lbl">Protein</div>
+              </div>
+              <div class="hero-vc-item">
+                <div class="hero-vc-val">51g</div>
+                <div class="hero-vc-lbl">Lemak</div>
+              </div>
+            </div>
+
+            <div class="hero-vc-bar-wrap">
+              <div class="hero-vc-bar-label"><span>Karbohidrat 50%</span><span>231g</span></div>
+              <div class="hero-vc-bar-track"><div class="hero-vc-bar-fill" style="width:50%;--ca:#10b981;--cb:#34d399"></div></div>
+
+              <div class="hero-vc-bar-label"><span>Protein 15%</span><span>69g</span></div>
+              <div class="hero-vc-bar-track"><div class="hero-vc-bar-fill" style="width:15%;--ca:#059669;--cb:#10b981"></div></div>
+
+              <div class="hero-vc-bar-label"><span>Lemak 25%</span><span>51g</span></div>
+              <div class="hero-vc-bar-track" style="margin-bottom:0"><div class="hero-vc-bar-fill" style="width:25%;--ca:#34d399;--cb:#6ee7b7"></div></div>
+            </div>
+
+            <div class="hero-badge-tag">
+              <i class="bi bi-stars"></i> Sesuai PERKENI 2024
+            </div>
           </div>
         </div>
+      </div>
 
-        <div class="card-body">
-          <form action="/outputs" method="post" id="calculatorForm">
-            <!-- Nama -->
-            <div class="mb-3">
-              <label class="form-label" for="name"><i class="bi bi-person me-1"></i> Nama Lengkap</label>
-              <input id="name" name="name" type="text" class="form-control" placeholder="Nama kamu" required>
-            </div>
+    </div>
+  </div>
+</section>
 
-            <!-- Usia & Gender -->
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label" for="age"><i class="bi bi-calendar me-1"></i> Umur</label>
-                <div class="input-group">
-                  <input id="age" name="age" type="number" class="form-control" placeholder="25" min="1" max="120" required>
-                  <span class="input-group-text">tahun</span>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label" for="gender"><i class="bi bi-gender-ambiguous me-1"></i> Jenis Kelamin</label>
-                <select id="gender" name="gender" class="form-select" required>
-                  <option value="" disabled selected>Pilih jenis kelamin</option>
-                  <option value="pria">Laki-laki</option>
-                  <option value="wanita">Perempuan</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- BB & TB -->
-            <div class="row g-3 mt-0">
-              <div class="col-md-6">
-                <label class="form-label" for="weight"><i class="bi bi-speedometer me-1"></i> Berat Badan</label>
-                <div class="input-group">
-                  <input id="weight" name="weight" type="number" class="form-control" placeholder="70" min="1" max="300" required>
-                  <span class="input-group-text">kg</span>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label" for="height"><i class="bi bi-rulers me-1"></i> Tinggi Badan</label>
-                <div class="input-group">
-                  <input id="height" name="height" type="number" class="form-control" placeholder="170" min="50" max="250" required>
-                  <span class="input-group-text">cm</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Aktivitas -->
-            <div class="mt-3">
-              <label class="form-label" for="activity">
-                <i class="bi bi-activity me-1"></i> Tingkat Aktivitas Harian
-                <span class="badge-info ms-1" data-bs-toggle="modal" data-bs-target="#activityModal">
-                  <i class="bi bi-info-circle"></i> PERKENI
-                </span>
-              </label>
-              <select id="activity" name="activity" class="form-select" required>
-                <option value="" disabled selected>Pilih tingkat aktivitas</option>
-
-                <option value="rest">🛌 Istirahat ( +10% )</option>
-                <option value="light">🚶 Ringan ( +20% )</option>
-                <option value="moderate">🏃 Sedang ( +30% )</option>
-                <option value="heavy">💪 Berat ( +40% )</option>
-                <option value="very_heavy">🏋️ Sangat Berat ( +50% )</option>
-              </select>
-            </div>
-
-            <!-- Alergi -->
-            <div class="mt-4">
-              <div class="section-label mb-2"><i class="bi bi-shield-check me-1"></i> Alergi / Larangan Bahan</div>
-              <div class="d-flex flex-wrap gap-2">
-                <label class="pill"><input type="checkbox" name="allergies" value="kacang"><span class="dot"></span> Kacang</label>
-                <label class="pill"><input type="checkbox" name="allergies" value="susu"><span class="dot"></span> Susu/Dairy</label>
-                <label class="pill"><input type="checkbox" name="allergies" value="seafood"><span class="dot"></span> Seafood</label>
-                <label class="pill"><input type="checkbox" name="allergies" value="telur"><span class="dot"></span> Telur</label>
-                <label class="pill"><input type="checkbox" name="allergies" value="kedelai"><span class="dot"></span> Kedelai</label>
-                <label class="pill"><input type="checkbox" name="allergies" value="gluten"><span class="dot"></span> Gluten/Gandum</label>
-              </div>
-              <div class="hint mt-2">Centang yang perlu dihindari — sistem tidak akan menampilkan menu yang mengandung bahan tersebut.</div>
-            </div>
-
-            <!-- Preferensi exclude -->
-            <div class="mt-3">
-              <label class="form-label" for="exclude_foods">
-                <i class="bi bi-x-circle me-1"></i> Makanan yang ingin dihindari (opsional)
-              </label>
-              <input id="exclude_foods" name="exclude_foods" type="text" class="form-control"
-                    placeholder="Misal: rendang, udang, susu sapi — pisahkan dengan koma">
-              <div class="hint mt-1">Contoh penulisan: <em>petis, udang, bakso sapi</em></div>
-            </div>
-
-            <!-- Actions -->
-            <div class="mt-4 d-grid gap-2">
-              <a href="/" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i> Kembali ke Beranda
-              </a>
-              <button id="submitBtn" type="submit" class="btn btn-primary-cta">
-                <i class="bi bi-calculator me-1"></i> Hitung Kebutuhan & Lanjutkan
-              </button>
-            </div>
-          </form>
+<!-- FEATURE STRIP -->
+<div class="feature-strip">
+  <div class="container">
+    <div class="row g-3 pb-3">
+      <div class="col-md-4">
+        <div class="feature-item">
+          <div class="feature-ico" style="background:linear-gradient(135deg,#10b981,#047857)"><i class="bi bi-calculator-fill"></i></div>
+          <div>
+            <div class="feature-text-title">Kalkulasi Otomatis</div>
+            <div class="feature-text-sub">BBI &amp; kebutuhan kalori dihitung real-time menggunakan rumus Broca</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature-item">
+          <div class="feature-ico" style="background:linear-gradient(135deg,#059669,#065f46)"><i class="bi bi-list-task"></i></div>
+          <div>
+            <div class="feature-text-title">5 Jadwal Makan</div>
+            <div class="feature-text-sub">Menu tersebar dalam 5 waktu makan: sarapan, snack, makan siang, sore, malam</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature-item">
+          <div class="feature-ico" style="background:linear-gradient(135deg,#34d399,#10b981)"><i class="bi bi-shield-check-fill"></i></div>
+          <div>
+            <div class="feature-text-title">Berbasis PERKENI 2024</div>
+            <div class="feature-text-sub">Distribusi gizi sesuai pedoman nasional terbaru untuk diabetes tipe 2</div>
+          </div>
         </div>
       </div>
     </div>
-  </main>
-
-  <!-- Modal PERKENI -->
-  <div class="modal fade" id="activityModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg"><div class="modal-content">
-      <div class="modal-header" style="background:linear-gradient(135deg,var(--brand),var(--accent)); color:#fff">
-        <h5 class="modal-title"><i class="bi bi-book me-2"></i>Panduan Tingkat Aktivitas (PERKENI)</h5>
-        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body p-4">
-        <div class="mb-3"><strong>Ringkas:</strong> Istirahat +10% • Ringan +20% • Sedang +30% • Berat +40% • Sangat Berat +50% dari kebutuhan basal.</div>
-        <ul class="mb-0">
-          <li><b>Istirahat</b> — aktivitas minimal.</li>
-          <li><b>Ringan</b> — pegawai kantor, guru, ibu rumah tangga.</li>
-          <li><b>Sedang</b> — industri ringan, mahasiswa, militer tidak berperang.</li>
-          <li><b>Berat</b> — petani, buruh, atlet, militer latihan.</li>
-          <li><b>Sangat Berat</b> — tukang gali, pekerjaan fisik sangat tinggi.</li>
-        </ul>
-      </div>
-    </div></div>
   </div>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- â•â•â•â•â•â•â•â•â•â•â• FORM SECTION â•â•â•â•â•â•â•â•â•â•â• -->
+<section class="calc-section">
+  <div class="container">
+    <div class="row g-4 justify-content-center align-items-start">
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Theme toggle (system/dark/light) -> selalu set data-theme resolved
-      const root = document.documentElement;
-      const KEY  = 'smartdiabets-theme';
-      const btn  = document.getElementById('themeToggle');
-      const icon = document.getElementById('themeIcon');
+      <!-- SIDEBAR -->
+      <div class="col-lg-3 d-none d-lg-block">
+        <div class="calc-sidebar">
 
-      function applyTheme(pref){
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const resolved = (pref === 'system') ? (prefersDark ? 'dark' : 'light') : pref;
-        root.setAttribute('data-theme', resolved);
-        if(icon) icon.className = (resolved === 'dark') ? 'bi bi-brightness-high' : 'bi bi-moon-stars';
-        try{ localStorage.setItem(KEY, pref); }catch(e){}
-      }
+          <div class="info-card">
+            <div class="info-card-title">
+              <i class="bi bi-list-check"></i>
+              Cara Pengisian
+            </div>
+            <div class="step-item">
+              <div class="step-num">1</div>
+              <div class="step-text"><strong>Data Diri</strong> &mdash; Nama &amp; jenis kelamin Anda.</div>
+            </div>
+            <div class="step-item">
+              <div class="step-num">2</div>
+              <div class="step-text"><strong>Data Fisik</strong> &mdash; Usia, berat, dan tinggi badan.</div>
+            </div>
+            <div class="step-item">
+              <div class="step-num">3</div>
+              <div class="step-text"><strong>Aktivitas</strong> &mdash; Pilih tingkat aktivitas harian.</div>
+            </div>
+            <div class="step-item" style="margin-bottom:0">
+              <div class="step-num">4</div>
+              <div class="step-text"><strong>Preferensi</strong> &mdash; Alergi &amp; makanan dihindari (opsional).</div>
+            </div>
+          </div>
 
-      const saved = (function(){ try{ return localStorage.getItem(KEY) }catch(e){ return null } })() || 'system';
-      applyTheme(saved);
+          <div class="info-card">
+            <div class="info-card-title">
+              <i class="bi bi-robot"></i>
+              Cara Kerja Sistem
+            </div>
+            <p class="step-text" style="margin:0">
+              BBI dihitung dengan rumus <strong>Broca</strong>, dikoreksi usia &amp; aktivitas 
+              sesuai <strong>PERKENI 2024</strong>. Menu dioptimalkan menggunakan 
+              <strong>Constrained Least Squares</strong> dari 1.489 data TKPI.
+            </p>
+          </div>
 
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-        const cur = (function(){ try{ return localStorage.getItem(KEY) }catch(e){ return 'system' } })() || 'system';
-        if(cur === 'system') applyTheme('system');
-      });
+        </div>
+      </div>
 
-      btn?.addEventListener('click', () => {
-        const cur = (function(){ try{ return localStorage.getItem(KEY) }catch(e){ return 'system' } })() || 'system';
-        const next = (cur==='system') ? 'dark' : (cur==='dark' ? 'light' : 'system');
-        applyTheme(next);
-      });
+      <!-- FORM -->
+      <div class="col-lg-7 col-md-10">
+        <form method="POST" action="/outputs" class="form-card">
 
-      // Bubbles
-      const host = document.getElementById('bubbles');
-      if(host){
-        const N=14;
-        for(let i=0;i<N;i++){
-          const b=document.createElement('span');
-          b.className='bubble';
-          const size=Math.random()*90+26;
-          b.style.width=size+'px'; b.style.height=size+'px';
-          b.style.left=(Math.random()*100)+'%';
-          b.style.setProperty('--dur',(12+Math.random()*12)+'s');
-          b.style.setProperty('--sway',(5+Math.random()*6)+'s');
-          b.style.setProperty('--scale',0.9+Math.random()*0.6);
-          b.style.setProperty('--blur',(Math.random()*2.5)+'px');
-          b.style.setProperty('--ty',(Math.random()*20-10)+'px');
-          host.appendChild(b);
-        }
-      }
+          <div class="form-header">
+            <div class="form-header-title">
+              <i class="bi bi-clipboard2-pulse-fill"></i>
+              Isi Data Anda
+            </div>
+          </div>
 
-      // Sparks particle canvas
-      const sparks=document.getElementById('sparks');
-      const heroEl=document.querySelector('.hero-mini');
-      if(sparks && heroEl){
-        const ctx=sparks.getContext('2d');
-        let W=heroEl.clientWidth, H=heroEl.clientHeight;
-        const DPR=Math.min(2, window.devicePixelRatio||1);
-        const N=70; const parts=[];
-        function resize(){
-          W=heroEl.clientWidth; H=heroEl.clientHeight;
-          sparks.width=W*DPR; sparks.height=H*DPR;
-          sparks.style.width=W+'px'; sparks.style.height=H+'px';
-          ctx.setTransform(DPR,0,0,DPR,0,0);
-        }
-        function spawn(p){
-          p.x=Math.random()*W; p.y=H+Math.random()*H*0.2;
-          p.vy=0.6+Math.random()*1.2; p.vx=(Math.random()-0.5)*0.6;
-          p.r=1+Math.random()*2; p.a=0.25+Math.random()*0.5; p.h=Math.random()*360;
-        }
-        for(let i=0;i<N;i++){ parts.push({}); spawn(parts[i]); }
-        function tick(){
-          ctx.clearRect(0,0,W,H);
-          for(const p of parts){
-            p.x+=p.vx; p.y-=p.vy;
-            if(p.y<-10||p.x<-10||p.x>W+10) spawn(p);
-            ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-            ctx.fillStyle=`hsla(${p.h},90%,60%,${p.a})`;
-            ctx.fill();
-          }
-          requestAnimationFrame(tick);
-        }
-        resize(); tick();
-        window.addEventListener('resize', resize);
-      }
+          <div class="form-body">
 
-      // Toggle pill state
-      document.querySelectorAll('.pill').forEach(p=>{
-        const cb=p.querySelector('input[type="checkbox"]');
-        const sync=()=>p.classList.toggle('active', cb.checked);
-        sync();
-        p.addEventListener('click', e=>{
-          if(e.target !== cb){
-            cb.checked = !cb.checked;
-            cb.dispatchEvent(new Event('change', {bubbles:true}));
-          }
-        });
-        cb.addEventListener('change', sync);
-      });
+            <!-- 1. Data Diri -->
+            <div class="fsec">
+              <div class="fsec-label">
+                <div class="fsec-label-num">1</div> Data Diri
+              </div>
+              <div class="mb-3">
+                <label class="f-label"><i class="bi bi-person-fill"></i> Nama Lengkap</label>
+                <input type="text" name="name" class="f-input" placeholder="Masukkan nama Anda" required>
+              </div>
+              <div>
+                <label class="f-label"><i class="bi bi-gender-ambiguous"></i> Jenis Kelamin</label>
+                <div class="gender-group">
+                  <div class="gender-opt">
+                    <input type="radio" name="gender" value="pria" id="g-pria" required>
+                    <label for="g-pria"><i class="bi bi-person-fill"></i> Pria</label>
+                  </div>
+                  <div class="gender-opt">
+                    <input type="radio" name="gender" value="wanita" id="g-wanita">
+                    <label for="g-wanita"><i class="bi bi-person-fill"></i> Wanita</label>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-      // Clamp nilai input
-      const clamp=(el,min,max)=>{
-        if(!el) return;
-        el.addEventListener('input',()=>{
-          if(el.value==='')return;
-          const v=+el.value;
-          if(v<min)el.value=min;
-          if(v>max)el.value=max;
-        });
-      };
-      clamp(document.getElementById('age'),1,120);
-      clamp(document.getElementById('weight'),1,300);
-      clamp(document.getElementById('height'),50,250);
+            <!-- 2. Data Fisik -->
+            <div class="fsec">
+              <div class="fsec-label">
+                <div class="fsec-label-num">2</div> Data Fisik
+              </div>
+              <div class="row g-3">
+                <div class="col-sm-4">
+                  <label class="f-label"><i class="bi bi-calendar3"></i> Usia</label>
+                  <input type="number" name="age" class="f-input" placeholder="cth: 45" min="1" max="120" required>
+                  <div class="f-hint"><span class="f-unit">tahun</span></div>
+                </div>
+                <div class="col-sm-4">
+                  <label class="f-label"><i class="bi bi-arrow-down-circle-fill"></i> Berat Badan</label>
+                  <input type="number" name="weight" class="f-input" placeholder="cth: 70" min="1" step="0.1" required>
+                  <div class="f-hint"><span class="f-unit">kg</span></div>
+                </div>
+                <div class="col-sm-4">
+                  <label class="f-label"><i class="bi bi-rulers"></i> Tinggi Badan</label>
+                  <input type="number" name="height" class="f-input" placeholder="cth: 170" min="1" step="0.1" required>
+                  <div class="f-hint"><span class="f-unit">cm</span></div>
+                </div>
+              </div>
+            </div>
 
-      // Loading state submit
-      const form=document.getElementById('calculatorForm');
-      const btnSubmit=document.getElementById('submitBtn');
-      form?.addEventListener('submit', ()=>{
-        btnSubmit?.classList.add('loading');
-        if(btnSubmit) btnSubmit.disabled=true;
-      });
-    });
-  </script>
-</body>
-</html>
+            <!-- 3. Aktivitas -->
+            <div class="fsec">
+              <div class="fsec-label">
+                <div class="fsec-label-num">3</div> Aktivitas Fisik
+              </div>
+              <label class="f-label"><i class="bi bi-lightning-charge-fill"></i> Tingkat Aktivitas Harian</label>
+              <div class="select-wrap">
+                <select name="activity" class="f-select" required>
+                  <option value="" disabled selected>-- Pilih tingkat aktivitas --</option>
+                  <option value="sedentary">Istirahat / Sangat Sedikit Bergerak</option>
+                  <option value="light">Ringan &mdash; Olahraga 1-3 Hari/Minggu</option>
+                  <option value="moderate">Sedang &mdash; Olahraga 3-5 Hari/Minggu</option>
+                  <option value="active">Berat &mdash; Olahraga 6-7 Hari/Minggu</option>
+                  <option value="very_active">Sangat Berat &mdash; Olahraga Intensif Tiap Hari</option>
+                </select>
+              </div>
+              <div class="f-hint mt-2"><i class="bi bi-info-circle"></i> Faktor koreksi PERKENI 2024 Tabel 2.2 (F_akt 1.10&ndash;1.50)</div>
+            </div>
+
+            <!-- 4. Preferensi -->
+            <div class="fsec">
+              <div class="fsec-label">
+                <div class="fsec-label-num">4</div> Alergi &amp; Preferensi
+                <span style="font-size:.65rem;background:var(--muted);color:#fff;padding:.1rem .45rem;border-radius:5px;margin-left:.3rem;font-weight:700">opsional</span>
+              </div>
+              <label class="f-label"><i class="bi bi-shield-exclamation"></i> Alergi Makanan</label>
+              <div class="pill-group mb-3">
+                <div class="pill-opt"><input type="checkbox" name="allergies" value="kacang" id="al-kacang"><label for="al-kacang">Kacang</label></div>
+                <div class="pill-opt"><input type="checkbox" name="allergies" value="susu" id="al-susu"><label for="al-susu">Susu</label></div>
+                <div class="pill-opt"><input type="checkbox" name="allergies" value="telur" id="al-telur"><label for="al-telur">Telur</label></div>
+                <div class="pill-opt"><input type="checkbox" name="allergies" value="seafood" id="al-sea"><label for="al-sea">Seafood</label></div>
+                <div class="pill-opt"><input type="checkbox" name="allergies" value="gluten" id="al-gluten"><label for="al-gluten">Gluten</label></div>
+                <div class="pill-opt"><input type="checkbox" name="allergies" value="kedelai" id="al-kedelai"><label for="al-kedelai">Kedelai</label></div>
+              </div>
+              <label class="f-label"><i class="bi bi-x-circle-fill"></i> Makanan yang Dihindari</label>
+              <input type="text" name="exclude_foods" class="f-input"
+                placeholder="cth: tahu, tempe, nasi goreng  (pisahkan dengan koma)">
+              <div class="f-hint mt-1"><i class="bi bi-lightbulb"></i> Keyword matching &mdash; kata "ayam" akan memblokir semua menu mengandung ayam.</div>
+            </div>
+
+            <!-- algo info -->
+            <div class="algo-banner">
+              <p>
+                <strong><i class="bi bi-gift me-1"></i>Yang akan kamu dapat</strong> &mdash;
+                Jadwal <strong>5 waktu makan</strong> harian, distribusi <strong>kalori, karbo, protein &amp; lemak</strong>
+                yang sesuai kondisimu, plus rekomendasi menu siap saji dari database TKPI.
+              </p>
+            </div>
+
+            <button type="submit" class="btn-calc">
+              <i class="bi bi-graph-up-arrow" style="font-size:1.05rem"></i>
+              Hitung &amp; Dapatkan Rekomendasi Menu
+            </button>
+
+          </div><!-- /form-body -->
+        </form>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}

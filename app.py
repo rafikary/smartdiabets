@@ -4,19 +4,46 @@ from datetime import datetime
 import logging
 import numpy as np
 import os
+from flask_login import LoginManager, login_required, current_user
+from database import db, init_db, User
+from admin_routes import admin_bp
+from user_routes import user_bp
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
+# Konfigurasi Flask
+app.config['SECRET_KEY'] = 'your-secret-key-change-this-in-production'  # GANTI dengan random string!
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///smartdiabetes.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Inisialisasi database
+init_db(app)
+
+# Setup Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'user.login'
+login_manager.login_message = None  # Hilangkan flash message otomatis
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# Register blueprints
+app.register_blueprint(admin_bp)
+app.register_blueprint(user_bp)
+
 VALID_ACT = {"rest", "light", "moderate", "heavy", "very_heavy"}
 
 # mapping dari value form (indo / english) ke internal code
 ACTIVITY_MAP = {
-    # sangat ringan / istirahat
+    # istirahat / sangat ringan
     "istirahat": "rest",
     "sangat_ringan": "rest",
+    "sedentary": "rest",
     "rest": "rest",
 
     # ringan
@@ -30,10 +57,12 @@ ACTIVITY_MAP = {
     # berat
     "berat": "heavy",
     "heavy": "heavy",
+    "active": "heavy",
 
     # sangat berat
     "sangat_berat": "very_heavy",
     "very_heavy": "very_heavy",
+    "very_active": "very_heavy",
 }
 
 #Normalisasi input aktivitas dari form ke kode internal (rest/light/moderate/heavy/very_heavy)
@@ -81,88 +110,157 @@ def parse_exclude_foods(form) -> list:
     logger.debug(f"Exclude foods parsed: {out}")
     return out
 
-#Hitung Berat Badan Ideal dengan Rumus Broca (Pria: 0.9×(TB-100), Wanita: 0.85×(TB-100))
+#Hitung Berat Badan Ideal dengan Rumus Broca sesuai PERKENI 2024
 def calculate_bbi(height: float, gender: str) -> float:
+    # Rumus Broca (PERKENI 2024):
+    # - Laki-laki ≥ 160 cm dan perempuan ≥ 150 cm: BBI = 0.9 × (TB - 100)
+    # - Di bawah ambang tersebut: BBI = (TB - 100)
     if gender == "pria":
-        return 0.9 * (height - 100)
-    else:
-        return 0.85 * (height - 100)
+        if height >= 160:
+            return 0.9 * (height - 100)
+        else:
+            return height - 100
+    else:  # wanita
+        if height >= 150:
+            return 0.9 * (height - 100)
+        else:
+            return height - 100
 
-#Klasifikasi status gizi berdasarkan %BB/BBI (<90%: Kurus, 90-110%: Normal, >110%: Gemuk)
+#Hitung IMT (Indeks Massa Tubuh) sesuai PERKENI 2024
+def calculate_imt(weight: float, height: float) -> float:
+    # IMT = BB / (TB^2)
+    # BB dalam kg, TB dalam meter
+    height_m = height / 100.0
+    return weight / (height_m ** 2)
+
+#Klasifikasi IMT berdasarkan standar Asia-Pasifik (PERKENI 2024)
+def classify_imt(imt: float) -> str:
+    # Klasifikasi IMT (Asia-Pasifik):
+    # BB kurang: < 18.5 kg/m²
+    # BB normal: 18.5–22.9 kg/m²
+    # BB lebih: ≥ 23.0 kg/m²
+    #   - Risiko meningkat: 23.0–24.9 kg/m²
+    #   - Obesitas I: 25.0–29.9 kg/m²
+    #   - Obesitas II: ≥ 30.0 kg/m²
+    if imt < 18.5:
+        return "BB Kurang"
+    elif 18.5 <= imt < 23.0:
+        return "BB Normal"
+    elif 23.0 <= imt < 25.0:
+        return "BB Lebih (Risiko Meningkat)"
+    elif 25.0 <= imt < 30.0:
+        return "Obesitas I"
+    else:
+        return "Obesitas II"
+
+#Klasifikasi status gizi berdasarkan BBI±10% (PERKENI 2024)
 def classify_nutrition_status(weight: float, bbi: float):
-    percentage = (weight / bbi) * 100 if bbi > 0 else 0
-    if percentage < 90:
-        return "Kurus", percentage
-    elif 90 <= percentage <= 110:
-        return "Normal", percentage
-    return "Gemuk", percentage
+    # Status berat badan berdasarkan BBI:
+    # BB Normal: BBI ± 10%
+    # Kurus: BB < (BBI - 10%)
+    # Gemuk: BB > (BBI + 10%)
+    lower_bound = bbi * 0.9  # BBI - 10%
+    upper_bound = bbi * 1.1  # BBI + 10%
+    
+    if weight < lower_bound:
+        return "Kurus"
+    elif lower_bound <= weight <= upper_bound:
+        return "Normal"
+    else:
+        return "Gemuk"
 
 #Hitung energi basal (Pria: 30×BBI, Wanita: 25×BBI kkal/hari)
 def calculate_base_calories(bbi: float, gender: str) -> float:
+    # Kalori Basal berdasarkan jenis kelamin:
+    # Pria   : BMR = 30 kkal/kg × BBI
+    # Wanita : BMR = 25 kkal/kg × BBI
     return bbi * (30 if gender == "pria" else 25)
 
-#Koreksi kalori berdasarkan usia dan tingkat aktivitas fisik (PAL)
-def apply_corrections(calories: float, age: int, activity: str) -> float:
-    
-    if age < 40:
-        calories *= 1.00
-    elif 40 <= age < 50:
-        calories *= 0.95
-    elif 50 <= age < 60:
-        calories *= 0.90
-    elif 60 <= age < 70:
-        calories *= 0.85
+#Koreksi kalori berdasarkan status berat badan (kurus: +20-30%, gemuk: -20-30%)
+def apply_weight_correction(calories: float, status: str) -> float:
+    # Koreksi berat badan sesuai PERKENI 2024:
+    # - Gemuk: pengurangan ~20-30% (gunakan -25% sebagai nilai tengah)
+    # - Kurus: penambahan ~20-30% (gunakan +25% sebagai nilai tengah)
+    # - Normal: tidak ada penyesuaian
+    if status == "Gemuk":
+        return calories * 0.75  # Kurangi 25%
+    elif status == "Kurus":
+        return calories * 1.25  # Tambah 25%
     else:
-        calories *= 0.80
+        return calories  # Normal: tidak ada koreksi
 
-    pal_values = {
-        "rest": 1.20,
-        "light": 1.375,
-        "moderate": 1.55,
-        "heavy": 1.725,
-        "very_heavy": 1.90,
+#Koreksi kalori berdasarkan usia dan tingkat aktivitas fisik sesuai PERKENI 2024
+def apply_corrections(calories: float, age: int, activity: str) -> float:
+    # LANGKAH 1: Koreksi Umur (F_usia)
+    # Metabolisme menurun seiring bertambahnya usia
+    # E_usia = BMR × F_usia
+    if age < 40:
+        calories *= 1.00      # Tidak ada koreksi
+    elif 40 <= age < 50:
+        calories *= 0.95      # Kurangi 5%
+    elif 50 <= age < 60:
+        calories *= 0.90      # Kurangi 10%
+    elif 60 <= age < 70:
+        calories *= 0.90      # Kurangi 10%
+    else:  # >= 70 tahun
+        calories *= 0.80      # Kurangi 20%
+
+    # LANGKAH 2: Tabel 2.2 - Koreksi Aktivitas Fisik (F_akt)
+    # Tambahkan kebutuhan energi berdasarkan tingkat aktivitas fisik
+    # E_aktiv = E_usia × F_akt
+    f_akt_values = {
+        "rest": 1.10,        # Istirahat: +10%
+        "light": 1.20,       # Ringan: +20%
+        "moderate": 1.30,    # Sedang: +30%
+        "heavy": 1.40,       # Berat: +40%
+        "very_heavy": 1.50,  # Sangat berat: +50%
     }
     act_norm = normalize_activity(activity)
-    return calories * pal_values.get(act_norm, 1.375)
+    return calories * f_akt_values.get(act_norm, 1.20)
 
-#Cek dan enforce batas minimum kalori aman (Wanita: 1000-1200, Pria: 1200-1600 kkal)
+#Cek dan enforce batas minimum kalori aman sesuai PERKENI 2024
 def check_minimum_calories(calories: float, gender: str):
-    min_cal = {"pria": (1200, 1600), "wanita": (1000, 1200)}
-    low, high = min_cal[gender]
+    # Batas minimum PERKENI 2024:
+    # Wanita: min 1000 kkal/hari
+    # Pria: min 1200 kkal/hari
+    min_cal = {"pria": 1200, "wanita": 1000}
+    minimum = min_cal[gender]
     warning = None
 
-    if calories < low:
+    if calories < minimum:
         warning = (
-            f"Kebutuhan kalori terhitung {calories:.1f} kkal, "
-            f"di bawah batas minimum aman ({low}–{high} kkal untuk {gender}). "
-            f"Disesuaikan ke {low} kkal."
+            f"⚠️ Kebutuhan kalori hasil perhitungan ({calories:.0f} kkal) "
+            f"di bawah batas minimum aman ({minimum} kkal untuk {gender}). "
+            f"Kalori dinaikkan ke {minimum} kkal untuk menjaga keamanan nutrisi."
         )
-        calories = low
-    elif calories < high:
-        warning = (
-            f"Kebutuhan kalori berada di batas bawah rentang aman "
-            f"({low}–{high} kkal untuk {gender})."
-        )
+        calories = minimum
 
     return calories, warning
 
 #Distribusi kalori ke 5 jadwal makan (Pagi 20%, Siang 30%, Sore 25%, Snack1 10%, Snack2 15%)
 def distribute_calories(cal: float) -> dict:
+    # Distribusi proporsi kalori per jadwal makan:
+    # Total harus = 100% (0.20 + 0.30 + 0.25 + 0.10 + 0.15 = 1.00)
     return {
-        "Pagi": cal * 0.20,
-        "Siang": cal * 0.30,
-        "Sore/Malam": cal * 0.25,
-        "Snack 1": cal * 0.10,
-        "Snack 2": cal * 0.15,
+        "Pagi": cal * 0.20,         # 20% - Sarapan
+        "Siang": cal * 0.30,        # 30% - Makan siang (porsi terbesar)
+        "Sore/Malam": cal * 0.25,   # 25% - Makan malam
+        "Snack 1": cal * 0.10,      # 10% - Snack pagi
+        "Snack 2": cal * 0.15,      # 15% - Snack sore
     }
 
 #Hitung target makronutrien per jadwal (Karbo 55%, Protein 15%, Lemak 30%, Serat 14g/1000kkal)
 def calculate_nutrients(cal: float) -> dict:
+    # Konversi kalori ke gram makronutrien:
+    # Karbohidrat: 55% kalori, 1g = 4 kkal → gram = (kalori × 0.55) / 4
+    # Protein    : 15% kalori, 1g = 4 kkal → gram = (kalori × 0.15) / 4
+    # Lemak      : 30% kalori, 1g = 9 kkal → gram = (kalori × 0.30) / 9
+    # Serat      : 14g per 1000 kkal → gram = kalori × 0.014
     return {
-        "karbohidrat": (cal * 0.55) / 4.0,
-        "protein": (cal * 0.15) / 4.0,
-        "lemak": (cal * 0.30) / 9.0,
-        "fiber": (cal * 0.014),
+        "karbohidrat": (cal * 0.55) / 4.0,  # 55% energi dari karbo
+        "protein": (cal * 0.15) / 4.0,      # 15% energi dari protein
+        "lemak": (cal * 0.30) / 9.0,        # 30% energi dari lemak
+        "fiber": (cal * 0.014),             # 14g per 1000 kkal
     }
 
 #Hitung RMSE untuk evaluasi akurasi nutrisi
@@ -199,6 +297,14 @@ def calculator():
 def blog():
     return render_template('blog.html')
 
+@app.route('/blog/diet-3j')
+def blog_article_diet_3j():
+    return render_template('blog/diet-3j.html')
+
+@app.route('/blog/porsi-nasi')
+def blog_article_porsi_nasi():
+    return render_template('blog/porsi-nasi.html')
+
 @app.route('/outputs', methods=['POST'])
 def output():
     try:
@@ -215,10 +321,29 @@ def output():
         exclude_foods = parse_exclude_foods(request.form)
         swap_meal = request.form.get('swap_meal', '')
 
+        # 1. Hitung BBI (Broca)
         bbi = calculate_bbi(height, gender)
-        status, percentage = classify_nutrition_status(weight, bbi)
+        
+        # 2. Hitung IMT dan klasifikasi
+        imt = calculate_imt(weight, height)
+        imt_status = classify_imt(imt)
+        
+        # 3. Klasifikasi status berat badan berdasarkan BBI
+        status = classify_nutrition_status(weight, bbi)
+        
+        # Hitung persentase berat badan terhadap BBI
+        percentage = (weight / bbi) * 100 if bbi > 0 else 100
+        
+        # 4. Hitung energi basal
         base_calories = calculate_base_calories(bbi, gender)
+        
+        # 5. Koreksi usia dan aktivitas
         calories = apply_corrections(base_calories, age, activity_level)
+        
+        # 6. Koreksi berat badan (kurus/gemuk)
+        calories = apply_weight_correction(calories, status)
+        
+        # 7. Enforce batas minimum klinis
         final_calories, warning = check_minimum_calories(calories, gender)
 
         distribution = distribute_calories(final_calories)
@@ -295,6 +420,8 @@ def output():
             activity_level=activity_display,
             date_today=date_today,
             bbi=bbi,
+            imt=imt,
+            imt_status=imt_status,
             status=status,
             percentage=percentage,
             caloric_needs=final_calories,

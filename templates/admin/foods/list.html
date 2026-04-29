@@ -1,0 +1,171 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Daftar Makanan{% endblock %}
+{% block page_title %}Kelola Makanan{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+            <i class="bi bi-egg-fried"></i> Daftar Makanan
+            <span class="badge bg-primary ms-2">{{ foods.total }} makanan</span>
+        </div>
+        <a href="{{ url_for('admin.add_food') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-circle"></i> Tambah Makanan
+        </a>
+    </div>
+    <div class="card-body">
+        <!-- Filter dan Search -->
+        <form method="GET" action="{{ url_for('admin.list_foods') }}" class="row g-3 mb-4">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" 
+                       placeholder="Cari nama makanan..." 
+                       value="{{ search_query }}">
+            </div>
+            <div class="col-md-3">
+                <select name="category" class="form-select">
+                    <option value="">Semua Kategori</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.name }}" {% if current_category == cat.name %}selected{% endif %}>
+                        {{ cat.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Filter
+                </button>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ url_for('admin.list_foods') }}" class="btn btn-secondary w-100">
+                    <i class="bi bi-x-circle"></i> Reset
+                </a>
+            </div>
+        </form>
+
+        <!-- Table -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 5%;">No</th>
+                        <th style="width: 30%;">Nama Makanan</th>
+                        <th style="width: 12%;">Kategori</th>
+                        <th style="width: 8%;">Energi</th>
+                        <th style="width: 8%;">Protein</th>
+                        <th style="width: 8%;">Lemak</th>
+                        <th style="width: 8%;">Karbo</th>
+                        <th style="width: 8%;">Serat</th>
+                        <th style="width: 13%;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if foods.items %}
+                        {% for food in foods.items %}
+                        <tr>
+                            <td>{{ loop.index + (foods.page - 1) * foods.per_page }}</td>
+                            <td>
+                                <strong>{{ food.nama_bahan }}</strong>
+                                {% if food.allergens %}
+                                <br>
+                                {% for allergen in food.allergens %}
+                                <span class="badge bg-warning text-dark" style="font-size: 0.7rem;">
+                                    {{ allergen.allergen_name }}
+                                </span>
+                                {% endfor %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ food.category.name }}</span>
+                                {% if food.staple_type %}
+                                <br><span class="badge bg-info" style="font-size: 0.7rem;">
+                                    {{ food.staple_type.name }}
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ "%.1f"|format(food.energi) }}</td>
+                            <td>{{ "%.1f"|format(food.protein) }}</td>
+                            <td>{{ "%.1f"|format(food.lemak) }}</td>
+                            <td>{{ "%.1f"|format(food.karbohidrat) }}</td>
+                            <td>{{ "%.1f"|format(food.serat) }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{{ url_for('admin.edit_food', id=food.id) }}" 
+                                       class="btn btn-warning btn-action" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-danger btn-action" 
+                                            onclick="confirmDelete({{ food.id }}, '{{ food.nama_bahan }}')"
+                                            title="Hapus">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-5">
+                            <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                            <p class="mt-2">Tidak ada data makanan</p>
+                            <a href="{{ url_for('admin.add_food') }}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i> Tambah Makanan Pertama
+                            </a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if foods.pages > 1 %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item {% if not foods.has_prev %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.list_foods', page=foods.prev_num, category=current_category, search=search_query) }}">
+                        Previous
+                    </a>
+                </li>
+                
+                {% for page_num in foods.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if page_num %}
+                        <li class="page-item {% if page_num == foods.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('admin.list_foods', page=page_num, category=current_category, search=search_query) }}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endfor %}
+                
+                <li class="page-item {% if not foods.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.list_foods', page=foods.next_num, category=current_category, search=search_query) }}">
+                        Next
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<form id="deleteForm" method="POST" style="display: none;">
+    <input type="hidden" name="_method" value="DELETE">
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(foodId, foodName) {
+    if (confirm('Apakah Anda yakin ingin menghapus "' + foodName + '"?\n\nData yang dihapus tidak dapat dikembalikan!')) {
+        const form = document.getElementById('deleteForm');
+        form.action = "{{ url_for('admin.delete_food', id=0) }}".replace('0', foodId);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

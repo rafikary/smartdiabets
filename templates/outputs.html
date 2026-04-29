@@ -1,327 +1,518 @@
-<!doctype html>
-<html lang="id" data-theme="light">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Hasil Rekomendasi — SmartDiabets</title>
+﻿{% extends "base.html" %}
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+{% block title %}Hasil Rekomendasi &mdash; SmartDiabets{% endblock %}
 
-  <style>
-    :root{
-      --brand:#047857; --brand-soft:#22c55e; --accent:#fb923c;
-      --ink:#022c22; --muted:#6b7280; --paper:#f4faf7; --card:#ffffffef; --border:#00000010;
-      --shadow:0 18px 50px rgba(15,118,110,.18); --pill:#f0fbf6;
-      --ink-hero:#064e3b;
-      --hero-grad: radial-gradient(1200px 600px at 10% 10%, rgba(34,197,94,.16), transparent 60%),
-                   radial-gradient(1000px 500px at 90% 40%, rgba(56,189,248,.16), transparent 60%),
-                   linear-gradient(135deg, #ecfdf5, #eff6ff);
-    }
-    html[data-theme="dark"]{
-      --paper:#020617; --ink:#e5e7eb; --muted:#9ca3af; --card:#020617f5; --border:#ffffff1a;
-      --shadow:0 18px 50px rgba(0,0,0,.65); --pill:rgba(255,255,255,.06);
-      --ink-hero:#e0f2fe;
-      --hero-grad: radial-gradient(1200px 600px at 10% 10%, rgba(34,197,94,.18), transparent 60%),
-                   radial-gradient(1000px 500px at 90% 40%, rgba(56,189,248,.18), transparent 60%),
-                   linear-gradient(135deg, #020617, #022c22);
-    }
-    html[data-theme="dark"]{ color-scheme: dark; }
-    html[data-theme="light"]{ color-scheme: light; }
+{% block extra_css %}
+<style>
+  :root {
+    --brand:#047857; --brand-mid:#059669; --brand-soft:#10b981; --brand-glow:#34d399;
+    --ink:#0a1628; --muted:#64748b; --paper:#f8fafc; --card:#fff;
+    --border:rgba(0,0,0,.07); --shadow-card:0 4px 24px rgba(15,23,42,.08);
+    --shadow-hover:0 20px 56px rgba(4,120,87,.18);
+    --radius-xl:22px; --radius-lg:16px; --radius-md:12px;
+    --tr:all .25s cubic-bezier(.4,0,.2,1);
+  }
+  html[data-theme="dark"] {
+    --ink:#e2e8f0; --muted:#94a3b8; --paper:#0f172a; --card:#1e293b;
+    --border:rgba(255,255,255,.08); --shadow-card:0 4px 24px rgba(0,0,0,.35);
+  }
+  .out-hero {
+    background:linear-gradient(135deg,#047857 0%,#059669 45%,#0d9488 100%);
+    padding:1.8rem 0 1.6rem; position:relative; overflow:hidden;
+  }
+  html[data-theme="dark"] .out-hero { background:linear-gradient(135deg,#064e3b 0%,#065f46 50%,#134e4a 100%); }
+  .out-hero .blob { position:absolute; border-radius:50%; filter:blur(70px); pointer-events:none; }
+  .out-hero .blob-1 { width:300px;height:300px;background:rgba(255,255,255,.08);top:-80px;right:160px; }
+  .out-hero .blob-2 { width:220px;height:220px;background:rgba(13,148,136,.4);bottom:-70px;left:-30px; }
+  .out-hero::after{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");pointer-events:none;}
+  /* hero 2-col grid */
+  .hero-grid{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2rem;}
+  @media(max-width:640px){.hero-grid{grid-template-columns:1fr;}.hero-right{display:none;}}
+  /* calorie showcase on hero right */
+  .kcal-showcase{
+    position:relative;width:170px;height:170px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .kcal-showcase .ks-ring{
+    position:absolute;border-radius:50%;border:1.5px solid rgba(255,255,255,.18);
+  }
+  .kcal-showcase .ks-ring-1{inset:0;}
+  .kcal-showcase .ks-ring-2{inset:14px;border-color:rgba(255,255,255,.12);}
+  .kcal-showcase .ks-ring-3{inset:28px;border-color:rgba(255,255,255,.22);border-width:2px;border-style:dashed;animation:spin 24s linear infinite;}
+  .kcal-showcase .ks-core{
+    position:relative;z-index:1;
+    width:100px;height:100px;border-radius:50%;
+    background:rgba(255,255,255,.14);backdrop-filter:blur(12px);
+    border:2px solid rgba(255,255,255,.3);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    box-shadow:0 0 32px rgba(52,211,153,.35);
+  }
+  .ks-num{font-family:'Poppins',sans-serif;font-size:1.45rem;font-weight:900;color:#fff;line-height:1;}
+  .ks-lbl{font-size:.6rem;color:rgba(255,255,255,.7);font-weight:700;letter-spacing:.05em;margin-top:.1rem;}
+  /* dot orbit decorations */
+  .ks-dot{
+    position:absolute;width:10px;height:10px;border-radius:50%;
+    background:rgba(255,255,255,.5);box-shadow:0 0 8px rgba(255,255,255,.6);
+  }
+  .ks-dot-1{top:8px;left:50%;transform:translateX(-50%);}
+  .ks-dot-2{bottom:8px;right:22px;background:rgba(167,243,208,.7);}
+  .ks-dot-3{top:50%;left:8px;transform:translateY(-50%);width:7px;height:7px;background:rgba(255,255,255,.35);}
+  .out-eyebrow {
+    display:inline-flex;align-items:center;gap:.5rem;
+    background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+    border-radius:999px;padding:.28rem .9rem;
+    font-size:.75rem;font-weight:700;color:rgba(255,255,255,.9);
+    letter-spacing:.04em;text-transform:uppercase;margin-bottom:.8rem;
+  }
+  .out-eyebrow::before,.out-eyebrow::after{content:'';display:inline-block;width:20px;height:1.5px;background:currentColor;opacity:.6;border-radius:2px;}
+  .out-hero h1 {
+    font-family:'Poppins',sans-serif;font-weight:900;
+    font-size:clamp(1.5rem,3vw,2.2rem);color:#fff;
+    margin-bottom:.25rem;line-height:1.2;
+  }
+  .out-hero h1 .grad {
+    background:linear-gradient(135deg,#a7f3d0,#6ee7b7);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  }
+  .out-date{color:rgba(255,255,255,.7);font-size:.83rem;display:flex;align-items:center;gap:.4rem;}
+  .out-stat-row{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem;}
+  .out-stat-pill {
+    display:inline-flex;align-items:center;gap:.45rem;
+    background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.25);border-radius:999px;
+    padding:.35rem .9rem;font-size:.8rem;font-weight:700;color:#fff;
+    backdrop-filter:blur(8px);
+  }
+  .out-stat-pill i{color:#6ee7b7;}
+  .out-stat-pill .sp-big{font-size:.98rem;color:#34d399;}
+  .btn-back {
+    display:inline-flex;align-items:center;gap:.4rem;
+    padding:.35rem .85rem;border-radius:.6rem;
+    background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);
+    color:rgba(255,255,255,.85);font-weight:700;font-size:.82rem;
+    text-decoration:none;transition:var(--tr);margin-bottom:.9rem;
+  }
+  .btn-back:hover{background:rgba(255,255,255,.25);color:#fff;}
+  .btn-save {
+    display:inline-flex;align-items:center;gap:.45rem;
+    padding:.55rem 1.2rem;border-radius:var(--radius-md);
+    background:linear-gradient(135deg,#059669,#047857);
+    border:none;color:white;font-weight:800;font-size:.85rem;
+    cursor:pointer;transition:var(--tr);
+    box-shadow:0 6px 18px rgba(4,120,87,.3);
+  }
+  .btn-save:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(4,120,87,.4);}
+  .btn-save-ghost {
+    display:inline-flex;align-items:center;gap:.45rem;
+    padding:.55rem 1.2rem;border-radius:var(--radius-md);
+    background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);
+    color:#fff;font-weight:700;font-size:.85rem;text-decoration:none;transition:var(--tr);
+  }
+  .btn-save-ghost:hover{background:rgba(255,255,255,.25);}
+  .sec-label {
+    font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;
+  }
+  .sec-label::before,.sec-label::after{content:'';flex:1;height:1px;background:var(--border);}
+  .card-g{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);}
+  .card-g-title{display:flex;align-items:center;gap:.5rem;font-weight:800;font-size:.87rem;color:var(--ink);margin-bottom:.8rem;}
+  .card-g-title i {
+    width:32px;height:32px;
+    background:linear-gradient(135deg,rgba(5,150,105,.15),rgba(16,185,129,.08));
+    border-radius:9px;display:flex;align-items:center;justify-content:center;
+    font-size:.9rem;color:var(--brand-mid);flex-shrink:0;
+  }
+  .meta-label{color:var(--muted);font-size:.73rem;font-weight:600;margin-bottom:.15rem;}
+  .meta-val{font-weight:800;color:var(--ink);font-size:.92rem;}
+  .meta-big{font-size:1.6rem;font-weight:900;color:var(--brand);line-height:1;}
+  .meta-big-unit{font-size:.8rem;font-weight:600;color:var(--muted);}
+  .status-badge{display:inline-block;padding:.2rem .65rem;border-radius:999px;font-size:.73rem;font-weight:800;}
+  .status-kurus{background:rgba(59,130,246,.12);color:#1d4ed8;}
+  .status-normal{background:rgba(16,185,129,.12);color:#047857;}
+  .status-gemuk,.status-obesitas{background:rgba(245,158,11,.12);color:#b45309;}
+  html[data-theme="dark"] .status-kurus{background:rgba(59,130,246,.2);color:#93c5fd;}
+  html[data-theme="dark"] .status-normal{background:rgba(16,185,129,.2);color:#6ee7b7;}
+  html[data-theme="dark"] .status-gemuk,html[data-theme="dark"] .status-obesitas{background:rgba(245,158,11,.2);color:#fcd34d;}
+  .kalori-display {
+    background:linear-gradient(135deg,rgba(4,120,87,.06),rgba(16,185,129,.04));
+    border:1.5px solid rgba(4,120,87,.15);border-radius:var(--radius-md);
+    padding:.85rem 1rem;display:flex;align-items:center;gap:.75rem;
+  }
+  .kalori-display .kd-icon {
+    width:44px;height:44px;border-radius:12px;flex-shrink:0;
+    background:linear-gradient(135deg,#059669,#047857);
+    display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;
+  }
+  .warn-box{background:rgba(245,158,11,.08);border-left:3px solid #f59e0b;border-radius:.5rem;padding:.65rem .9rem;color:var(--ink);font-size:.82rem;margin-top:.75rem;}
+  .profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;}
+  .profile-item{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius-md);padding:.6rem .75rem;}
+  .dist-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:.6rem;}
+  .dist-chip{background:var(--paper);border:1.5px solid var(--border);border-radius:var(--radius-md);padding:.7rem .5rem;text-align:center;transition:var(--tr);position:relative;overflow:hidden;}
+  .dist-chip::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+  .dist-chip:nth-child(1)::before{background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+  .dist-chip:nth-child(2)::before{background:linear-gradient(90deg,#059669,#34d399);}
+  .dist-chip:nth-child(3)::before{background:linear-gradient(90deg,#f43f5e,#fb7185);}
+  .dist-chip:nth-child(4)::before{background:linear-gradient(90deg,#8b5cf6,#c4b5fd);}
+  .dist-chip:nth-child(5)::before{background:linear-gradient(90deg,#06b6d4,#67e8f9);}
+  .dist-chip:hover{border-color:var(--brand-soft);transform:translateY(-3px);box-shadow:0 8px 20px rgba(15,23,42,.1);}
+  .dist-chip .dc-time{font-size:.68rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.2rem;margin-top:.25rem;}
+  .dist-chip .dc-val{font-size:1.15rem;font-weight:900;color:var(--brand);}
+  .dist-chip .dc-kcal{font-size:.65rem;color:var(--muted);}
+  .filter-banner{background:linear-gradient(135deg,rgba(4,120,87,.07),rgba(16,185,129,.04));border:1.5px solid rgba(4,120,87,.2);border-radius:var(--radius-lg);padding:1rem 1.25rem;display:flex;align-items:flex-start;gap:.85rem;}
+  .filter-banner .fb-icon{width:40px;height:40px;border-radius:10px;flex-shrink:0;background:linear-gradient(135deg,#047857,#10b981);display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:#fff;box-shadow:0 4px 12px rgba(4,120,87,.25);}
+  .filter-banner b{color:var(--brand);}
+  .fi-text{color:var(--muted);font-size:.83rem;line-height:1.7;}
+  .fi-tag{display:inline-flex;align-items:center;gap:.3rem;background:rgba(4,120,87,.1);border-radius:999px;padding:.18rem .6rem;font-size:.75rem;font-weight:700;color:var(--brand);margin:.15rem .1rem;}
+  .meal-nav{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);padding:.85rem 1rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;}
+  .meal-nav-label{font-size:.7rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-right:.25rem;}
+  .meal-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:var(--radius-md);background:var(--paper);border:1.5px solid var(--border);color:var(--muted);font-weight:700;font-size:.8rem;cursor:pointer;transition:var(--tr);}
+  .meal-btn:hover{border-color:var(--brand-soft);color:var(--brand);transform:translateY(-1px);}
+  .meal-btn.active{background:linear-gradient(135deg,#059669,#047857);border-color:#047857;color:#fff;box-shadow:0 6px 16px rgba(4,120,87,.28);}
+  .meal-section{display:none;animation:fadeUp .3s ease;}
+  .meal-section.active{display:block;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .meal-header-card{background:linear-gradient(135deg,#047857 0%,#059669 60%,#0d9488 100%);border:none;border-radius:var(--radius-lg);padding:1.1rem 1.25rem;margin-bottom:1rem;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;}
+  .meal-header-title{font-family:'Poppins',sans-serif;font-weight:900;font-size:1.05rem;color:#fff;margin-bottom:.15rem;display:flex;align-items:center;gap:.5rem;}
+  .meal-header-title i{color:#6ee7b7;}
+  .meal-target{font-size:.8rem;color:rgba(255,255,255,.75);}
+  .meal-target strong{color:#a7f3d0;font-weight:800;}
+  .nut-row{display:flex;gap:.5rem;flex-wrap:wrap;}
+  .nut-chip{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);border-radius:var(--radius-md);padding:.5rem .7rem;text-align:center;min-width:70px;backdrop-filter:blur(6px);}
+  .nut-chip .nc-val{font-size:.95rem;font-weight:900;color:#fff;}
+  .nut-chip .nc-lbl{font-size:.65rem;color:rgba(255,255,255,.7);margin-top:.1rem;}
+  .food-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);transition:var(--tr);height:100%;overflow:hidden;position:relative;}
+  .food-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-hover);}
+  .food-card-top{height:4px;width:100%;}
+  .food-card.type-pokok .food-card-top{background:linear-gradient(90deg,#059669,#34d399);}
+  .food-card.type-lauk  .food-card-top{background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+  .food-card.type-sayur .food-card-top{background:linear-gradient(90deg,#06b6d4,#67e8f9);}
+  .food-card.type-buah  .food-card-top{background:linear-gradient(90deg,#8b5cf6,#c4b5fd);}
+  .food-card-body{padding:1rem 1.1rem 1.1rem;}
+  .food-cat-badge{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .6rem;border-radius:999px;font-size:.7rem;font-weight:800;margin-bottom:.55rem;}
+  .food-cat-badge.pokok{background:rgba(16,185,129,.12);color:#047857;}
+  .food-cat-badge.lauk {background:rgba(245,158,11,.12); color:#b45309;}
+  .food-cat-badge.sayur{background:rgba(6,182,212,.12);  color:#0e7490;}
+  .food-cat-badge.buah {background:rgba(139,92,246,.12); color:#6d28d9;}
+  html[data-theme="dark"] .food-cat-badge.pokok{background:rgba(16,185,129,.2);color:#6ee7b7;}
+  html[data-theme="dark"] .food-cat-badge.lauk {background:rgba(245,158,11,.2);color:#fcd34d;}
+  html[data-theme="dark"] .food-cat-badge.sayur{background:rgba(6,182,212,.2);color:#67e8f9;}
+  html[data-theme="dark"] .food-cat-badge.buah {background:rgba(139,92,246,.2);color:#c4b5fd;}
+  .food-name{font-weight:900;font-size:.95rem;color:var(--ink);margin-bottom:.15rem;}
+  .food-sub{font-size:.75rem;color:var(--muted);margin-bottom:.65rem;}
+  .food-row{display:flex;justify-content:space-between;align-items:center;font-size:.78rem;color:var(--muted);padding:.25rem 0;border-bottom:1px solid var(--border);}
+  .food-row:last-child{border-bottom:none;}
+  .food-row b{color:var(--ink);font-weight:800;}
+  .swap-wrap{
+    background:linear-gradient(135deg,#047857,#059669 60%,#0d9488);
+    border:none;border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-top:.75rem;
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;
+    position:relative;overflow:hidden;
+  }
+  .swap-wrap::before{content:'';position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.06);}
+  .swap-wrap::after{content:'';position:absolute;right:60px;bottom:-40px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.05);}
+  .swap-hint{font-size:.83rem;color:rgba(255,255,255,.85);position:relative;z-index:1;}
+  .swap-hint strong{color:#a7f3d0;}
+  .swap-icon-box{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:1rem;color:#fff;flex-shrink:0;}
+  .btn-swap{display:inline-flex;align-items:center;gap:.45rem;padding:.55rem 1.2rem;border-radius:var(--radius-md);background:#fff;border:none;color:#047857;font-weight:800;font-size:.85rem;cursor:pointer;transition:var(--tr);box-shadow:0 4px 14px rgba(0,0,0,.15);position:relative;z-index:1;}
+  .btn-swap:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2);background:#f0fdf4;}
+  .btn-swap.loading{position:relative;color:transparent;pointer-events:none;}
+  .btn-swap.loading::after{content:"";position:absolute;inset:0;margin:auto;width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+{% endblock %}
 
-    body{background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; overflow-x:hidden}
-
-    .hero{
-      position:relative; background:var(--hero-grad); color:var(--ink-hero);
-      padding:48px 0; overflow:hidden
-    }
-    .hero .grain{position:absolute; inset:0; opacity:.12; pointer-events:none;
-      background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><circle cx="8" cy="12" r="1" fill="white" opacity=".14"/></svg>');
-      mix-blend-mode:overlay;
-    }
-
-    .cardx{background:var(--card); border:1px solid var(--border); border-radius:20px; box-shadow:var(--shadow)}
-    .stat-pill{display:inline-flex; gap:.5rem; align-items:center; padding:.4rem .7rem; border-radius:999px; background:var(--pill); border:1px solid var(--border); font-weight:800; font-size:.9rem}
-
-    .meal-tabs{background:var(--card); border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow); padding:16px}
-    .meal-btn{
-      border:none; background:linear-gradient(135deg, rgba(34,197,94,.08), rgba(16,185,129,.06));
-      border:1px solid var(--border); color:var(--ink);
-      padding:10px 14px; border-radius:12px; font-weight:800; cursor:pointer; transition:.18s; min-width:130px
-    }
-    .meal-btn:hover{transform:translateY(-2px)}
-    .meal-btn.active{background:linear-gradient(135deg, var(--brand-soft), var(--brand)); color:#fff; box-shadow:0 14px 30px rgba(2,6,23,.06)}
-
-    .meal-section{display:none; animation:fade .36s ease}
-    .meal-section.active{display:block}
-    @keyframes fade{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
-
-    .nut{display:grid; grid-template-columns: repeat(4, 1fr); gap:8px}
-    .nut .chip{background:var(--pill); border:1px solid var(--border); border-radius:12px; padding:10px 12px; text-align:center}
-    .nut .big{font-weight:900}
-
-    .food-card{
-      background:var(--card); border:1px solid var(--border); border-left:4px solid var(--accent);
-      border-radius:14px; padding:16px; box-shadow:var(--shadow); transition:.18s
-    }
-    .food-card:hover{transform:translateX(4px)}
-    .food-title{font-weight:900; margin:0 0 6px}
-    .food-meta{color:var(--muted); margin-bottom:8px}
-
-    .warn{background:rgba(217,119,6,.08); border-left:4px solid #d97706; padding:10px 12px; border-radius:10px}
-
-    .btn-swap{
-      background:linear-gradient(135deg, var(--brand-soft), var(--brand));
-      color:#fff; border:none; border-radius:12px; padding:10px 14px;
-      font-weight:900; box-shadow:0 14px 30px rgba(2,6,23,.06)
-    }
-    .btn-swap.loading{position:relative; color:transparent}
-    .btn-swap.loading:after{
-      content:""; position:absolute; inset:0; margin:auto; width:20px; height:20px; border-radius:50%;
-      border:2px solid rgba(255,255,255,.35); border-top-color:#fff; animation:spin 1s linear infinite
-    }
-    @keyframes spin{to{transform:rotate(360deg)}}
-  </style>
-</head>
-<body>
-
-  <header class="hero">
-    <div class="grain"></div>
-    <div class="container position-relative">
-      <a href="/calculator" class="btn btn-outline-dark btn-sm mb-3" style="border-color:rgba(0,0,0,.25)">
-        <i class="bi bi-arrow-left me-1"></i>Kembali
-      </a>
-      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-        <div>
-          <h1 class="mb-1"><i class="bi bi-clipboard-data me-2"></i>Hasil Rekomendasi Makanan</h1>
-          <div class="mt-2">Tanggal: <b>{{ date_today }}</b></div>
+{% block content %}
+<div class="out-hero">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="container" style="position:relative;z-index:1;">
+    <a href="/calculator" class="btn-back"><i class="bi bi-arrow-left"></i> Kembali ke Kalkulator</a>
+    <div class="hero-grid">
+      <div>
+        <div class="out-eyebrow"><i class="bi bi-stars"></i> Hasil Rekomendasi Personal</div>
+        <h1>Menu Harianmu<br><span class="grad">Sudah Siap!</span></h1>
+        <div class="out-date"><i class="bi bi-calendar3"></i>{{ date_today }}&nbsp;&middot;&nbsp;<i class="bi bi-person-fill"></i>{{ name }}</div>
+        <div class="out-stat-row">
+          <div class="out-stat-pill"><i class="bi bi-fire"></i><span><span class="sp-big">{{ caloric_needs|round(0)|int }}</span> kkal/hari</span></div>
+          <div class="out-stat-pill"><i class="bi bi-calendar2-week"></i><span>5 waktu makan</span></div>
+          <div class="out-stat-pill"><i class="bi bi-cpu"></i><span>Broca &middot; PERKENI 2024</span></div>
         </div>
-        <div class="stat-pill"><i class="bi bi-robot me-1"></i> Regresi Linier • Broca + PERKENI</div>
+        <div class="mt-3">
+          {% if current_user.is_authenticated and not current_user.is_admin %}
+          <button id="saveRecommendation" class="btn-save"><i class="bi bi-bookmark-fill"></i> Simpan ke Riwayat</button>
+          {% elif not current_user.is_authenticated %}
+          <a href="{{ url_for('user.login', next=request.path) }}" class="btn-save-ghost"><i class="bi bi-box-arrow-in-right"></i> Login untuk Menyimpan</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="hero-right">
+        <div class="kcal-showcase">
+          <div class="ks-ring ks-ring-1"></div>
+          <div class="ks-ring ks-ring-2"></div>
+          <div class="ks-ring ks-ring-3"></div>
+          <div class="ks-dot ks-dot-1"></div>
+          <div class="ks-dot ks-dot-2"></div>
+          <div class="ks-dot ks-dot-3"></div>
+          <div class="ks-core">
+            <div class="ks-num">{{ caloric_needs|round(0)|int }}</div>
+            <div class="ks-lbl">KKAL / HARI</div>
+          </div>
+        </div>
       </div>
     </div>
-  </header>
+  </div>
+</div>
 
-  <main class="py-4">
-    <div class="container">
-      <div class="row g-3">
-        <div class="col-lg-6">
-          <div class="cardx p-3 h-100">
-            <div class="d-flex align-items-center gap-2 mb-2">
-              <i class="bi bi-person-circle"></i><b>Profil Pengguna</b>
-            </div>
-            <div class="row">
-              <div class="col-6 small"><span class="text-muted">Nama</span><br><b>{{ name }}</b></div>
-              <div class="col-6 small"><span class="text-muted">Jenis Kelamin</span><br><b>{{ gender_display }}</b></div>
-              <div class="col-4 small mt-2"><span class="text-muted">Umur</span><br><b>{{ age }} th</b></div>
-              <div class="col-4 small mt-2"><span class="text-muted">Berat</span><br><b>{{ weight }} kg</b></div>
-              <div class="col-4 small mt-2"><span class="text-muted">Tinggi</span><br><b>{{ height }} cm</b></div>
-              <div class="col-12 small mt-2"><span class="text-muted">Aktivitas</span><br><b>{{ activity_level }}</b></div>
-            </div>
-          </div>
-        </div>
+<div class="container py-4">
 
-        <div class="col-lg-6">
-          <div class="cardx p-3 h-100">
-            <div class="d-flex align-items-center gap-2 mb-2">
-              <i class="bi bi-graph-up"></i><b>Ringkasan Perhitungan</b>
-            </div>
-            <div class="row gy-2">
-              <div class="col-6 small"><span class="text-muted">BBI</span><br><b>{{ bbi|round(2) }} kg</b></div>
-              <div class="col-6 small"><span class="text-muted">Status Gizi</span><br><b>{{ status }}</b> ({{ percentage|round(2) }}%)</div>
-              <div class="col-12 small"><span class="text-muted">Kebutuhan Kalori</span><br><b>{{ caloric_needs|round(2) }} kkal/hari</b></div>
-            </div>
-            {% if warning %}
-            <div class="warn mt-3"><i class="bi bi-exclamation-triangle me-1"></i>{{ warning }}</div>
-            {% endif %}
-          </div>
+  <div class="sec-label">Ringkasan Data</div>
+  <div class="row g-3 mb-4">
+    <div class="col-lg-5">
+      <div class="card-g p-3 h-100">
+        <div class="card-g-title"><i class="bi bi-person-vcard-fill"></i> Profil Anda</div>
+        <div class="profile-grid">
+          <div class="profile-item"><div class="meta-label">Nama</div><div class="meta-val">{{ name }}</div></div>
+          <div class="profile-item"><div class="meta-label">Jenis Kelamin</div><div class="meta-val">{{ gender_display }}</div></div>
+          <div class="profile-item"><div class="meta-label">Umur</div><div class="meta-val">{{ age }} tahun</div></div>
+          <div class="profile-item"><div class="meta-label">Berat Badan</div><div class="meta-val">{{ weight }} kg</div></div>
+          <div class="profile-item"><div class="meta-label">Tinggi Badan</div><div class="meta-val">{{ height }} cm</div></div>
+          <div class="profile-item"><div class="meta-label">Aktivitas</div><div class="meta-val" style="font-size:.82rem;">{{ activity_level }}</div></div>
         </div>
       </div>
-
-      <div class="cardx p-3 mt-3">
-        <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-pie-chart"></i><b>Distribusi Kalori (Diet 3J)</b></div>
-        <div class="row small text-muted">
-          {% for meal_time, calories in distribution.items() %}
-          <div class="col-md-2 col-6 mb-1"><b>{{ meal_time }}</b>: {{ calories|round(0) }} kkal</div>
-          {% endfor %}
-        </div>
-      </div>
-
-      <div class="meal-tabs mt-4">
-        <div class="d-flex flex-wrap gap-2">
-          {% for m in ['Pagi','Siang','Sore/Malam','Snack 1','Snack 2'] %}
-          <button class="meal-btn" type="button" data-meal="{{ m|replace('/', '-') }}">
-            {% if m=='Pagi' %}<i class="bi bi-sunrise me-1"></i>{% elif m=='Siang' %}<i class="bi bi-sun me-1"></i>
-            {% elif m=='Sore/Malam' %}<i class="bi bi-moon me-1"></i>{% elif m=='Snack 1' %}<i class="bi bi-cup me-1"></i>
-            {% else %}<i class="bi bi-cookie me-1"></i>{% endif %}
-            {{ m }}
-          </button>
-          {% endfor %}
-        </div>
-      </div>
-
-      {% set _al = allergies|default([]) %}
-      {% set _ex = exclude_foods|default('') %}
-
-      {% for meal_time in ['Pagi','Siang','Sore/Malam','Snack 1','Snack 2'] %}
-      {% set section_id = meal_time|replace('/', '-') %}
-      <section id="{{ section_id }}" class="meal-section mt-3">
-        <div class="cardx p-3 mb-3">
-          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-utensils"></i><b>Rekomendasi {{ meal_time }}</b>
-            </div>
-            <div class="nut">
-              <div class="chip"><div class="big">{{ nutrients[meal_time].karbohidrat|round(1) }}</div><div class="small text-muted">Karbo (g)</div></div>
-              <div class="chip"><div class="big">{{ nutrients[meal_time].lemak|round(1) }}</div><div class="small text-muted">Lemak (g)</div></div>
-              <div class="chip"><div class="big">{{ nutrients[meal_time].protein|round(1) }}</div><div class="small text-muted">Protein (g)</div></div>
-              <div class="chip"><div class="big">{{ nutrients[meal_time].fiber|round(1) }}</div><div class="small text-muted">Serat (g)</div></div>
-            </div>
+    </div>
+    <div class="col-lg-7">
+      <div class="card-g p-3 h-100">
+        <div class="card-g-title"><i class="bi bi-graph-up-arrow"></i> Hasil Perhitungan</div>
+        <div class="kalori-display mb-3">
+          <div class="kd-icon"><i class="bi bi-fire"></i></div>
+          <div>
+            <div style="font-size:.73rem;color:var(--muted);font-weight:700;margin-bottom:.2rem;">TOTAL KEBUTUHAN HARIAN</div>
+            <div><span class="meta-big">{{ caloric_needs|round(0)|int }}</span><span class="meta-big-unit"> kkal/hari</span></div>
           </div>
-          <div class="small text-muted mt-1">Target energi: <b>{{ distribution[meal_time]|round(0) }} kkal</b></div>
         </div>
-
-        <div class="row g-3">
-          {% for food in meals[meal_time] %}
-            {% if food['Pokok'] %}
-            <div class="col-md-6">
-              <div class="food-card h-100">
-                <h5 class="food-title"><i class="bi bi-bowl me-2"></i>{{ food['Pokok']['name'] }}</h5>
-                <div class="food-meta small">{{ food['Pokok']['category'] }}</div>
-                <div class="row small">
-                  <div class="col-6">Porsi: <b>{{ food['Pokok']['portion'] }} g</b></div>
-                  <div class="col-6">Kalori: <b>{{ food['Pokok']['calories']|round(1) }}</b></div>
-                  <div class="col-6 mt-1">Karbo: <b>{{ food['Pokok']['carbs']|round(1) }} g</b></div>
-                  <div class="col-6 mt-1">Lemak: <b>{{ food['Pokok']['fat']|round(1) }} g</b></div>
-                  <div class="col-6 mt-1">Protein: <b>{{ food['Pokok']['protein']|round(1) }} g</b></div>
-                  <div class="col-6 mt-1">Serat: <b>{{ food['Pokok']['fiber']|round(1) }} g</b></div>
-                </div>
-              </div>
-            </div>
-            {% endif %}
-
-            {% if food['Lauk'] %}
-            <div class="col-md-6">
-              <div class="food-card h-100">
-                <h5 class="food-title"><i class="bi bi-egg-fried me-2"></i>{{ food['Lauk']['name'] }}</h5>
-                <div class="food-meta small">{{ food['Lauk']['category'] }}</div>
-                <div class="row small">
-                  <div class="col-6">Porsi: <b>{{ food['Lauk']['portion'] }} g</b></div>
-                  <div class="col-6">Kalori: <b>{{ food['Lauk']['calories']|round(1) }}</b></div>
-                  <div class="col-6 mt-1">Karbo: <b>{{ food['Lauk']['carbs']|round(1) }} g</b></div>
-                  <div class="col-6 mt-1">Lemak: <b>{{ food['Lauk']['fat']|round(1) }} g</b></div>
-                  <div class="col-6 mt-1">Protein: <b>{{ food['Lauk']['protein']|round(1) }} g</b></div>
-                  <div class="col-6 mt-1">Serat: <b>{{ food['Lauk']['fiber']|round(1) }} g</b></div>
-                </div>
-              </div>
-            </div>
-            {% endif %}
-
-            {% if food['Sayur'] %}
-            <div class="col-md-6">
-              <div class="food-card h-100">
-                <h5 class="food-title"><i class="bi bi-flower1 me-2"></i>{{ food['Sayur']['name'] }}</h5>
-                <div class="food-meta small">{{ food['Sayur']['category'] }}</div>
-                <div class="row small">
-                  <div class="col-6">Porsi: <b>{{ food['Sayur']['portion'] }} g</b></div>
-                  <div class="col-6">Kalori: <b>{{ food['Sayur']['calories']|round(1) }}</b></div>
-                  <div class="col-6 mt-1">Karbo: <b>{{ food['Sayur']['carbs']|round(1) }} g</b></div>
-                  <div class="col-6 mt-1">Lemak: <b>{{ food['Sayur']['fat']|round(1) }} g</b></div>
-                  <div class="col-6 mt-1">Protein: <b>{{ food['Sayur']['protein']|round(1) }} g</b></div>
-                  <div class="col-6 mt-1">Serat: <b>{{ food['Sayur']['fiber']|round(1) }} g</b></div>
-                </div>
-              </div>
-            </div>
-            {% endif %}
-
-            {% if food['Buah'] %}
-            <div class="col-md-6">
-              <div class="food-card h-100">
-                <h5 class="food-title"><i class="bi bi-apple me-2"></i>{{ food['Buah']['name'] }}</h5>
-                <div class="food-meta small">{{ food['Buah']['category'] }}</div>
-                <div class="row small">
-                  <div class="col-6">Porsi: <b>{{ food['Buah']['portion'] }} g</b></div>
-                  <div class="col-6">Kalori: <b>{{ food['Buah']['calories']|round(1) }}</b></div>
-                  <div class="col-6 mt-1">Karbo: <b>{{ food['Buah']['carbs']|round(1) }} g</b></div>
-                  <div class="col-6 mt-1">Lemak: <b>{{ food['Buah']['fat']|round(1) }} g</b></div>
-                  <div class="col-6 mt-1">Protein: <b>{{ food['Buah']['protein']|round(1) }} g</b></div>
-                  <div class="col-6 mt-1">Serat: <b>{{ food['Buah']['fiber']|round(1) }} g</b></div>
-                </div>
-              </div>
-            </div>
-            {% endif %}
-          {% endfor %}
+        <div class="row g-2">
+          <div class="col-6"><div class="meta-label">BBI (Broca)</div><div class="meta-val">{{ bbi|round(1) }} kg</div></div>
+          <div class="col-6">
+            <div class="meta-label">Status Gizi</div>
+            <span class="status-badge status-{{ status|lower|replace(' ','') }}">{{ status }}</span>
+            <small style="color:var(--muted);font-size:.73rem;"> {{ percentage|round(1) }}%</small>
+          </div>
         </div>
+        {% if warning %}<div class="warn-box"><i class="bi bi-exclamation-triangle-fill me-1" style="color:#f59e0b;"></i>{{ warning }}</div>{% endif %}
+      </div>
+    </div>
+  </div>
 
-        {% set exclude_now = [] %}
-        {% for food in meals[meal_time] %}
-          {% if food['Pokok'] %}{% set _ = exclude_now.append(food['Pokok']['name']|trim) %}{% endif %}
-          {% if food['Lauk']  %}{% set _ = exclude_now.append(food['Lauk']['name']|trim)  %}{% endif %}
-          {% if food['Sayur'] %}{% set _ = exclude_now.append(food['Sayur']['name']|trim) %}{% endif %}
-          {% if food['Buah']  %}{% set _ = exclude_now.append(food['Buah']['name']|trim)  %}{% endif %}
-        {% endfor %}
-        {% set _ex_list = (_ex.split(',') if _ex else []) | map('trim') | reject('equalto','') | list %}
-        {% set exclude_combined_str = (_ex_list + exclude_now) | unique | join(', ') %}
-
-        <form action="/outputs" method="post" class="mt-2"
-              onsubmit="this.querySelector('button[type=submit]').classList.add('loading')">
-          <input type="hidden" name="name"    value="{{ name }}">
-          <input type="hidden" name="age"     value="{{ age }}">
-          <input type="hidden" name="gender"  value="{{ 'pria' if gender_display=='Laki-laki' else 'wanita' }}">
-          <input type="hidden" name="weight"  value="{{ weight }}">
-          <input type="hidden" name="height"  value="{{ height }}">
-          <input type="hidden" name="activity" value="{{ {
-            'Istirahat':'rest','Ringan':'light','Sedang':'moderate','Berat':'heavy','Sangat Berat':'very_heavy'
-          }[activity_level] if activity_level in ['Istirahat','Ringan','Sedang','Berat','Sangat Berat'] else 'light' }}">
-          {% for a in _al %}
-            <input type="hidden" name="allergies" value="{{ a }}">
-          {% endfor %}
-          <input type="hidden" name="exclude_foods" value="{{ exclude_combined_str }}">
-          <input type="hidden" name="swap_meal" value="{{ meal_time }}">
-          <button type="submit" class="btn-swap"><i class="bi bi-arrow-repeat me-1"></i> Ganti Menu {{ meal_time }}</button>
-        </form>
-
-      </section>
+  <div class="card-g p-3 mb-4">
+    <div class="card-g-title"><i class="bi bi-pie-chart-fill"></i> Distribusi Kalori 5 Waktu Makan</div>
+    <div class="dist-grid">
+      {% for meal_time, calories in distribution.items() %}
+      <div class="dist-chip">
+        <div class="dc-time">{{ meal_time }}</div>
+        <div class="dc-val">{{ calories|round(0)|int }}</div>
+        <div class="dc-kcal">kkal</div>
+      </div>
       {% endfor %}
     </div>
-  </main>
+  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
+  {% if allergies or exclude_foods %}
+  <div class="filter-banner mb-4">
+    <div class="fb-icon"><i class="bi bi-shield-check-fill"></i></div>
+    <div>
+      <div style="font-weight:800;font-size:.85rem;color:var(--ink);margin-bottom:.4rem;">Filter Keamanan Aktif</div>
+      <div class="fi-text">
+        {% if allergies %}
+        <div class="mb-1">Makanan yang mengandung {% for a in allergies %}<span class="fi-tag"><i class="bi bi-x-circle-fill"></i>{{ a }}</span>{% endfor %} telah dikeluarkan.</div>
+        {% endif %}
+        {% if exclude_foods %}<div>Menu yang dihindari: <b>{{ exclude_foods }}</b> tidak akan direkomendasikan.</div>{% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
-  <script>
-    document.addEventListener('DOMContentLoaded', ()=>{
-      const btns=[...document.querySelectorAll('.meal-btn')];
-      const secs=[...document.querySelectorAll('.meal-section')];
+  <div class="sec-label">Rekomendasi Menu</div>
+  <div class="meal-nav mb-3">
+    <span class="meal-nav-label">Pilih Waktu:</span>
+    {% for m in ['Pagi','Siang','Sore/Malam','Snack 1','Snack 2'] %}
+    <button class="meal-btn" type="button" data-meal="{{ m|replace('/', '-') }}">
+      {% if m=='Pagi' %}<i class="bi bi-sunrise-fill"></i>
+      {% elif m=='Siang' %}<i class="bi bi-sun-fill"></i>
+      {% elif m=='Sore/Malam' %}<i class="bi bi-moon-stars-fill"></i>
+      {% elif m=='Snack 1' %}<i class="bi bi-cup-hot-fill"></i>
+      {% else %}<i class="bi bi-apple"></i>{% endif %}
+      {{ m }}
+    </button>
+    {% endfor %}
+  </div>
 
-      function show(mealId){
-        btns.forEach(b=>b.classList.toggle('active', b.dataset.meal===mealId));
-        secs.forEach(s=>s.classList.toggle('active', s.id===mealId));
+  {% set _al = allergies|default([]) %}
+  {% set _ex = exclude_foods|default('') %}
+
+  {% for meal_time in ['Pagi','Siang','Sore/Malam','Snack 1','Snack 2'] %}
+  {% set section_id = meal_time|replace('/', '-') %}
+  <section id="{{ section_id }}" class="meal-section">
+    <div class="meal-header-card">
+      <div>
+        <div class="meal-header-title">
+          {% if meal_time=='Pagi' %}<i class="bi bi-sunrise-fill"></i>
+          {% elif meal_time=='Siang' %}<i class="bi bi-sun-fill"></i>
+          {% elif meal_time=='Sore/Malam' %}<i class="bi bi-moon-stars-fill"></i>
+          {% elif meal_time=='Snack 1' %}<i class="bi bi-cup-hot-fill"></i>
+          {% else %}<i class="bi bi-apple"></i>{% endif %}
+          {{ meal_time }}
+        </div>
+        <div class="meal-target">Target energi: <strong>{{ distribution[meal_time]|round(0)|int }} kkal</strong></div>
+      </div>
+      <div class="nut-row">
+        <div class="nut-chip"><div class="nc-val">{{ nutrients[meal_time].karbohidrat|round(1) }}</div><div class="nc-lbl">Karbo (g)</div></div>
+        <div class="nut-chip"><div class="nc-val">{{ nutrients[meal_time].protein|round(1) }}</div><div class="nc-lbl">Protein (g)</div></div>
+        <div class="nut-chip"><div class="nc-val">{{ nutrients[meal_time].lemak|round(1) }}</div><div class="nc-lbl">Lemak (g)</div></div>
+        <div class="nut-chip"><div class="nc-val">{{ nutrients[meal_time].fiber|round(1) }}</div><div class="nc-lbl">Serat (g)</div></div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      {% for food in meals[meal_time] %}
+        {% if food['Pokok'] %}
+        <div class="col-md-4">
+          <div class="food-card type-pokok"><div class="food-card-top"></div><div class="food-card-body">
+            <span class="food-cat-badge pokok"><i class="bi bi-bowl-fill"></i>Makanan Pokok</span>
+            <div class="food-name">{{ food['Pokok']['name'] }}</div><div class="food-sub">{{ food['Pokok']['category'] }}</div>
+            <div class="food-row"><span>Porsi</span><b>{{ food['Pokok']['portion']|round(1) }} g</b></div>
+            <div class="food-row"><span>Kalori</span><b>{{ food['Pokok']['calories']|round(1) }} kkal</b></div>
+            <div class="food-row"><span>Karbohidrat</span><b>{{ food['Pokok']['carbs']|round(1) }} g</b></div>
+            <div class="food-row"><span>Protein</span><b>{{ food['Pokok']['protein']|round(1) }} g</b></div>
+            <div class="food-row"><span>Lemak</span><b>{{ food['Pokok']['fat']|round(1) }} g</b></div>
+            <div class="food-row"><span>Serat</span><b>{{ food['Pokok']['fiber']|round(1) }} g</b></div>
+          </div></div>
+        </div>
+        {% endif %}
+        {% if food['Lauk'] %}
+        <div class="col-md-4">
+          <div class="food-card type-lauk"><div class="food-card-top"></div><div class="food-card-body">
+            <span class="food-cat-badge lauk"><i class="bi bi-egg-fried"></i>Lauk</span>
+            <div class="food-name">{{ food['Lauk']['name'] }}</div><div class="food-sub">{{ food['Lauk']['category'] }}</div>
+            <div class="food-row"><span>Porsi</span><b>{{ food['Lauk']['portion']|round(1) }} g</b></div>
+            <div class="food-row"><span>Kalori</span><b>{{ food['Lauk']['calories']|round(1) }} kkal</b></div>
+            <div class="food-row"><span>Karbohidrat</span><b>{{ food['Lauk']['carbs']|round(1) }} g</b></div>
+            <div class="food-row"><span>Protein</span><b>{{ food['Lauk']['protein']|round(1) }} g</b></div>
+            <div class="food-row"><span>Lemak</span><b>{{ food['Lauk']['fat']|round(1) }} g</b></div>
+            <div class="food-row"><span>Serat</span><b>{{ food['Lauk']['fiber']|round(1) }} g</b></div>
+          </div></div>
+        </div>
+        {% endif %}
+        {% if food['Sayur'] %}
+        <div class="col-md-4">
+          <div class="food-card type-sayur"><div class="food-card-top"></div><div class="food-card-body">
+            <span class="food-cat-badge sayur"><i class="bi bi-leaf-fill"></i>Sayur</span>
+            <div class="food-name">{{ food['Sayur']['name'] }}</div><div class="food-sub">{{ food['Sayur']['category'] }}</div>
+            <div class="food-row"><span>Porsi</span><b>{{ food['Sayur']['portion']|round(1) }} g</b></div>
+            <div class="food-row"><span>Kalori</span><b>{{ food['Sayur']['calories']|round(1) }} kkal</b></div>
+            <div class="food-row"><span>Karbohidrat</span><b>{{ food['Sayur']['carbs']|round(1) }} g</b></div>
+            <div class="food-row"><span>Protein</span><b>{{ food['Sayur']['protein']|round(1) }} g</b></div>
+            <div class="food-row"><span>Lemak</span><b>{{ food['Sayur']['fat']|round(1) }} g</b></div>
+            <div class="food-row"><span>Serat</span><b>{{ food['Sayur']['fiber']|round(1) }} g</b></div>
+          </div></div>
+        </div>
+        {% endif %}
+        {% if food['Buah'] %}
+        <div class="col-md-4">
+          <div class="food-card type-buah"><div class="food-card-top"></div><div class="food-card-body">
+            <span class="food-cat-badge buah"><i class="bi bi-apple"></i>Buah</span>
+            <div class="food-name">{{ food['Buah']['name'] }}</div><div class="food-sub">{{ food['Buah']['category'] }}</div>
+            <div class="food-row"><span>Porsi</span><b>{{ food['Buah']['portion']|round(1) }} g</b></div>
+            <div class="food-row"><span>Kalori</span><b>{{ food['Buah']['calories']|round(1) }} kkal</b></div>
+            <div class="food-row"><span>Karbohidrat</span><b>{{ food['Buah']['carbs']|round(1) }} g</b></div>
+            <div class="food-row"><span>Protein</span><b>{{ food['Buah']['protein']|round(1) }} g</b></div>
+            <div class="food-row"><span>Lemak</span><b>{{ food['Buah']['fat']|round(1) }} g</b></div>
+            <div class="food-row"><span>Serat</span><b>{{ food['Buah']['fiber']|round(1) }} g</b></div>
+          </div></div>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    {% set exclude_now = [] %}
+    {% for food in meals[meal_time] %}
+      {% if food['Pokok'] %}{% set _ = exclude_now.append(food['Pokok']['name']|trim) %}{% endif %}
+      {% if food['Lauk']  %}{% set _ = exclude_now.append(food['Lauk']['name']|trim)  %}{% endif %}
+      {% if food['Sayur'] %}{% set _ = exclude_now.append(food['Sayur']['name']|trim) %}{% endif %}
+      {% if food['Buah']  %}{% set _ = exclude_now.append(food['Buah']['name']|trim)  %}{% endif %}
+    {% endfor %}
+    {% set _ex_list = (_ex.split(',') if _ex else []) | map('trim') | reject('equalto','') | list %}
+    {% set exclude_combined_str = (_ex_list + exclude_now) | unique | join(', ') %}
+
+    <form action="/outputs" method="post" onsubmit="this.querySelector('button[type=submit]').classList.add('loading')" style="margin-top:.75rem;">
+      <input type="hidden" name="name"     value="{{ name }}">
+      <input type="hidden" name="age"      value="{{ age }}">
+      <input type="hidden" name="gender"   value="{{ 'pria' if gender_display=='Laki-laki' else 'wanita' }}">
+      <input type="hidden" name="weight"   value="{{ weight }}">
+      <input type="hidden" name="height"   value="{{ height }}">
+      <input type="hidden" name="activity" value="{{ {'Istirahat':'rest','Ringan':'light','Sedang':'moderate','Berat':'heavy','Sangat Berat':'very_heavy'}[activity_level] if activity_level in ['Istirahat','Ringan','Sedang','Berat','Sangat Berat'] else 'light' }}">
+      {% for a in _al %}<input type="hidden" name="allergies" value="{{ a }}">{% endfor %}
+      <input type="hidden" name="exclude_foods" value="{{ exclude_combined_str }}">
+      <input type="hidden" name="swap_meal" value="{{ meal_time }}">
+      <div class="swap-wrap">
+        <div class="d-flex align-items-center gap-2" style="position:relative;z-index:1;">
+          <div class="swap-icon-box"><i class="bi bi-arrow-repeat"></i></div>
+          <div class="swap-hint">Kurang cocok? Dapatkan pilihan menu <strong>{{ meal_time }}</strong> yang berbeda!</div>
+        </div>
+        <button type="submit" class="btn-swap"><i class="bi bi-shuffle"></i> Ganti Menu {{ meal_time }}</button>
+      </div>
+    </form>
+  </section>
+  {% endfor %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const btns = [...document.querySelectorAll('.meal-btn')];
+  const secs = [...document.querySelectorAll('.meal-section')];
+  function show(mealId) {
+    btns.forEach(b => b.classList.toggle('active', b.dataset.meal === mealId));
+    secs.forEach(s => s.classList.toggle('active', s.id === mealId));
+  }
+  const serverActive = "{{ active_meal|default('Pagi') }}".replace('/', '-');
+  show(serverActive);
+  btns.forEach(b => b.addEventListener('click', () => {
+    show(b.dataset.meal);
+    document.getElementById(b.dataset.meal)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }));
+
+  const saveBtn = document.getElementById('saveRecommendation');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async function () {
+      const orig = this.innerHTML;
+      this.disabled = true;
+      this.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Menyimpan...';
+      const data = {
+        gender: "{{ 'pria' if gender_display=='Laki-laki' else 'wanita' }}",
+        age: {{ age }}, weight: {{ weight }}, height: {{ height }},
+        activity_level: "{{ {'Istirahat':'rest','Ringan':'light','Sedang':'moderate','Berat':'heavy','Sangat Berat':'very_heavy'}[activity_level] if activity_level in ['Istirahat','Ringan','Sedang','Berat','Sangat Berat'] else 'light' }}",
+        diabetes_type: "{{ diabetes_type|default('Tipe 2') }}",
+        total_calories: {{ caloric_needs|round(2) }},
+        allergies: {{ allergies|default([])|tojson|safe }},
+        recommendations: {{ meals|tojson|safe }}
+      };
+      try {
+        const res = await fetch('/user/save-recommendation', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (result.status === 'success') {
+          this.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Tersimpan!';
+          setTimeout(() => { this.innerHTML = orig; this.disabled = false; }, 3000);
+        } else { throw new Error(result.message || 'Gagal menyimpan'); }
+      } catch (err) {
+        this.innerHTML = orig; this.disabled = false;
+        alert('Gagal menyimpan: ' + err.message);
       }
-
-      const serverActive = "{{ active_meal|default('Pagi') }}".replace('/','-');
-      show(serverActive);
-
-      btns.forEach(b=>b.addEventListener('click',()=>{
-        show(b.dataset.meal);
-        const el=document.getElementById(b.dataset.meal);
-        el?.scrollIntoView({behavior:'smooth', block:'start'});
-      }));
-
-      // Theme apply (tanpa tombol di page ini, tetap sync dengan storage)
-      const root=document.documentElement, KEY='smartdiabets-theme';
-      function applyTheme(pref){
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const resolved = (pref === 'system') ? (prefersDark ? 'dark' : 'light') : pref;
-        root.setAttribute('data-theme', resolved);
-        try{ localStorage.setItem(KEY, pref) }catch(e){}
-      }
-      const saved=(function(){try{return localStorage.getItem(KEY)}catch(e){return null}})()||'system';
-      applyTheme(saved);
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{
-        const cur=(function(){try{return localStorage.getItem(KEY)}catch(e){return 'system'}})()||'system';
-        if(cur==='system') applyTheme('system');
-      });
     });
-  </script>
-</body>
-</html>
+  }
+});
+</script>
+{% endblock %}

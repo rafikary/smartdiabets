@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+
+{% block title %}Contoh Porsi Nasi yang Tepat untuk Penderita Diabetes - SmartDiabets{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root{
+    --brand:#047857; --brand-mid:#059669; --brand-soft:#10b981; --brand-glow:#34d399;
+    --ink:#0a1628; --muted:#64748b;
+    --paper:#f8fafc; --card:#fff; --border:rgba(0,0,0,.07);
+    --shadow-card:0 4px 24px rgba(15,23,42,.08);
+    --radius-xl:22px; --radius-lg:16px; --radius-md:12px;
+    --tr: all .25s cubic-bezier(.4,0,.2,1);
+  }
+  html[data-theme="dark"]{
+    --paper:#070e1a; --ink:#e2e8f0; --muted:#94a3b8;
+    --card:#0f1829; --border:rgba(255,255,255,.08);
+    --shadow-card:0 4px 24px rgba(0,0,0,.4);
+  }
+
+  /* ── HERO ── */
+  .article-hero{
+    background:linear-gradient(135deg,#ecfdf5 0%,#f0fff4 50%,#f8fafc 100%);
+    padding:2rem 0 1.75rem; position:relative; overflow:hidden;
+  }
+  html[data-theme="dark"] .article-hero{
+    background:linear-gradient(135deg,#070e1a 0%,#091325 50%,#070e1a 100%);
+  }
+  .article-hero::before{
+    content:""; position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse 60% 80% at 10% 30%, rgba(5,150,105,.16) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 60% at 90% 70%, rgba(16,185,129,.12) 0%, transparent 60%);
+  }
+  .hero-back{
+    display:inline-flex; align-items:center; gap:.45rem;
+    font-size:.82rem; font-weight:600; color:var(--brand-mid);
+    text-decoration:none; margin-bottom:1.5rem; transition:var(--tr);
+  }
+  .hero-back:hover{ color:var(--brand); gap:.7rem }
+  .article-eyebrow{
+    display:inline-flex; align-items:center; gap:.4rem;
+    font-size:.7rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+    color:#059669; background:rgba(5,150,105,.1);
+    border:1px solid rgba(5,150,105,.2); padding:.3rem .85rem;
+    border-radius:999px; margin-bottom:1rem;
+  }
+  .article-hero-title{
+    font-family:'Poppins',sans-serif; font-size:clamp(1.8rem,4vw,2.8rem);
+    font-weight:900; letter-spacing:-.04em; line-height:1.15; color:var(--ink);
+    margin-bottom:1rem; max-width:720px;
+  }
+  .article-hero-title .grad{
+    background:linear-gradient(130deg,#059669,var(--brand-glow));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .article-meta-row{
+    display:flex; align-items:center; flex-wrap:wrap; gap:1rem;
+    font-size:.82rem; color:var(--muted); margin-top:1.2rem;
+  }
+  .article-meta-row i{ color:var(--brand-mid) }
+
+  /* ── BODY ── */
+  .article-body{ padding:2rem 0 2.5rem; background:var(--paper) }
+  .article-content-wrap{ max-width:760px; margin:0 auto; }
+  .article-lead{
+    font-size:1.1rem; line-height:1.85; color:var(--ink); font-weight:500;
+    margin-bottom:2rem; padding-left:1.25rem;
+    border-left:4px solid #059669;
+  }
+  .article-content-wrap h2{
+    font-family:'Poppins',sans-serif; font-size:1.25rem; font-weight:800;
+    color:var(--ink); margin-top:1.8rem; margin-bottom:.7rem; letter-spacing:-.02em;
+  }
+  .article-content-wrap h3{
+    font-family:'Poppins',sans-serif; font-size:1.05rem; font-weight:700;
+    color:var(--brand); margin-top:1.8rem; margin-bottom:.5rem;
+  }
+  .article-content-wrap p{
+    color:var(--muted); line-height:1.85; margin-bottom:1rem; font-size:.95rem;
+  }
+  .article-content-wrap strong{ color:var(--ink) }
+
+  /* Portion visual cards */
+  .portion-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin:1.2rem 0;
+  }
+  @media(max-width:640px){ .portion-grid{ grid-template-columns:1fr; } }
+  .portion-card{
+    border-radius:var(--radius-lg); overflow:hidden;
+    border:1px solid var(--border); background:var(--card);
+    box-shadow:var(--shadow-card); text-align:center;
+  }
+  .portion-top{
+    padding:1.5rem 1rem 1rem;
+    font-size:3rem; line-height:1;
+  }
+  .portion-body{ padding:.8rem 1rem 1.2rem; }
+  .portion-label{ font-family:'Poppins',sans-serif; font-weight:700; font-size:.92rem; color:var(--ink); margin-bottom:.3rem }
+  .portion-gram{
+    display:inline-block; font-size:1.4rem; font-weight:900;
+    font-family:'Poppins',sans-serif; color:var(--brand-mid);
+    line-height:1;
+  }
+  .portion-gram-unit{ font-size:.75rem; color:var(--muted); font-weight:500 }
+  .portion-kal{ font-size:.8rem; color:var(--muted); margin-top:.35rem }
+  .portion-card.active{ border-color:var(--brand-soft) }
+  .portion-card-badge{
+    font-size:.68rem; font-weight:800; letter-spacing:.06em;
+    text-transform:uppercase; padding:.25rem .65rem; border-radius:8px;
+    margin-bottom:.5rem; display:inline-block;
+  }
+
+  /* Comparison table */
+  .compare-table{ width:100%; border-collapse:collapse; margin:1.4rem 0; font-size:.87rem }
+  .compare-table th{
+    background:linear-gradient(135deg,#059669,#10b981);
+    color:#fff; padding:.75rem 1rem; text-align:left; font-weight:700;
+  }
+  .compare-table th:first-child{ border-radius:var(--radius-md) 0 0 0 }
+  .compare-table th:last-child{ border-radius:0 var(--radius-md) 0 0 }
+  .compare-table td{
+    padding:.65rem 1rem; border-bottom:1px solid var(--border);
+    color:var(--ink); background:var(--card);
+  }
+  .compare-table tr:last-child td{ border-bottom:none }
+  .compare-table tr:hover td{ background:rgba(16,185,129,.04) }
+  .gi-badge{
+    display:inline-block; padding:.18rem .6rem; border-radius:6px;
+    font-size:.73rem; font-weight:700;
+  }
+  .gi-low{ background:rgba(16,185,129,.12); color:#059669 }
+  .gi-medium{ background:rgba(245,158,11,.12); color:#b45309 }
+  .gi-high{ background:rgba(239,68,68,.12); color:#dc2626 }
+
+  /* Sample plate visual */
+  .plate-card{
+    border-radius:var(--radius-xl); padding:2rem;
+    background:var(--card); border:1px solid var(--border);
+    box-shadow:var(--shadow-card); margin:1.8rem 0;
+  }
+  .plate-title{
+    font-family:'Poppins',sans-serif; font-weight:800; font-size:1rem;
+    color:var(--ink); margin-bottom:1.25rem; display:flex; align-items:center; gap:.6rem;
+  }
+  .plate-row{
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;
+  }
+  @media(max-width:600px){ .plate-row{ grid-template-columns:1fr } }
+  .plate-item{
+    border-radius:var(--radius-md); padding:1rem;
+    background:var(--paper); border:1px solid var(--border);
+    display:flex; flex-direction:column; gap:.35rem;
+  }
+  .plate-item-icon{ font-size:1.5rem }
+  .plate-item-name{ font-weight:700; font-size:.88rem; color:var(--ink) }
+  .plate-item-gram{ font-size:.8rem; color:var(--brand-mid); font-weight:600 }
+  .plate-item-kal{ font-size:.75rem; color:var(--muted) }
+  .plate-total{
+    margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:.87rem; color:var(--muted);
+  }
+  .plate-total strong{ font-family:'Poppins',sans-serif; color:var(--brand-mid); font-size:1rem }
+
+  /* Callout */
+  .callout{
+    border-radius:var(--radius-md); padding:1.25rem 1.5rem;
+    display:flex; gap:1rem; align-items:flex-start; margin:1.8rem 0;
+  }
+  .callout-info{ background:rgba(16,185,129,.07); border-left:4px solid var(--brand-soft) }
+  .callout-warn{ background:rgba(245,158,11,.07); border-left:4px solid #f59e0b }
+  .callout-tip{ background:rgba(56,189,248,.07); border-left:4px solid #38bdf8 }
+  .callout i{ font-size:1.2rem; margin-top:.1rem; flex-shrink:0 }
+  .callout-info i{ color:var(--brand-mid) }
+  .callout-warn i{ color:#f59e0b }
+  .callout-tip i{ color:#0ea5e9 }
+  .callout p{ margin:0; font-size:.88rem; line-height:1.7; color:var(--ink) }
+
+  /* Key list */
+  .key-list{ list-style:none; padding:0; margin:1rem 0 }
+  .key-list li{
+    display:flex; align-items:flex-start; gap:.75rem;
+    padding:.6rem 0; border-bottom:1px solid var(--border);
+    font-size:.9rem; color:var(--muted); line-height:1.65;
+  }
+  .key-list li:last-child{ border-bottom:none }
+  .key-list i{ color:var(--brand-mid); font-size:1rem; margin-top:.1rem; flex-shrink:0 }
+
+  /* CTA */
+  .article-cta{
+    margin-top:1.25rem; border-radius:var(--radius-xl);
+    background:linear-gradient(135deg,var(--brand) 0%,var(--brand-mid) 60%,#059669 100%);
+    padding:1.1rem 1.5rem; text-align:center; position:relative; overflow:hidden;
+  }
+  .article-cta::before{
+    content:""; position:absolute; inset:0; opacity:.07;
+    background-image:radial-gradient(rgba(255,255,255,.6) 1px, transparent 1px);
+    background-size:24px 24px;
+  }
+  .article-cta h3{ font-family:'Poppins',sans-serif; font-size:1.1rem; font-weight:800; color:#fff; margin-bottom:.35rem }
+  .article-cta p{ color:rgba(255,255,255,.85); font-size:.85rem; margin-bottom:.9rem }
+  .btn-cta-white{
+    display:inline-flex; align-items:center; gap:.5rem;
+    background:#fff; color:var(--brand);
+    font-weight:700; font-size:.85rem; padding:.55rem 1.5rem;
+    border-radius:999px; text-decoration:none;
+    box-shadow:0 4px 20px rgba(0,0,0,.15); transition:var(--tr);
+  }
+  .btn-cta-white:hover{ transform:translateY(-2px); box-shadow:0 8px 28px rgba(0,0,0,.2); color:var(--brand) }
+
+  /* Back row */
+  .back-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding-top:1rem; border-top:1px solid var(--border); margin-top:1rem;
+    flex-wrap:wrap; gap:.75rem;
+  }
+  .back-row a{
+    display:inline-flex; align-items:center; gap:.45rem;
+    font-size:.85rem; font-weight:600; color:var(--brand-mid);
+    text-decoration:none; transition:var(--tr);
+  }
+  .back-row a:hover{ color:var(--brand); gap:.7rem }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ──────── HERO ──────── -->
+<section class="article-hero">
+  <div class="container position-relative" style="z-index:1">
+    <a href="{{ url_for('blog') }}" class="hero-back">
+      <i class="bi bi-arrow-left"></i> Kembali ke Artikel
+    </a>
+    <div class="article-eyebrow"><i class="bi bi-egg-fried"></i> Praktik Harian</div>
+    <h1 class="article-hero-title">
+      Contoh <span class="grad">Porsi Nasi</span><br>yang Tepat untuk Penderita Diabetes
+    </h1>
+    <p style="color:var(--muted);max-width:620px;line-height:1.75;font-size:.95rem;">
+      Panduan praktis cara SmartDiabets menghitung porsi nasi dan lauk agar
+      total karbohidrat harian tetap terkontrol tanpa rasa lapar berlebihan.
+    </p>
+    <div class="article-meta-row">
+      <span><i class="bi bi-clock me-1"></i> 4 menit baca</span>
+      <span class="meta-dot" style="width:3px;height:3px;border-radius:50%;background:var(--muted)"></span>
+      <span><i class="bi bi-person me-1"></i> Untuk pemula</span>
+      <span class="meta-dot" style="width:3px;height:3px;border-radius:50%;background:var(--muted)"></span>
+      <span><i class="bi bi-calendar3 me-1"></i> Updated Maret 2025</span>
+    </div>
+  </div>
+</section>
+
+<!-- ──────── BODY ──────── -->
+<section class="article-body">
+  <div class="container">
+    <div class="article-content-wrap">
+
+      <p class="article-lead">
+        Nasi putih memiliki <strong>Indeks Glikemik (IG) sekitar 64–72</strong> — cukup tinggi untuk penderita diabetes.
+        Namun nasi <strong>tidak perlu dihindari total</strong> — cukup kendalikan porsi dan padukan dengan protein serta sayur.
+      </p>
+
+      <!-- Porsi Berdasarkan Kebutuhan Kalori -->
+      <h2>Estimasi Porsi Nasi per Waktu Makan</h2>
+      <div class="portion-grid">
+        <div class="portion-card">
+          <div class="portion-top">🍚</div>
+          <div class="portion-body">
+            <div class="portion-label">Kalori Rendah</div>
+            <div style="margin-bottom:.3rem"><span class="gi-badge gi-low" style="font-size:.65rem">1200–1500 kkal/hari</span></div>
+            <div class="portion-gram">75–100<span class="portion-gram-unit"> gram</span></div>
+            <div class="portion-kal">~100–135 kkal per sajian</div>
+          </div>
+        </div>
+        <div class="portion-card active">
+          <div class="portion-top">🍚</div>
+          <div class="portion-body">
+            <div class="portion-label">Kalori Sedang</div>
+            <div style="margin-bottom:.3rem"><span class="gi-badge gi-medium" style="font-size:.65rem">1500–2000 kkal/hari</span></div>
+            <div class="portion-gram">100–150<span class="portion-gram-unit"> gram</span></div>
+            <div class="portion-kal">~135–200 kkal per sajian</div>
+          </div>
+        </div>
+        <div class="portion-card">
+          <div class="portion-top">🍚</div>
+          <div class="portion-body">
+            <div class="portion-label">Kalori Tinggi</div>
+            <div style="margin-bottom:.3rem"><span class="gi-badge" style="background:rgba(99,102,241,.1);color:#6366f1;font-size:.65rem">2000–2500 kkal/hari</span></div>
+            <div class="portion-gram">150–200<span class="portion-gram-unit"> gram</span></div>
+            <div class="portion-kal">~200–270 kkal per sajian</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-info">
+        <i class="bi bi-info-circle-fill"></i>
+        <p>100 g nasi matang &asymp; <strong>2–3 sendok makan diratakan</strong>. SmartDiabets menghitung dalam gram untuk akurasi yang konsisten.</p>
+      </div>
+
+      <!-- Tabel IG -->
+      <h2>Perbandingan Indeks Glikemik Sumber Karbohidrat</h2>
+      <table class="compare-table">
+        <thead>
+          <tr><th>Sumber Karbohidrat</th><th>Indeks Glikemik</th><th>Karbo (per 100g)</th><th>Catatan</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Nasi Putih</strong></td><td><span class="gi-badge gi-high">Tinggi (64–72)</span></td><td>~28 g</td><td>Batasi porsi</td></tr>
+          <tr><td>Nasi Merah</td><td><span class="gi-badge gi-medium">Sedang (50–56)</span></td><td>~23 g</td><td>Lebih disarankan</td></tr>
+          <tr><td>Ubi Rebus</td><td><span class="gi-badge gi-low">Rendah (44–54)</span></td><td>~20 g</td><td>Alternatif bagus</td></tr>
+          <tr><td>Jagung Rebus</td><td><span class="gi-badge gi-low">Rendah (48–52)</span></td><td>~19 g</td><td>Tinggi serat</td></tr>
+        </tbody>
+      </table>
+
+      <!-- Contoh Piring -->
+      <h2>Contoh Komposisi Makan Siang (~510 kkal)</h2>
+      <div class="plate-card">
+        <div class="plate-title"><i class="bi bi-egg-fried" style="color:var(--brand-mid)"></i> Kebutuhan total 1.700 kkal/hari &mdash; porsi siang 30%</div>
+        <div class="plate-row">
+          <div class="plate-item">
+            <div class="plate-item-icon">🍚</div>
+            <div class="plate-item-name">Nasi Putih</div>
+            <div class="plate-item-gram">±135 gram</div>
+            <div class="plate-item-kal">~182 kkal</div>
+          </div>
+          <div class="plate-item">
+            <div class="plate-item-icon">🍗</div>
+            <div class="plate-item-name">Ayam Rebus Tanpa Kulit</div>
+            <div class="plate-item-gram">±100 gram</div>
+            <div class="plate-item-kal">~165 kkal</div>
+          </div>
+          <div class="plate-item">
+            <div class="plate-item-icon">🥬</div>
+            <div class="plate-item-name">Sayur Bayam Rebus</div>
+            <div class="plate-item-gram">±150 gram</div>
+            <div class="plate-item-kal">~29 kkal</div>
+          </div>
+        </div>
+        <div class="plate-total">
+          <span>Total dari pokok + lauk + sayur</span>
+          <strong>±376 kkal &nbsp;|&nbsp; sisa dari bumbu &amp; minyak masak</strong>
+        </div>
+      </div>
+
+      <!-- Tips singkat -->
+      <h2>Tips Praktis</h2>
+      <ul class="key-list">
+        <li><i class="bi bi-check-circle-fill"></i><span><strong>Makan sayur duluan</strong> — serat sayur memperlambat penyerapan glukosa dari nasi.</span></li>
+        <li><i class="bi bi-check-circle-fill"></i><span><strong>Campurkan nasi merah 50:50</strong> — menurunkan IG keseluruhan tanpa mengorbankan rasa.</span></li>
+        <li><i class="bi bi-check-circle-fill"></i><span><strong>Jangan lewat protein</strong> di setiap makan — menstabilkan gula darah setelah makan.</span></li>
+      </ul>
+
+      <!-- CTA -->
+      <div class="article-cta">
+        <h3>Dapatkan Porsi yang Tepat untukmu</h3>
+        <p>SmartDiabets menghitung porsi setiap bahan makanan secara otomatis berdasarkan data tubuhmu.</p>
+        <a href="{{ url_for('calculator') }}" class="btn-cta-white">
+          <i class="bi bi-calculator"></i> Hitung Kebutuhan Kalori Sekarang
+        </a>
+      </div>
+
+      <!-- Back row -->
+      <div class="back-row">
+        <a href="{{ url_for('blog') }}"><i class="bi bi-arrow-left"></i> Semua Artikel</a>
+        <a href="{{ url_for('blog_article_diet_3j') }}" style="flex-direction:row-reverse;">Artikel Sebelumnya <i class="bi bi-arrow-right"></i></a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}

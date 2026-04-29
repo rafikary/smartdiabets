@@ -1,0 +1,436 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Riwayat - SmartDiabets{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root{
+    --brand:#047857; --brand-mid:#059669; --brand-soft:#10b981; --brand-glow:#34d399;
+    --ink:#0a1628; --muted:#64748b;
+    --paper:#f8fafc; --card:#fff; --border:rgba(0,0,0,.07);
+    --shadow-card:0 4px 24px rgba(15,23,42,.08);
+    --shadow-hover:0 20px 56px rgba(4,120,87,.16);
+    --radius-xl:22px; --radius-lg:16px; --radius-md:12px;
+    --tr:all .25s cubic-bezier(.4,0,.2,1);
+  }
+  html[data-theme="dark"]{
+    --paper:#070e1a; --ink:#e2e8f0; --muted:#94a3b8;
+    --card:#0f1829; --border:rgba(255,255,255,.08);
+    --shadow-card:0 4px 24px rgba(0,0,0,.4);
+    --shadow-hover:0 20px 56px rgba(16,185,129,.14);
+  }
+
+  /* â”€â”€ PAGE BG â”€â”€ */
+  .profile-page{
+    min-height:calc(100vh - 72px);
+    background:var(--paper); padding:2.5rem 0 4rem;
+  }
+
+  /* â”€â”€ PROFILE CARD â”€â”€ */
+  .pcard{
+    background:var(--card); border:1px solid var(--border);
+    border-radius:var(--radius-xl); overflow:hidden;
+    box-shadow:var(--shadow-card); position:sticky; top:90px;
+  }
+  .pcard-top{
+    background:linear-gradient(135deg,#047857,#10b981);
+    padding:2rem 1.5rem 3.5rem; position:relative; text-align:center;
+  }
+  .pcard-top::after{
+    content:""; position:absolute; bottom:-1px; left:0; right:0; height:32px;
+    background:var(--card); border-radius:50% 50% 0 0 / 100% 100% 0 0;
+  }
+  .pcard-avatar{
+    width:80px; height:80px; border-radius:50%; margin:0 auto .75rem;
+    background:rgba(255,255,255,.25); border:3px solid rgba(255,255,255,.5);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Poppins',sans-serif; font-size:2rem; font-weight:800; color:#fff;
+    position:relative; z-index:1;
+  }
+  .pcard-name{
+    font-family:'Poppins',sans-serif; font-weight:800; font-size:1.2rem;
+    color:#fff; margin:0; position:relative; z-index:1;
+  }
+  .pcard-email{ color:rgba(255,255,255,.75); font-size:.82rem; margin-top:.2rem; position:relative; z-index:1; }
+
+  .pcard-body{ padding:1rem 1.5rem 1.5rem }
+  .pcard-meta{
+    display:flex; align-items:center; gap:.5rem;
+    font-size:.8rem; color:var(--muted); margin-bottom:1.25rem;
+    padding-top:.25rem;
+  }
+  .pcard-meta i{ color:var(--brand-mid) }
+
+  .pcard-stat-row{
+    display:grid; grid-template-columns:1fr 1fr; gap:.65rem; margin-bottom:1.25rem;
+  }
+  .pcard-stat{
+    background:var(--paper); border:1px solid var(--border);
+    border-radius:var(--radius-md); padding:.75rem; text-align:center;
+  }
+  .pcard-stat-val{
+    font-family:'Poppins',sans-serif; font-weight:800; font-size:1.3rem;
+    color:var(--brand-mid); line-height:1;
+  }
+  .pcard-stat-lbl{ font-size:.7rem; color:var(--muted); margin-top:.2rem }
+
+  .btn-new{
+    display:flex; align-items:center; justify-content:center; gap:.5rem;
+    width:100%; padding:.8rem;
+    background:linear-gradient(135deg,#059669,#047857); color:#fff;
+    border:none; border-radius:var(--radius-md);
+    font-family:'Poppins',sans-serif; font-weight:700; font-size:.9rem;
+    text-decoration:none; transition:var(--tr);
+    box-shadow:0 6px 18px rgba(4,120,87,.28);
+  }
+  .btn-new:hover{
+    transform:translateY(-2px); color:#fff;
+    box-shadow:0 12px 28px rgba(4,120,87,.38);
+    background:linear-gradient(135deg,#10b981,#059669);
+  }
+
+  /* â”€â”€ HISTORY PANEL â”€â”€ */
+  .history-panel{
+    background:var(--card); border:1px solid var(--border);
+    border-radius:var(--radius-xl); overflow:hidden;
+    box-shadow:var(--shadow-card);
+  }
+  .history-header{
+    padding:1.25rem 1.5rem; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:.65rem;
+  }
+  .history-header-ico{
+    width:38px; height:38px; border-radius:11px; flex-shrink:0;
+    background:linear-gradient(135deg,#10b981,#047857); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:1rem;
+  }
+  .history-header-title{
+    font-family:'Poppins',sans-serif; font-weight:800; font-size:1rem; color:var(--ink);
+  }
+  .history-count{
+    margin-left:auto; background:rgba(4,120,87,.1); color:var(--brand-mid);
+    font-size:.72rem; font-weight:800; padding:.25rem .65rem; border-radius:999px;
+  }
+  html[data-theme="dark"] .history-count{ background:rgba(4,120,87,.22) }
+  .history-body{ padding:1.25rem 1.5rem }
+
+  /* history item */
+  .hist-item{
+    background:var(--paper); border:1px solid var(--border);
+    border-radius:var(--radius-lg); padding:1.1rem 1.25rem;
+    margin-bottom:.85rem; transition:var(--tr);
+    display:flex; align-items:center; gap:1rem;
+  }
+  .hist-item:last-child{ margin-bottom:0 }
+  .hist-item:hover{
+    border-color:rgba(16,185,129,.25);
+    box-shadow:0 8px 24px rgba(4,120,87,.1);
+    transform:translateY(-2px);
+  }
+  .hist-ico{
+    width:46px; height:46px; border-radius:14px; flex-shrink:0;
+    background:linear-gradient(135deg,#10b981,#047857); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:1.1rem;
+  }
+  .hist-name{ font-weight:700; font-size:.92rem; color:var(--ink); margin-bottom:.3rem }
+  .hist-meta{ font-size:.76rem; color:var(--muted); display:flex; flex-wrap:wrap; gap:.5rem }
+  .hist-pill{
+    display:inline-flex; align-items:center; gap:.25rem;
+    background:rgba(4,120,87,.08); color:var(--brand-mid);
+    font-size:.7rem; font-weight:700; padding:.2rem .6rem; border-radius:7px;
+  }
+  html[data-theme="dark"] .hist-pill{ background:rgba(4,120,87,.2) }
+  .hist-pill.amber{ background:rgba(245,158,11,.1); color:#d97706 }
+  .hist-pill.blue{ background:rgba(56,189,248,.1); color:#0284c7 }
+  html[data-theme="dark"] .hist-pill.amber{ background:rgba(245,158,11,.18) }
+  html[data-theme="dark"] .hist-pill.blue{ background:rgba(56,189,248,.18) }
+
+  .btn-detail{
+    margin-left:auto; flex-shrink:0;
+    display:inline-flex; align-items:center; gap:.4rem;
+    padding:.45rem .95rem; border-radius:10px;
+    border:1.5px solid rgba(4,120,87,.2); color:var(--brand-mid);
+    font-size:.78rem; font-weight:700; transition:var(--tr);
+    background:transparent; text-decoration:none; white-space:nowrap;
+  }
+  .btn-detail:hover{
+    background:rgba(4,120,87,.08); border-color:var(--brand-mid); color:var(--brand-mid);
+  }
+  .btn-delete-hist{
+    flex-shrink:0; display:inline-flex; align-items:center; justify-content:center;
+    width:34px; height:34px; border-radius:9px;
+    border:1.5px solid rgba(239,68,68,.2); color:#ef4444;
+    background:transparent; cursor:pointer; transition:var(--tr); font-size:.9rem;
+    margin-left:.4rem;
+  }
+  .btn-delete-hist:hover{ background:rgba(239,68,68,.08); border-color:#ef4444; }
+  .btn-delete-hist:disabled{ opacity:.5; cursor:not-allowed; }
+
+  /* empty state */
+  .empty-state{ text-align:center; padding:3.5rem 1rem }
+  .empty-ico{
+    width:72px; height:72px; border-radius:22px; margin:0 auto 1.25rem;
+    background:rgba(4,120,87,.07); display:flex; align-items:center; justify-content:center;
+    font-size:2rem; color:var(--brand-mid);
+  }
+  html[data-theme="dark"] .empty-ico{ background:rgba(4,120,87,.18) }
+  .empty-title{ font-family:'Poppins',sans-serif; font-weight:700; font-size:1rem; color:var(--ink); margin-bottom:.4rem }
+  .empty-sub{ color:var(--muted); font-size:.85rem; margin-bottom:1.5rem }
+
+  /* â”€â”€ MODAL â”€â”€ */
+  .modal-content{
+    border:none; border-radius:var(--radius-xl);
+    background:var(--card); overflow:hidden; box-shadow:0 32px 80px rgba(0,0,0,.2);
+  }
+  .modal-top{
+    background:linear-gradient(135deg,#047857,#10b981);
+    padding:1.5rem; display:flex; align-items:center; gap:.75rem;
+  }
+  .modal-top-ico{
+    width:42px; height:42px; border-radius:13px; flex-shrink:0;
+    background:rgba(255,255,255,.2); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:1.1rem;
+  }
+  .modal-top-title{
+    font-family:'Poppins',sans-serif; font-weight:800; font-size:1.05rem; color:#fff;
+  }
+  .modal-top-close{
+    margin-left:auto; background:rgba(255,255,255,.2); border:none;
+    width:34px; height:34px; border-radius:9px; color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:1.1rem; transition:var(--tr); flex-shrink:0;
+  }
+  .modal-top-close:hover{ background:rgba(255,255,255,.35) }
+  .modal-body{ padding:1.5rem }
+  .modal-sec-title{
+    display:flex; align-items:center; gap:.5rem;
+    font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--brand-mid); margin-bottom:.85rem;
+  }
+  .modal-drow{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:.6rem 0; border-bottom:1px solid var(--border); font-size:.85rem;
+  }
+  .modal-drow:last-child{ border-bottom:none }
+  .modal-dkey{ color:var(--muted); font-weight:500 }
+  .modal-dval{ color:var(--ink); font-weight:700 }
+  .modal-footer-custom{
+    padding:1rem 1.5rem; border-top:1px solid var(--border);
+    display:flex; justify-content:flex-end; gap:.75rem;
+  }
+  .btn-close-modal{
+    padding:.6rem 1.4rem; border-radius:10px;
+    border:1.5px solid var(--border); background:transparent;
+    font-weight:700; font-size:.85rem; color:var(--muted); cursor:pointer; transition:var(--tr);
+  }
+  .btn-close-modal:hover{ border-color:var(--brand-mid); color:var(--brand-mid) }
+  .btn-recalc{
+    padding:.6rem 1.4rem; border-radius:10px;
+    background:linear-gradient(135deg,#059669,#047857); border:none;
+    font-weight:700; font-size:.85rem; color:#fff; cursor:pointer; transition:var(--tr);
+    text-decoration:none; display:inline-flex; align-items:center; gap:.4rem;
+  }
+  .btn-recalc:hover{ color:#fff; transform:translateY(-1px); box-shadow:0 8px 20px rgba(4,120,87,.3) }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+  <div class="container">
+    <div class="row g-4 align-items-start">
+
+      <!-- PROFILE CARD -->
+      <div class="col-lg-3 col-md-4">
+        <div class="pcard">
+          <div class="pcard-top">
+            <div class="pcard-avatar">{{ current_user.username[0].upper() }}</div>
+            <div class="pcard-name">{{ current_user.username }}</div>
+            <div class="pcard-email">{{ current_user.email }}</div>
+          </div>
+          <div class="pcard-body">
+            <div class="pcard-meta">
+              <i class="bi bi-calendar3"></i>
+              Member sejak {{ current_user.created_at.strftime('%d %B %Y') }}
+            </div>
+            <div class="pcard-stat-row">
+              <div class="pcard-stat">
+                <div class="pcard-stat-val">{{ history|length if history else 0 }}</div>
+                <div class="pcard-stat-lbl">Riwayat</div>
+              </div>
+              <div class="pcard-stat">
+                <div class="pcard-stat-val">5</div>
+                <div class="pcard-stat-lbl">Jadwal/Hari</div>
+              </div>
+            </div>
+            <a href="{{ url_for('calculator') }}" class="btn-new">
+              <i class="bi bi-calculator-fill"></i> Buat Rekomendasi Baru
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- HISTORY PANEL -->
+      <div class="col-lg-9 col-md-8">
+        <div class="history-panel">
+          <div class="history-header">
+            <div class="history-header-ico"><i class="bi bi-clock-history"></i></div>
+            <div class="history-header-title">Riwayat Rekomendasi</div>
+            {% if history %}
+            <span class="history-count">{{ history|length }} rekomendasi</span>
+            {% endif %}
+          </div>
+          <div class="history-body">
+
+            {% if history %}
+              {% for item in history %}
+              <div class="hist-item">
+                <div class="hist-ico"><i class="bi bi-clipboard2-pulse-fill"></i></div>
+                <div style="flex:1;min-width:0">
+                  <div class="hist-name">{{ item.name or 'Rekomendasi' }}</div>
+                  <div class="hist-meta">
+                    <span><i class="bi bi-calendar3" style="color:var(--brand-mid)"></i> {{ item.saved_at }}</span>
+                    <span class="hist-pill"><i class="bi bi-lightning-charge-fill"></i> {{ item.caloric_needs|int }} kkal</span>
+                    <span class="hist-pill amber">{{ item.gender_display }}</span>
+                    <span class="hist-pill blue">{{ item.activity_level }}</span>
+                  </div>
+                </div>
+                <a href="#" class="btn-detail view-detail-btn"
+                   data-id="{{ item.id }}"
+                   data-name="{{ item.name }}"
+                   data-age="{{ item.age }}"
+                   data-gender="{{ item.gender_display }}"
+                   data-weight="{{ item.weight }}"
+                   data-height="{{ item.height }}"
+                   data-bbi="{{ item.bbi }}"
+                   data-status="{{ item.nutrition_status }}"
+                   data-calories="{{ item.caloric_needs }}"
+                   data-activity="{{ item.activity_level }}"
+                   data-allergies="{{ item.allergies or 'Tidak ada' }}">
+                  <i class="bi bi-eye"></i> Detail
+                </a>
+                <button class="btn-delete-hist delete-hist-btn" data-id="{{ item.id }}" title="Hapus riwayat ini">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </div>
+              {% endfor %}
+
+            {% else %}
+              <div class="empty-state">
+                <div class="empty-ico"><i class="bi bi-inbox"></i></div>
+                <div class="empty-title">Belum ada riwayat</div>
+                <div class="empty-sub">Mulai buat rekomendasi menu pertama Anda sekarang</div>
+                <a href="{{ url_for('calculator') }}" class="btn-new" style="width:auto;display:inline-flex;padding:.8rem 1.75rem">
+                  <i class="bi bi-plus-circle-fill"></i> Buat Rekomendasi Pertama
+                </a>
+              </div>
+            {% endif %}
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- â”€â”€ MODAL â”€â”€ -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-top">
+        <div class="modal-top-ico"><i class="bi bi-file-earmark-text-fill"></i></div>
+        <div class="modal-top-title">Detail Rekomendasi</div>
+        <button class="modal-top-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="modal-sec-title"><i class="bi bi-person-fill"></i> Data Diri</div>
+            <div class="modal-drow"><span class="modal-dkey">Nama</span><span class="modal-dval" id="detail-name">-</span></div>
+            <div class="modal-drow"><span class="modal-dkey">Umur</span><span class="modal-dval" id="detail-age">-</span></div>
+            <div class="modal-drow"><span class="modal-dkey">Jenis Kelamin</span><span class="modal-dval" id="detail-gender">-</span></div>
+            <div class="modal-drow"><span class="modal-dkey">Berat Badan</span><span class="modal-dval" id="detail-weight">-</span></div>
+            <div class="modal-drow"><span class="modal-dkey">Tinggi Badan</span><span class="modal-dval" id="detail-height">-</span></div>
+          </div>
+          <div class="col-md-6">
+            <div class="modal-sec-title"><i class="bi bi-clipboard-data-fill"></i> Hasil Analisis</div>
+            <div class="modal-drow"><span class="modal-dkey">BBI</span><span class="modal-dval" id="detail-bbi">-</span></div>
+            <div class="modal-drow"><span class="modal-dkey">Status Gizi</span><span class="modal-dval" id="detail-status">-</span></div>
+            <div class="modal-drow"><span class="modal-dkey">Kebutuhan Kalori</span><span class="modal-dval" id="detail-calories">-</span></div>
+            <div class="modal-drow"><span class="modal-dkey">Aktivitas</span><span class="modal-dval" id="detail-activity">-</span></div>
+            <div class="modal-drow"><span class="modal-dkey">Alergi</span><span class="modal-dval" id="detail-allergies">-</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer-custom">
+        <button class="btn-close-modal" data-bs-dismiss="modal">Tutup</button>
+        <a href="{{ url_for('calculator') }}" class="btn-recalc">
+          <i class="bi bi-arrow-repeat"></i> Hitung Ulang
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.querySelectorAll('.view-detail-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      const d = e.currentTarget.dataset;
+      document.getElementById('detail-name').textContent = d.name || '-';
+      document.getElementById('detail-age').textContent = (d.age || '-') + ' tahun';
+      document.getElementById('detail-gender').textContent = d.gender || '-';
+      document.getElementById('detail-weight').textContent = (d.weight || '-') + ' kg';
+      document.getElementById('detail-height').textContent = (d.height || '-') + ' cm';
+      document.getElementById('detail-bbi').textContent = (d.bbi || '-') + ' kg';
+      document.getElementById('detail-status').textContent = d.status || '-';
+      document.getElementById('detail-calories').textContent = (d.calories || '-') + ' kkal/hari';
+      document.getElementById('detail-activity').textContent = d.activity || '-';
+      document.getElementById('detail-allergies').textContent = d.allergies || 'Tidak ada';
+      new bootstrap.Modal(document.getElementById('detailModal')).show();
+    });
+  });
+
+  document.querySelectorAll('.delete-hist-btn').forEach(btn => {
+    btn.addEventListener('click', async e => {
+      e.preventDefault();
+      if (!confirm('Hapus riwayat ini? Tindakan tidak bisa dibatalkan.')) return;
+      const id = btn.dataset.id;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+      try {
+        const res = await fetch(`/user/delete-recommendation/${id}`, { method: 'POST',
+          headers: { 'X-CSRFToken': document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '' }
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          const row = btn.closest('.hist-item');
+          row.style.transition = 'opacity .3s, transform .3s';
+          row.style.opacity = '0';
+          row.style.transform = 'translateX(20px)';
+          setTimeout(() => {
+            row.remove();
+            // update counter
+            const counter = document.querySelector('.history-count');
+            if (counter) {
+              const cur = parseInt(counter.textContent) - 1;
+              counter.textContent = cur + ' rekomendasi';
+            }
+          }, 300);
+        } else {
+          alert('Gagal menghapus: ' + data.message);
+          btn.disabled = false;
+          btn.innerHTML = '<i class="bi bi-trash3"></i>';
+        }
+      } catch(err) {
+        alert('Terjadi kesalahan, coba lagi.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-trash3"></i>';
+      }
+    });
+  });
+</script>
+{% endblock %}
+

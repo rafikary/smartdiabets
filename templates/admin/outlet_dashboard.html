@@ -1,0 +1,601 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Dashboard Outlet Berisiko - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Container */
+    .outlet-dashboard {
+        padding: 2rem 0;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    /* Chart Section */
+    .chart-section {
+        background: var(--bg-primary);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border);
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .section-title {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .section-title i {
+        color: #ef4444;
+        font-size: 2rem;
+    }
+    
+    .legend {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+    }
+    
+    /* Chart Container - Fixed Height */
+    .chart-wrapper {
+        position: relative;
+        height: 450px;
+        margin-top: 1.5rem;
+    }
+    
+    /* Table Section */
+    .table-section {
+        background: var(--bg-primary);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border);
+    }
+    
+    .search-bar {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .search-input {
+        flex: 1;
+        min-width: 250px;
+        padding: 0.875rem 1.25rem;
+        border: 2px solid var(--border);
+        border-radius: 0.75rem;
+        font-size: 0.95rem;
+        color: var(--text-primary);
+        background: var(--bg-secondary);
+        transition: all 0.3s ease;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(4, 120, 87, 0.1);
+    }
+    
+    .filter-select {
+        padding: 0.875rem 1.25rem;
+        border: 2px solid var(--border);
+        border-radius: 0.75rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        background: var(--bg-secondary);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .filter-select:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+    
+    /* Table Styling */
+    .data-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 0.95rem;
+        margin-top: 1rem;
+    }
+    
+    .data-table thead {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+    }
+    
+    .data-table thead th {
+        padding: 1.25rem 1rem;
+        text-align: left;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+    }
+    
+    .data-table thead th:first-child {
+        border-radius: 0.75rem 0 0 0;
+    }
+    
+    .data-table thead th:last-child {
+        border-radius: 0 0.75rem 0 0;
+    }
+    
+    .data-table tbody tr {
+        background: var(--bg-primary);
+        border-bottom: 1px solid var(--border);
+        transition: all 0.2s ease;
+    }
+    
+    .data-table tbody tr:hover {
+        background: var(--bg-secondary);
+        transform: scale(1.01);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    
+    .data-table tbody td {
+        padding: 1.25rem 1rem;
+        color: var(--text-primary);
+    }
+    
+    .outlet-name {
+        font-weight: 700;
+        color: var(--text-primary);
+        font-size: 1rem;
+    }
+    
+    .number-cell {
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+    
+    /* Status Badge - MERAH untuk Berisiko */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1.25rem;
+        border-radius: 9999px;
+        font-weight: 800;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .status-berisiko {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4); }
+        50% { box-shadow: 0 4px 20px rgba(220, 38, 38, 0.6); }
+    }
+    
+    .status-aman {
+        background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    
+    /* Percentage Badge */
+    .percentage-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.1));
+        border: 2px solid #ef4444;
+        border-radius: 0.5rem;
+        font-weight: 800;
+        color: #dc2626;
+        font-size: 0.95rem;
+    }
+    
+    /* Responsive */
+    .table-responsive {
+        overflow-x: auto;
+        border-radius: 0.75rem;
+    }
+    
+    @media (max-width: 768px) {
+        .chart-wrapper {
+            height: 350px;
+        }
+        
+        .data-table {
+            font-size: 0.85rem;
+        }
+        
+        .data-table thead th,
+        .data-table tbody td {
+            padding: 0.875rem 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container outlet-dashboard">
+    <!-- Chart Section -->
+    <div class="chart-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                Top 10 Outlet Berisiko
+            </h2>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #dc2626;"></div>
+                    <span>Lewat Jatuh Tempo</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #10b981;"></div>
+                    <span>Aktif</span>
+                </div>
+            </div>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="outletChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Table Section -->
+    <div class="table-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="bi bi-table"></i>
+                Data Per Outlet
+            </h2>
+        </div>
+        
+        <div class="search-bar">
+            <input type="text" 
+                   class="search-input" 
+                   id="searchOutlet" 
+                   placeholder="🔍 Cari outlet...">
+            <select class="filter-select" id="sortBy">
+                <option value="transaksi">Urutkan: Total Transaksi</option>
+                <option value="pinjaman">Urutkan: Total Pinjaman</option>
+                <option value="rasio">Urutkan: Rasio Berisiko</option>
+            </select>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Outlet</th>
+                        <th>Total Transaksi</th>
+                        <th>Total Pinjaman</th>
+                        <th>Rasio</th>
+                        <th>Transaksi Berisiko</th>
+                        <th>% Berisiko</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td>1</td>
+                        <td class="outlet-name">CIKARET</td>
+                        <td class="number-cell">1.274</td>
+                        <td class="number-cell">Rp 1.999.800.000</td>
+                        <td class="number-cell">1.000</td>
+                        <td class="number-cell">1.274</td>
+                        <td><span class="percentage-badge">100.0%</span></td>
+                        <td>
+                            <span class="status-badge status-berisiko">
+                                <i class="bi bi-exclamation-circle-fill"></i>
+                                Berisiko
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td class="outlet-name">MUCHTAR</td>
+                        <td class="number-cell">684</td>
+                        <td class="number-cell">Rp 983.650.000</td>
+                        <td class="number-cell">1.000</td>
+                        <td class="number-cell">684</td>
+                        <td><span class="percentage-badge">100.0%</span></td>
+                        <td>
+                            <span class="status-badge status-berisiko">
+                                <i class="bi bi-exclamation-circle-fill"></i>
+                                Berisiko
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td class="outlet-name">IR JUANDA</td>
+                        <td class="number-cell">646</td>
+                        <td class="number-cell">Rp 887.750.000</td>
+                        <td class="number-cell">1.000</td>
+                        <td class="number-cell">646</td>
+                        <td><span class="percentage-badge">100.0%</span></td>
+                        <td>
+                            <span class="status-badge status-berisiko">
+                                <i class="bi bi-exclamation-circle-fill"></i>
+                                Berisiko
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td class="outlet-name">RENGASDENGKLOK</td>
+                        <td class="number-cell">697</td>
+                        <td class="number-cell">Rp 793.950.000</td>
+                        <td class="number-cell">1.000</td>
+                        <td class="number-cell">697</td>
+                        <td><span class="percentage-badge">100.0%</span></td>
+                        <td>
+                            <span class="status-badge status-berisiko">
+                                <i class="bi bi-exclamation-circle-fill"></i>
+                                Berisiko
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td class="outlet-name">BOJONG 2</td>
+                        <td class="number-cell">607</td>
+                        <td class="number-cell">Rp 749.854.000</td>
+                        <td class="number-cell">1.000</td>
+                        <td class="number-cell">607</td>
+                        <td><span class="percentage-badge">100.0%</span></td>
+                        <td>
+                            <span class="status-badge status-berisiko">
+                                <i class="bi bi-exclamation-circle-fill"></i>
+                                Berisiko
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td class="outlet-name">BLOK KERATON</td>
+                        <td class="number-cell">737</td>
+                        <td class="number-cell">Rp 702.600.000</td>
+                        <td class="number-cell">1.000</td>
+                        <td class="number-cell">737</td>
+                        <td><span class="percentage-badge">100.0%</span></td>
+                        <td>
+                            <span class="status-badge status-berisiko">
+                                <i class="bi bi-exclamation-circle-fill"></i>
+                                Berisiko
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td class="outlet-name">CITAYAM</td>
+                        <td class="number-cell">633</td>
+                        <td class="number-cell">Rp 682.500.000</td>
+                        <td class="number-cell">1.000</td>
+                        <td class="number-cell">633</td>
+                        <td><span class="percentage-badge">100.0%</span></td>
+                        <td>
+                            <span class="status-badge status-berisiko">
+                                <i class="bi bi-exclamation-circle-fill"></i>
+                                Berisiko
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td class="outlet-name">TANJUNGSARI</td>
+                        <td class="number-cell">563</td>
+                        <td class="number-cell">Rp 649.600.000</td>
+                        <td class="number-cell">1.000</td>
+                        <td class="number-cell">563</td>
+                        <td><span class="percentage-badge">100.0%</span></td>
+                        <td>
+                            <span class="status-badge status-berisiko">
+                                <i class="bi bi-exclamation-circle-fill"></i>
+                                Berisiko
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td class="outlet-name">CIBUNGBULANG</td>
+                        <td class="number-cell">534</td>
+                        <td class="number-cell">Rp 628.750.000</td>
+                        <td class="number-cell">1.000</td>
+                        <td class="number-cell">534</td>
+                        <td><span class="percentage-badge">100.0%</span></td>
+                        <td>
+                            <span class="status-badge status-berisiko">
+                                <i class="bi bi-exclamation-circle-fill"></i>
+                                Berisiko
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td class="outlet-name">CAKUNG</td>
+                        <td class="number-cell">523</td>
+                        <td class="number-cell">Rp 621.250.000</td>
+                        <td class="number-cell">1.000</td>
+                        <td class="number-cell">523</td>
+                        <td><span class="percentage-badge">100.0%</span></td>
+                        <td>
+                            <span class="status-badge status-berisiko">
+                                <i class="bi bi-exclamation-circle-fill"></i>
+                                Berisiko
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+// Data Outlet
+const outletData = [
+    { name: 'CIKARET', berisiko: 1274, aman: 0 },
+    { name: 'MUCHTAR', berisiko: 684, aman: 0 },
+    { name: 'IR JUANDA', berisiko: 646, aman: 0 },
+    { name: 'RENGASDENGKLOK', berisiko: 697, aman: 0 },
+    { name: 'BOJONG 2', berisiko: 607, aman: 0 },
+    { name: 'BLOK KERATON', berisiko: 737, aman: 0 },
+    { name: 'CITAYAM', berisiko: 633, aman: 0 },
+    { name: 'TANJUNGSARI', berisiko: 563, aman: 0 },
+    { name: 'CIBUNGBULANG', berisiko: 534, aman: 0 },
+    { name: 'CAKUNG', berisiko: 523, aman: 0 }
+];
+
+// Create Bar Chart
+const ctx = document.getElementById('outletChart').getContext('2d');
+const outletChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: outletData.map(d => d.name),
+        datasets: [
+            {
+                label: 'Lewat Jatuh Tempo',
+                data: outletData.map(d => d.berisiko),
+                backgroundColor: '#dc2626',
+                borderColor: '#b91c1c',
+                borderWidth: 2,
+                borderRadius: 8,
+                barPercentage: 0.7
+            },
+            {
+                label: 'Aktif',
+                data: outletData.map(d => d.aman),
+                backgroundColor: '#10b981',
+                borderColor: '#047857',
+                borderWidth: 2,
+                borderRadius: 8,
+                barPercentage: 0.7
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    padding: 20,
+                    usePointStyle: true,
+                    pointStyle: 'circle'
+                }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                padding: 16,
+                titleFont: {
+                    size: 16,
+                    weight: 'bold'
+                },
+                bodyFont: {
+                    size: 14
+                },
+                borderColor: 'rgba(255, 255, 255, 0.2)',
+                borderWidth: 1,
+                callbacks: {
+                    label: function(context) {
+                        const total = context.parsed.y;
+                        return context.dataset.label + ': ' + total.toLocaleString('id-ID') + ' transaksi';
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                stacked: false,
+                grid: {
+                    display: false
+                },
+                ticks: {
+                    font: {
+                        size: 12,
+                        weight: '700'
+                    },
+                    color: '#374151'
+                }
+            },
+            y: {
+                stacked: false,
+                beginAtZero: true,
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.05)',
+                    lineWidth: 1
+                },
+                ticks: {
+                    font: {
+                        size: 12,
+                        weight: '600'
+                    },
+                    color: '#6b7280',
+                    callback: function(value) {
+                        return value.toLocaleString('id-ID');
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Search Function
+document.getElementById('searchOutlet').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('#tableBody tr');
+    
+    rows.forEach(row => {
+        const outletName = row.querySelector('.outlet-name').textContent.toLowerCase();
+        if (outletName.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

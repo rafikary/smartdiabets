@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Panel{% endblock %} - Smart Diabetes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --sidebar-width: 250px;
+            --primary-color: #047857;
+            --primary-hover: #065f46;
+            --primary-light: #10b981;
+            --sidebar-bg: #064e3b;
+            --sidebar-hover: #065f46;
+            /* Shared semantic vars (used by child templates) */
+            --primary: #047857;
+            --primary-dark: #065f46;
+            --primary-soft: #d1fae5;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --shadow: 0 2px 8px rgba(0,0,0,.06);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,.12);
+            --radius-lg: 0.75rem;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            padding: 1rem 0;
+            z-index: 1000;
+        }
+        
+        .sidebar .brand {
+            padding: 1rem 1.5rem;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 1rem;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.7);
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        
+        .sidebar .nav-link:hover {
+            color: white;
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: var(--primary-color);
+            border-left: 4px solid var(--primary-light);
+        }
+        
+        .sidebar .nav-link i {
+            margin-right: 0.8rem;
+            width: 20px;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+            min-height: 100vh;
+            background-color: #f8f9fa;
+        }
+        
+        .top-bar {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #eee;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #047857, #10b981);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .stat-card .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .stat-card .stat-label {
+            opacity: 0.9;
+            margin-top: 0.5rem;
+        }
+        
+        .btn-action {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #047857, #10b981);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="brand">
+            <i class="bi bi-heart-pulse-fill"></i> Smart Diabetes
+        </div>
+        <nav class="nav flex-column">
+            <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+            <a href="{{ url_for('admin.list_foods') }}" class="nav-link {% if 'foods' in request.endpoint %}active{% endif %}">
+                <i class="bi bi-egg-fried"></i> Kelola Makanan
+            </a>
+            <a href="{{ url_for('admin.list_categories') }}" class="nav-link {% if 'categories' in request.endpoint or 'staple' in request.endpoint %}active{% endif %}">
+                <i class="bi bi-tags"></i> Kelola Kategori
+            </a>
+            <a href="{{ url_for('admin.upload_excel') }}" class="nav-link {% if 'upload' in request.endpoint %}active{% endif %}">
+                <i class="bi bi-cloud-upload"></i> Upload Excel
+            </a>
+            <div style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+                <a href="{{ url_for('home') }}" class="nav-link">
+                    <i class="bi bi-house"></i> Kembali ke Website
+                </a>
+                <a href="{{ url_for('admin.logout') }}" class="nav-link">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div>
+                <h4 class="mb-0">{% block page_title %}Dashboard{% endblock %}</h4>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar">{{ current_user.username[0].upper() }}</div>
+                <div>
+                    <strong>{{ current_user.username }}</strong>
+                    <br><small class="text-muted">Administrator</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {% if category == 'success' %}
+                        <i class="bi bi-check-circle-fill"></i>
+                    {% elif category == 'danger' %}
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    {% elif category == 'warning' %}
+                        <i class="bi bi-exclamation-circle-fill"></i>
+                    {% else %}
+                        <i class="bi bi-info-circle-fill"></i>
+                    {% endif %}
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
