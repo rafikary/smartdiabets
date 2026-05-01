@@ -12,6 +12,20 @@ STRUKTUR MENU (Diet 3J):
 - Pagi/Siang: Pokok + Lauk + Sayur (3 items)
 - Sore/Malam: Pokok + Lauk + Sayur (3 items)
 - Snack 1/2: Buah (1 item)
+
+⚕️ PROTOKOL KEAMANAN MEDIS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Sistem diet medis siap saji - DILARANG merekomendasikan bahan mentah.
+
+Filter 'Mentahan / Olahan' = 'Olahan' adalah NON-NEGOTIABLE:
+  ✓ Fallback boleh melonggarkan 'Tipe Pokok' (aman)
+  ✗ Fallback TIDAK BOLEH melonggarkan 'Mentahan / Olahan' (berbahaya)
+  
+Jika kandidat olahan habis → Return empty dataframe → Error handler
+JANGAN kompromi keamanan medis demi kelengkapan data.
+
+Catatan: Buah segar dengan status 'Tunggal' tetap aman untuk Snack.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 import pandas as pd
 import numpy as np
@@ -178,6 +192,10 @@ def choose_candidates(raw_df: pd.DataFrame,
     3. Filter exclude foods
     4. Ranking berdasarkan kedekatan kalori per-100g dengan target
     5. Ambil top-k kandidat
+    
+    MEDICAL SAFETY:
+    - Filter 'Mentahan / Olahan' TIDAK BOLEH dilonggarkan dalam fallback
+    - Jika kandidat olahan habis, return empty dataframe untuk error handling
     """
     rng = np.random.default_rng(seed)
     
@@ -195,11 +213,11 @@ def choose_candidates(raw_df: pd.DataFrame,
     # Step 3: Filter exclude foods
     df = exclude_foods(df, exclude_list)
     
-    # Fallback: longgarkan filter jika kosong
+    # Fallback: longgarkan filter jika kosong (KECUALI 'Mentahan / Olahan')
     if df.empty:
-        logger.warning(f"No candidates with filters {filters}. Relaxing filters...")
+        logger.warning(f"No candidates with filters {filters}. Attempting safe relaxation...")
         
-        # Fallback 1: Lepas Tipe Pokok
+        # Fallback 1: Lepas 'Tipe Pokok' saja (aman untuk dilonggarkan)
         if 'Tipe Pokok' in filters:
             relaxed = dict(filters)
             relaxed.pop('Tipe Pokok', None)
@@ -211,23 +229,18 @@ def choose_candidates(raw_df: pd.DataFrame,
                     df = df[df[col] == val]
             df = exclude_allergens(df, allergies)
             df = exclude_foods(df, exclude_list)
+            
+            if not df.empty:
+                logger.info(f"Fallback successful: Found {len(df)} candidates after relaxing 'Tipe Pokok'")
         
-        # Fallback 2: Lepas Mentahan/Olahan
-        if df.empty and 'Mentahan / Olahan' in filters:
-            relaxed = dict(filters)
-            relaxed.pop('Mentahan / Olahan', None)
-            relaxed.pop('Tipe Pokok', None)
-            df = raw_df.copy()
-            for col, val in relaxed.items():
-                if isinstance(val, (list, tuple, set)):
-                    df = df[df[col].isin(list(val))]
-                else:
-                    df = df[df[col] == val]
-            df = exclude_allergens(df, allergies)
-            df = exclude_foods(df, exclude_list)
+        # Fallback 2: DIHAPUS - TIDAK AMAN melonggarkan 'Mentahan / Olahan'
+        # Jika masih kosong, biarkan empty untuk ditangani error handler
     
     if df.empty:
-        logger.warning(f"Still no candidates after relaxing. Returning empty.")
+        logger.warning(
+            f"No safe candidates available after filtering. Returning empty dataframe. "
+            f"Filters: {filters}, Exclude count: {len(exclude_list or [])}"
+        )
         return df
     
     # Step 4: Ranking berdasarkan kedekatan kalori

@@ -493,6 +493,7 @@
           {% for a in _al %}<input type="hidden" name="allergies" value="{{ a }}">{% endfor %}
           <input type="hidden" name="exclude_foods" value="{{ exclude_combined_str }}">
           <input type="hidden" name="days" value="{{ num_days }}">
+          <input type="hidden" name="current_day" value="{{ day_idx }}">
           <input type="hidden" name="swap_meal" value="{{ meal_time }}">
           <div class="swap-wrap">
             <div class="d-flex align-items-center gap-2" style="position:relative;z-index:1;">
@@ -653,7 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Multi-day navigation
     const dayBtns = [...document.querySelectorAll('.day-btn')];
     const dayContainers = [...document.querySelectorAll('.day-container')];
-    let currentDay = 0;
+    let currentDay = {{ current_day|default(0) }};  // Get from backend (for persistence after "Ganti Menu")
 
     function showDay(dayIdx) {
       currentDay = dayIdx;
@@ -698,8 +699,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Initialize: show first day
-    showDay(0);
+    // Initialize: show day from backend (persists after "Ganti Menu")
+    showDay(currentDay);
     
   } else {
     // Single-day navigation (original behavior)

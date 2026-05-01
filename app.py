@@ -323,6 +323,9 @@ def output():
         
         # Get number of days for recommendations
         num_days = int(request.form.get('days', 1))
+        
+        # Get current day index (for multi-day navigation persistence)
+        current_day = int(request.form.get('current_day', 0))
 
         # 1. Hitung BBI (Broca)
         bbi = calculate_bbi(height, gender)
@@ -459,6 +462,7 @@ def output():
             meals=all_days_meals[0] if num_days == 1 else None,  # Keep compatibility for single day
             all_days_meals=all_days_meals,
             num_days=num_days,
+            current_day=current_day,
             allergies=allergies,
             exclude_foods=exclude_foods_str,
             active_meal=active_meal,

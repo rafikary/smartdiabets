@@ -2,112 +2,112 @@
     "Pagi": [
         {
             "Pokok": {
-                "name": "Mie bakso",
+                "name": "Spageti dengan Saus Tomat dan Sayuran",
                 "category": "Makanan pokok",
-                "portion": 266.21,
-                "calories": 303.48,
-                "carbs": 43.66,
-                "protein": 14.11,
-                "fat": 7.99,
-                "fiber": 0.27
+                "portion": 239.77,
+                "calories": 242.17,
+                "carbs": 44.31,
+                "protein": 8.54,
+                "fat": 3.79,
+                "fiber": 4.32
             },
             "Lauk": {
-                "name": "Tahu Sumedang",
+                "name": "Tahu goreng",
                 "category": "Lauk",
-                "portion": 20.0,
-                "calories": 23.6,
-                "carbs": 0.87,
-                "protein": 1.41,
-                "fat": 1.61,
-                "fiber": 0.08
+                "portion": 39.29,
+                "calories": 45.19,
+                "carbs": 0.98,
+                "protein": 3.81,
+                "fat": 3.34,
+                "fiber": 0.04
             },
             "Sayur": {
-                "name": "Kadada katembe",
+                "name": "Tumis Bayam",
                 "category": "Sayur",
-                "portion": 21.37,
-                "calories": 23.51,
-                "carbs": 1.52,
-                "protein": 0.96,
-                "fat": 1.47,
-                "fiber": 0.83
+                "portion": 73.79,
+                "calories": 63.46,
+                "carbs": 3.45,
+                "protein": 2.44,
+                "fat": 5.03,
+                "fiber": 2.21
             },
             "Buah": null,
             "avg_similarity": null,
-            "fit_rmse": 2.45
+            "fit_rmse": 1.08
         }
     ],
     "Siang": [
         {
             "Pokok": {
-                "name": "Kupat Tahu",
+                "name": "Tahu Gimbal",
                 "category": "Makanan pokok",
-                "portion": 113.49,
-                "calories": 178.18,
-                "carbs": 28.44,
-                "protein": 5.11,
-                "fat": 4.95,
-                "fiber": 1.59
+                "portion": 67.3,
+                "calories": 147.38,
+                "carbs": 11.35,
+                "protein": 7.96,
+                "fat": 8.48,
+                "fiber": 1.82
             },
             "Lauk": {
-                "name": "Sate Taichan",
+                "name": "Lawar babi, masakan",
                 "category": "Lauk",
-                "portion": 42.79,
-                "calories": 76.59,
-                "carbs": 2.79,
-                "protein": 5.33,
-                "fat": 5.03,
-                "fiber": 0.34
+                "portion": 20.0,
+                "calories": 34.8,
+                "carbs": 0.6,
+                "protein": 3.4,
+                "fat": 2.0,
+                "fiber": 0.0
             },
             "Sayur": {
-                "name": "Oseng Buncis Tempe",
+                "name": "Sayur Tahu Toge",
                 "category": "Sayur",
-                "portion": 128.91,
-                "calories": 270.72,
-                "carbs": 41.64,
-                "protein": 10.24,
-                "fat": 8.31,
-                "fiber": 4.38
+                "portion": 400.0,
+                "calories": 344.0,
+                "carbs": 51.64,
+                "protein": 23.72,
+                "fat": 7.72,
+                "fiber": 16.0
             },
             "Buah": null,
             "avg_similarity": null,
-            "fit_rmse": 0.77
+            "fit_rmse": 9.19
         }
     ],
     "Sore/Malam": [
         {
             "Pokok": {
-                "name": "Jagung gerontol",
+                "name": "Soto Ayam",
                 "category": "Makanan pokok",
-                "portion": 157.17,
-                "calories": 245.18,
-                "carbs": 52.34,
-                "protein": 4.24,
-                "fat": 2.04,
-                "fiber": 1.57
+                "portion": 70.71,
+                "calories": 91.92,
+                "carbs": 5.73,
+                "protein": 7.04,
+                "fat": 4.38,
+                "fiber": 0.49
             },
             "Lauk": {
-                "name": "Ikan asar merah, masakan",
+                "name": "Ikan baung bakar",
                 "category": "Lauk",
-                "portion": 47.53,
-                "calories": 69.39,
-                "carbs": 2.66,
-                "protein": 8.41,
-                "fat": 2.8,
+                "portion": 20.0,
+                "calories": 28.8,
+                "carbs": 1.04,
+                "protein": 3.56,
+                "fat": 1.16,
                 "fiber": 0.0
             },
             "Sayur": {
-                "name": "Gulai pakis",
+                "name": "Sayuran Campur Matang (Jagung, Kacang Lima, Kacang Polong, Kacang Hijau dan Wortel)",
                 "category": "Sayur",
-                "portion": 86.35,
-                "calories": 123.48,
-                "carbs": 5.18,
-                "protein": 3.45,
-                "fat": 9.84,
-                "fiber": 1.21
+                "portion": 392.4,
+                "calories": 317.84,
+                "carbs": 49.99,
+                "protein": 10.91,
+                "fat": 8.32,
+                "fiber": 16.87
             },
             "Buah": null,
             "avg_similarity": null,
-            "fit_rmse": 1.51
+            "fit_rmse": 5.74
         }
     ],
     "Snack 1": [
@@ -116,17 +116,17 @@
             "Lauk": null,
             "Sayur": null,
             "Buah": {
-                "name": "Kawista, segar",
+                "name": "Pisang ketip, segar",
                 "category": "Buah",
-                "portion": 145.07,
-                "calories": 174.08,
-                "carbs": 30.17,
-                "protein": 5.08,
-                "fat": 3.63,
-                "fiber": 6.67
+                "portion": 118.17,
+                "calories": 171.35,
+                "carbs": 40.77,
+                "protein": 1.3,
+                "fat": 0.35,
+                "fiber": 7.8
             },
             "avg_similarity": null,
-            "fit_rmse": 3.56
+            "fit_rmse": 8.73
         }
     ],
     "Snack 2": [
@@ -135,17 +135,17 @@
             "Lauk": null,
             "Sayur": null,
             "Buah": {
-                "name": "Buah kom, segar",
+                "name": "Pisang ua, segar",
                 "category": "Buah",
-                "portion": 97.64,
-                "calories": 257.78,
-                "carbs": 58.2,
-                "protein": 3.91,
-                "fat": 1.07,
-                "fiber": 8.79
+                "portion": 200.61,
+                "calories": 256.78,
+                "carbs": 60.58,
+                "protein": 1.6,
+                "fat": 1.0,
+                "fiber": 16.25
             },
             "avg_similarity": null,
-            "fit_rmse": 11.25
+            "fit_rmse": 13.59
         }
     ]
 }
