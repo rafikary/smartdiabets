@@ -655,18 +655,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const dayBtns = [...document.querySelectorAll('.day-btn')];
     const dayContainers = [...document.querySelectorAll('.day-container')];
     let currentDay = {{ current_day|default(0) }};  // Get from backend (for persistence after "Ganti Menu")
+    const activeMeal = "{{ active_meal|default('Pagi') }}".replace('/', '-');  // Get active meal from backend
 
-    function showDay(dayIdx) {
+    function showDay(dayIdx, skipMealReset = false) {
       currentDay = dayIdx;
       dayBtns.forEach((b, i) => b.classList.toggle('active', i === dayIdx));
       dayContainers.forEach((c, i) => c.classList.toggle('active', i === dayIdx));
       
-      // Show first meal of the newly selected day
-      const dayMealBtns = [...document.querySelectorAll(`.meal-btn[data-day="${dayIdx}"]`)];
-      const dayMealSecs = [...document.querySelectorAll(`.meal-section[data-day="${dayIdx}"]`)];
-      if (dayMealBtns.length > 0) {
-        const firstMeal = dayMealBtns[0].dataset.meal;
-        showMealInDay(dayIdx, firstMeal);
+      // Show first meal of the newly selected day (unless skipped)
+      if (!skipMealReset) {
+        const dayMealBtns = [...document.querySelectorAll(`.meal-btn[data-day="${dayIdx}"]`)];
+        if (dayMealBtns.length > 0) {
+          const firstMeal = dayMealBtns[0].dataset.meal;
+          showMealInDay(dayIdx, firstMeal);
+        }
       }
     }
 
@@ -699,8 +701,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Initialize: show day from backend (persists after "Ganti Menu")
-    showDay(currentDay);
+    // Initialize: show day from backend and restore active meal time
+    showDay(currentDay, true);  // Skip auto meal reset
+    showMealInDay(currentDay, activeMeal);  // Restore to the correct meal time
     
   } else {
     // Single-day navigation (original behavior)
