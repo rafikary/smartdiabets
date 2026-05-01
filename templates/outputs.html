@@ -162,6 +162,23 @@
   .filter-banner b{color:var(--brand);}
   .fi-text{color:var(--muted);font-size:.83rem;line-height:1.7;}
   .fi-tag{display:inline-flex;align-items:center;gap:.3rem;background:rgba(4,120,87,.1);border-radius:999px;padding:.18rem .6rem;font-size:.75rem;font-weight:700;color:var(--brand);margin:.15rem .1rem;}
+  
+  /* Day Navigation */
+  .day-nav{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);padding:1rem 1.15rem;display:flex;flex-direction:column;gap:.75rem;}
+  .day-nav-label{font-size:.75rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;display:flex;align-items:center;gap:.4rem;}
+  .day-btn-group{display:flex;gap:.5rem;flex-wrap:wrap;}
+  .day-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.1rem;border-radius:var(--radius-md);background:var(--paper);border:2px solid var(--border);color:var(--muted);font-weight:800;font-size:.85rem;cursor:pointer;transition:var(--tr);}
+  .day-btn:hover{border-color:var(--brand-soft);color:var(--brand);transform:translateY(-2px);box-shadow:0 4px 12px rgba(4,120,87,.15);}
+  .day-btn.active{background:linear-gradient(135deg,#047857,#059669);border-color:#047857;color:#fff;box-shadow:0 8px 20px rgba(4,120,87,.35);}
+  .day-btn i{font-size:.95rem;}
+  
+  /* Day Container */
+  .day-container{display:none;animation:fadeUp .3s ease;}
+  .day-container.active{display:block;}
+  .day-header{background:linear-gradient(135deg,rgba(4,120,87,.08),rgba(16,185,129,.05));border:2px solid rgba(4,120,87,.15);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:.6rem;}
+  .day-header i{font-size:1.2rem;color:var(--brand);flex-shrink:0;}
+  .day-subtitle{font-size:.8rem;color:var(--muted);margin-left:.3rem;}
+  
   .meal-nav{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);padding:.85rem 1rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;}
   .meal-nav-label{font-size:.7rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-right:.25rem;}
   .meal-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:var(--radius-md);background:var(--paper);border:1.5px solid var(--border);color:var(--muted);font-weight:700;font-size:.8rem;cursor:pointer;transition:var(--tr);}
@@ -331,137 +348,297 @@
   {% endif %}
 
   <div class="sec-label">Rekomendasi Menu</div>
-  <div class="meal-nav mb-3">
-    <span class="meal-nav-label">Pilih Waktu:</span>
-    {% for m in ['Pagi','Siang','Sore/Malam','Snack 1','Snack 2'] %}
-    <button class="meal-btn" type="button" data-meal="{{ m|replace('/', '-') }}">
-      {% if m=='Pagi' %}<i class="bi bi-sunrise-fill"></i>
-      {% elif m=='Siang' %}<i class="bi bi-sun-fill"></i>
-      {% elif m=='Sore/Malam' %}<i class="bi bi-moon-stars-fill"></i>
-      {% elif m=='Snack 1' %}<i class="bi bi-cup-hot-fill"></i>
-      {% else %}<i class="bi bi-apple"></i>{% endif %}
-      {{ m }}
-    </button>
-    {% endfor %}
+  
+  {% if num_days > 1 %}
+  <!-- Multi-Day Navigation -->
+  <div class="day-nav mb-4">
+    <span class="day-nav-label"><i class="bi bi-calendar-week"></i> Pilih Hari:</span>
+    <div class="day-btn-group">
+      {% for day_idx in range(num_days) %}
+      <button class="day-btn" type="button" data-day="{{ day_idx }}">
+        <i class="bi bi-calendar-check"></i> Hari {{ day_idx + 1 }}
+      </button>
+      {% endfor %}
+    </div>
   </div>
+  {% endif %}
 
   {% set _al = allergies|default([]) %}
   {% set _ex = exclude_foods|default('') %}
 
-  {% for meal_time in ['Pagi','Siang','Sore/Malam','Snack 1','Snack 2'] %}
-  {% set section_id = meal_time|replace('/', '-') %}
-  <section id="{{ section_id }}" class="meal-section">
-    <div class="meal-header-card">
-      <div>
-        <div class="meal-header-title">
-          {% if meal_time=='Pagi' %}<i class="bi bi-sunrise-fill"></i>
-          {% elif meal_time=='Siang' %}<i class="bi bi-sun-fill"></i>
-          {% elif meal_time=='Sore/Malam' %}<i class="bi bi-moon-stars-fill"></i>
-          {% elif meal_time=='Snack 1' %}<i class="bi bi-cup-hot-fill"></i>
+  {% if num_days > 1 %}
+    {# Multi-day view #}
+    {% for day_idx in range(num_days) %}
+    <div class="day-container" data-day="{{ day_idx }}">
+      <div class="day-header">
+        <i class="bi bi-calendar-date-fill"></i> Hari {{ day_idx + 1 }}
+        <span class="day-subtitle">Menu bervariasi untuk hari ini</span>
+      </div>
+      
+      <div class="meal-nav mb-3">
+        <span class="meal-nav-label">Pilih Waktu:</span>
+        {% for m in ['Pagi','Siang','Sore/Malam','Snack 1','Snack 2'] %}
+        <button class="meal-btn" type="button" data-meal="{{ m|replace('/', '-') }}" data-day="{{ day_idx }}">
+          {% if m=='Pagi' %}<i class="bi bi-sunrise-fill"></i>
+          {% elif m=='Siang' %}<i class="bi bi-sun-fill"></i>
+          {% elif m=='Sore/Malam' %}<i class="bi bi-moon-stars-fill"></i>
+          {% elif m=='Snack 1' %}<i class="bi bi-cup-hot-fill"></i>
           {% else %}<i class="bi bi-apple"></i>{% endif %}
-          {{ meal_time }}
-        </div>
-        <div class="meal-target">Target energi: <strong>{{ distribution[meal_time]|round(0)|int }} kkal</strong></div>
+          {{ m }}
+        </button>
+        {% endfor %}
       </div>
-      <div class="nut-row">
-        <div class="nut-chip"><div class="nc-val">{{ nutrients[meal_time].karbohidrat|round(1) }}</div><div class="nc-lbl">Karbo (g)</div></div>
-        <div class="nut-chip"><div class="nc-val">{{ nutrients[meal_time].protein|round(1) }}</div><div class="nc-lbl">Protein (g)</div></div>
-        <div class="nut-chip"><div class="nc-val">{{ nutrients[meal_time].lemak|round(1) }}</div><div class="nc-lbl">Lemak (g)</div></div>
-        <div class="nut-chip"><div class="nc-val">{{ nutrients[meal_time].fiber|round(1) }}</div><div class="nc-lbl">Serat (g)</div></div>
-      </div>
-    </div>
 
-    <div class="row g-3">
-      {% for food in meals[meal_time] %}
-        {% if food['Pokok'] %}
-        <div class="col-md-4">
-          <div class="food-card type-pokok"><div class="food-card-top"></div><div class="food-card-body">
-            <span class="food-cat-badge pokok"><i class="bi bi-bowl-fill"></i>Makanan Pokok</span>
-            <div class="food-name">{{ food['Pokok']['name'] }}</div><div class="food-sub">{{ food['Pokok']['category'] }}</div>
-            <div class="food-row"><span>Porsi</span><b>{{ food['Pokok']['portion']|round(1) }} g</b></div>
-            <div class="food-row"><span>Kalori</span><b>{{ food['Pokok']['calories']|round(1) }} kkal</b></div>
-            <div class="food-row"><span>Karbohidrat</span><b>{{ food['Pokok']['carbs']|round(1) }} g</b></div>
-            <div class="food-row"><span>Protein</span><b>{{ food['Pokok']['protein']|round(1) }} g</b></div>
-            <div class="food-row"><span>Lemak</span><b>{{ food['Pokok']['fat']|round(1) }} g</b></div>
-            <div class="food-row"><span>Serat</span><b>{{ food['Pokok']['fiber']|round(1) }} g</b></div>
-          </div></div>
+      {% for meal_time in ['Pagi','Siang','Sore/Malam','Snack 1','Snack 2'] %}
+      {% set section_id = 'day' ~ day_idx ~ '-' ~ meal_time|replace('/', '-') %}
+      <section id="{{ section_id }}" class="meal-section" data-day="{{ day_idx }}">
+        <div class="meal-header-card">
+          <div>
+            <div class="meal-header-title">
+              {% if meal_time=='Pagi' %}<i class="bi bi-sunrise-fill"></i>
+              {% elif meal_time=='Siang' %}<i class="bi bi-sun-fill"></i>
+              {% elif meal_time=='Sore/Malam' %}<i class="bi bi-moon-stars-fill"></i>
+              {% elif meal_time=='Snack 1' %}<i class="bi bi-cup-hot-fill"></i>
+              {% else %}<i class="bi bi-apple"></i>{% endif %}
+              {{ meal_time }}
+            </div>
+            <div class="meal-target">Target energi: <strong>{{ distribution[meal_time]|round(0)|int }} kkal</strong></div>
+          </div>
+          <div class="nut-row">
+            <div class="nut-chip"><div class="nc-val">{{ nutrients[meal_time].karbohidrat|round(1) }}</div><div class="nc-lbl">Karbo (g)</div></div>
+            <div class="nut-chip"><div class="nc-val">{{ nutrients[meal_time].protein|round(1) }}</div><div class="nc-lbl">Protein (g)</div></div>
+            <div class="nut-chip"><div class="nc-val">{{ nutrients[meal_time].lemak|round(1) }}</div><div class="nc-lbl">Lemak (g)</div></div>
+            <div class="nut-chip"><div class="nc-val">{{ nutrients[meal_time].fiber|round(1) }}</div><div class="nc-lbl">Serat (g)</div></div>
+          </div>
         </div>
-        {% endif %}
-        {% if food['Lauk'] %}
-        <div class="col-md-4">
-          <div class="food-card type-lauk"><div class="food-card-top"></div><div class="food-card-body">
-            <span class="food-cat-badge lauk"><i class="bi bi-egg-fried"></i>Lauk</span>
-            <div class="food-name">{{ food['Lauk']['name'] }}</div><div class="food-sub">{{ food['Lauk']['category'] }}</div>
-            <div class="food-row"><span>Porsi</span><b>{{ food['Lauk']['portion']|round(1) }} g</b></div>
-            <div class="food-row"><span>Kalori</span><b>{{ food['Lauk']['calories']|round(1) }} kkal</b></div>
-            <div class="food-row"><span>Karbohidrat</span><b>{{ food['Lauk']['carbs']|round(1) }} g</b></div>
-            <div class="food-row"><span>Protein</span><b>{{ food['Lauk']['protein']|round(1) }} g</b></div>
-            <div class="food-row"><span>Lemak</span><b>{{ food['Lauk']['fat']|round(1) }} g</b></div>
-            <div class="food-row"><span>Serat</span><b>{{ food['Lauk']['fiber']|round(1) }} g</b></div>
-          </div></div>
+
+        <div class="row g-3">
+          {% for food in all_days_meals[day_idx][meal_time] %}
+            {% if food['Pokok'] %}
+            <div class="col-md-4">
+              <div class="food-card type-pokok"><div class="food-card-top"></div><div class="food-card-body">
+                <span class="food-cat-badge pokok"><i class="bi bi-bowl-fill"></i>Makanan Pokok</span>
+                <div class="food-name">{{ food['Pokok']['name'] }}</div><div class="food-sub">{{ food['Pokok']['category'] }}</div>
+                <div class="food-row"><span>Porsi</span><b>{{ food['Pokok']['portion']|round(1) }} g</b></div>
+                <div class="food-row"><span>Kalori</span><b>{{ food['Pokok']['calories']|round(1) }} kkal</b></div>
+                <div class="food-row"><span>Karbohidrat</span><b>{{ food['Pokok']['carbs']|round(1) }} g</b></div>
+                <div class="food-row"><span>Protein</span><b>{{ food['Pokok']['protein']|round(1) }} g</b></div>
+                <div class="food-row"><span>Lemak</span><b>{{ food['Pokok']['fat']|round(1) }} g</b></div>
+                <div class="food-row"><span>Serat</span><b>{{ food['Pokok']['fiber']|round(1) }} g</b></div>
+              </div></div>
+            </div>
+            {% endif %}
+            {% if food['Lauk'] %}
+            <div class="col-md-4">
+              <div class="food-card type-lauk"><div class="food-card-top"></div><div class="food-card-body">
+                <span class="food-cat-badge lauk"><i class="bi bi-egg-fried"></i>Lauk</span>
+                <div class="food-name">{{ food['Lauk']['name'] }}</div><div class="food-sub">{{ food['Lauk']['category'] }}</div>
+                <div class="food-row"><span>Porsi</span><b>{{ food['Lauk']['portion']|round(1) }} g</b></div>
+                <div class="food-row"><span>Kalori</span><b>{{ food['Lauk']['calories']|round(1) }} kkal</b></div>
+                <div class="food-row"><span>Karbohidrat</span><b>{{ food['Lauk']['carbs']|round(1) }} g</b></div>
+                <div class="food-row"><span>Protein</span><b>{{ food['Lauk']['protein']|round(1) }} g</b></div>
+                <div class="food-row"><span>Lemak</span><b>{{ food['Lauk']['fat']|round(1) }} g</b></div>
+                <div class="food-row"><span>Serat</span><b>{{ food['Lauk']['fiber']|round(1) }} g</b></div>
+              </div></div>
+            </div>
+            {% endif %}
+            {% if food['Sayur'] %}
+            <div class="col-md-4">
+              <div class="food-card type-sayur"><div class="food-card-top"></div><div class="food-card-body">
+                <span class="food-cat-badge sayur"><i class="bi bi-leaf-fill"></i>Sayur</span>
+                <div class="food-name">{{ food['Sayur']['name'] }}</div><div class="food-sub">{{ food['Sayur']['category'] }}</div>
+                <div class="food-row"><span>Porsi</span><b>{{ food['Sayur']['portion']|round(1) }} g</b></div>
+                <div class="food-row"><span>Kalori</span><b>{{ food['Sayur']['calories']|round(1) }} kkal</b></div>
+                <div class="food-row"><span>Karbohidrat</span><b>{{ food['Sayur']['carbs']|round(1) }} g</b></div>
+                <div class="food-row"><span>Protein</span><b>{{ food['Sayur']['protein']|round(1) }} g</b></div>
+                <div class="food-row"><span>Lemak</span><b>{{ food['Sayur']['fat']|round(1) }} g</b></div>
+                <div class="food-row"><span>Serat</span><b>{{ food['Sayur']['fiber']|round(1) }} g</b></div>
+              </div></div>
+            </div>
+            {% endif %}
+            {% if food['Buah'] %}
+            <div class="col-md-4">
+              <div class="food-card type-buah"><div class="food-card-top"></div><div class="food-card-body">
+                <span class="food-cat-badge buah"><i class="bi bi-apple"></i>Buah</span>
+                <div class="food-name">{{ food['Buah']['name'] }}</div><div class="food-sub">{{ food['Buah']['category'] }}</div>
+                <div class="food-row"><span>Porsi</span><b>{{ food['Buah']['portion']|round(1) }} g</b></div>
+                <div class="food-row"><span>Kalori</span><b>{{ food['Buah']['calories']|round(1) }} kkal</b></div>
+                <div class="food-row"><span>Karbohidrat</span><b>{{ food['Buah']['carbs']|round(1) }} g</b></div>
+                <div class="food-row"><span>Protein</span><b>{{ food['Buah']['protein']|round(1) }} g</b></div>
+                <div class="food-row"><span>Lemak</span><b>{{ food['Buah']['fat']|round(1) }} g</b></div>
+                <div class="food-row"><span>Serat</span><b>{{ food['Buah']['fiber']|round(1) }} g</b></div>
+              </div></div>
+            </div>
+            {% endif %}
+          {% endfor %}
         </div>
-        {% endif %}
-        {% if food['Sayur'] %}
-        <div class="col-md-4">
-          <div class="food-card type-sayur"><div class="food-card-top"></div><div class="food-card-body">
-            <span class="food-cat-badge sayur"><i class="bi bi-leaf-fill"></i>Sayur</span>
-            <div class="food-name">{{ food['Sayur']['name'] }}</div><div class="food-sub">{{ food['Sayur']['category'] }}</div>
-            <div class="food-row"><span>Porsi</span><b>{{ food['Sayur']['portion']|round(1) }} g</b></div>
-            <div class="food-row"><span>Kalori</span><b>{{ food['Sayur']['calories']|round(1) }} kkal</b></div>
-            <div class="food-row"><span>Karbohidrat</span><b>{{ food['Sayur']['carbs']|round(1) }} g</b></div>
-            <div class="food-row"><span>Protein</span><b>{{ food['Sayur']['protein']|round(1) }} g</b></div>
-            <div class="food-row"><span>Lemak</span><b>{{ food['Sayur']['fat']|round(1) }} g</b></div>
-            <div class="food-row"><span>Serat</span><b>{{ food['Sayur']['fiber']|round(1) }} g</b></div>
-          </div></div>
-        </div>
-        {% endif %}
-        {% if food['Buah'] %}
-        <div class="col-md-4">
-          <div class="food-card type-buah"><div class="food-card-top"></div><div class="food-card-body">
-            <span class="food-cat-badge buah"><i class="bi bi-apple"></i>Buah</span>
-            <div class="food-name">{{ food['Buah']['name'] }}</div><div class="food-sub">{{ food['Buah']['category'] }}</div>
-            <div class="food-row"><span>Porsi</span><b>{{ food['Buah']['portion']|round(1) }} g</b></div>
-            <div class="food-row"><span>Kalori</span><b>{{ food['Buah']['calories']|round(1) }} kkal</b></div>
-            <div class="food-row"><span>Karbohidrat</span><b>{{ food['Buah']['carbs']|round(1) }} g</b></div>
-            <div class="food-row"><span>Protein</span><b>{{ food['Buah']['protein']|round(1) }} g</b></div>
-            <div class="food-row"><span>Lemak</span><b>{{ food['Buah']['fat']|round(1) }} g</b></div>
-            <div class="food-row"><span>Serat</span><b>{{ food['Buah']['fiber']|round(1) }} g</b></div>
-          </div></div>
-        </div>
-        {% endif %}
+
+        {% set exclude_now = [] %}
+        {% for food in all_days_meals[day_idx][meal_time] %}
+          {% if food['Pokok'] %}{% set _ = exclude_now.append(food['Pokok']['name']|trim) %}{% endif %}
+          {% if food['Lauk']  %}{% set _ = exclude_now.append(food['Lauk']['name']|trim)  %}{% endif %}
+          {% if food['Sayur'] %}{% set _ = exclude_now.append(food['Sayur']['name']|trim) %}{% endif %}
+          {% if food['Buah']  %}{% set _ = exclude_now.append(food['Buah']['name']|trim)  %}{% endif %}
+        {% endfor %}
+        {% set _ex_list = (_ex.split(',') if _ex else []) | map('trim') | reject('equalto','') | list %}
+        {% set exclude_combined_str = (_ex_list + exclude_now) | unique | join(', ') %}
+
+        <form action="/outputs" method="post" onsubmit="this.querySelector('button[type=submit]').classList.add('loading')" style="margin-top:.75rem;">
+          <input type="hidden" name="name"     value="{{ name }}">
+          <input type="hidden" name="age"      value="{{ age }}">
+          <input type="hidden" name="gender"   value="{{ 'pria' if gender_display=='Laki-laki' else 'wanita' }}">
+          <input type="hidden" name="weight"   value="{{ weight }}">
+          <input type="hidden" name="height"   value="{{ height }}">
+          <input type="hidden" name="activity" value="{{ {'Istirahat':'rest','Ringan':'light','Sedang':'moderate','Berat':'heavy','Sangat Berat':'very_heavy'}[activity_level] if activity_level in ['Istirahat','Ringan','Sedang','Berat','Sangat Berat'] else 'light' }}">
+          {% for a in _al %}<input type="hidden" name="allergies" value="{{ a }}">{% endfor %}
+          <input type="hidden" name="exclude_foods" value="{{ exclude_combined_str }}">
+          <input type="hidden" name="days" value="{{ num_days }}">
+          <input type="hidden" name="swap_meal" value="{{ meal_time }}">
+          <div class="swap-wrap">
+            <div class="d-flex align-items-center gap-2" style="position:relative;z-index:1;">
+              <div class="swap-icon-box"><i class="bi bi-arrow-repeat"></i></div>
+              <div class="swap-hint">Kurang cocok? Dapatkan pilihan menu <strong>{{ meal_time }}</strong> yang berbeda!</div>
+            </div>
+            <button type="submit" class="btn-swap"><i class="bi bi-shuffle"></i> Ganti Menu {{ meal_time }}</button>
+          </div>
+        </form>
+      </section>
+      {% endfor %}
+    </div>
+    {% endfor %}
+
+  {% else %}
+    {# Single-day view (backward compatibility) #}
+    <div class="meal-nav mb-3">
+      <span class="meal-nav-label">Pilih Waktu:</span>
+      {% for m in ['Pagi','Siang','Sore/Malam','Snack 1','Snack 2'] %}
+      <button class="meal-btn" type="button" data-meal="{{ m|replace('/', '-') }}">
+        {% if m=='Pagi' %}<i class="bi bi-sunrise-fill"></i>
+        {% elif m=='Siang' %}<i class="bi bi-sun-fill"></i>
+        {% elif m=='Sore/Malam' %}<i class="bi bi-moon-stars-fill"></i>
+        {% elif m=='Snack 1' %}<i class="bi bi-cup-hot-fill"></i>
+        {% else %}<i class="bi bi-apple"></i>{% endif %}
+        {{ m }}
+      </button>
       {% endfor %}
     </div>
 
-    {% set exclude_now = [] %}
-    {% for food in meals[meal_time] %}
-      {% if food['Pokok'] %}{% set _ = exclude_now.append(food['Pokok']['name']|trim) %}{% endif %}
-      {% if food['Lauk']  %}{% set _ = exclude_now.append(food['Lauk']['name']|trim)  %}{% endif %}
-      {% if food['Sayur'] %}{% set _ = exclude_now.append(food['Sayur']['name']|trim) %}{% endif %}
-      {% if food['Buah']  %}{% set _ = exclude_now.append(food['Buah']['name']|trim)  %}{% endif %}
-    {% endfor %}
-    {% set _ex_list = (_ex.split(',') if _ex else []) | map('trim') | reject('equalto','') | list %}
-    {% set exclude_combined_str = (_ex_list + exclude_now) | unique | join(', ') %}
-
-    <form action="/outputs" method="post" onsubmit="this.querySelector('button[type=submit]').classList.add('loading')" style="margin-top:.75rem;">
-      <input type="hidden" name="name"     value="{{ name }}">
-      <input type="hidden" name="age"      value="{{ age }}">
-      <input type="hidden" name="gender"   value="{{ 'pria' if gender_display=='Laki-laki' else 'wanita' }}">
-      <input type="hidden" name="weight"   value="{{ weight }}">
-      <input type="hidden" name="height"   value="{{ height }}">
-      <input type="hidden" name="activity" value="{{ {'Istirahat':'rest','Ringan':'light','Sedang':'moderate','Berat':'heavy','Sangat Berat':'very_heavy'}[activity_level] if activity_level in ['Istirahat','Ringan','Sedang','Berat','Sangat Berat'] else 'light' }}">
-      {% for a in _al %}<input type="hidden" name="allergies" value="{{ a }}">{% endfor %}
-      <input type="hidden" name="exclude_foods" value="{{ exclude_combined_str }}">
-      <input type="hidden" name="swap_meal" value="{{ meal_time }}">
-      <div class="swap-wrap">
-        <div class="d-flex align-items-center gap-2" style="position:relative;z-index:1;">
-          <div class="swap-icon-box"><i class="bi bi-arrow-repeat"></i></div>
-          <div class="swap-hint">Kurang cocok? Dapatkan pilihan menu <strong>{{ meal_time }}</strong> yang berbeda!</div>
+    {% for meal_time in ['Pagi','Siang','Sore/Malam','Snack 1','Snack 2'] %}
+    {% set section_id = meal_time|replace('/', '-') %}
+    <section id="{{ section_id }}" class="meal-section">
+      <div class="meal-header-card">
+        <div>
+          <div class="meal-header-title">
+            {% if meal_time=='Pagi' %}<i class="bi bi-sunrise-fill"></i>
+            {% elif meal_time=='Siang' %}<i class="bi bi-sun-fill"></i>
+            {% elif meal_time=='Sore/Malam' %}<i class="bi bi-moon-stars-fill"></i>
+            {% elif meal_time=='Snack 1' %}<i class="bi bi-cup-hot-fill"></i>
+            {% else %}<i class="bi bi-apple"></i>{% endif %}
+            {{ meal_time }}
+          </div>
+          <div class="meal-target">Target energi: <strong>{{ distribution[meal_time]|round(0)|int }} kkal</strong></div>
         </div>
-        <button type="submit" class="btn-swap"><i class="bi bi-shuffle"></i> Ganti Menu {{ meal_time }}</button>
+        <div class="nut-row">
+          <div class="nut-chip"><div class="nc-val">{{ nutrients[meal_time].karbohidrat|round(1) }}</div><div class="nc-lbl">Karbo (g)</div></div>
+          <div class="nut-chip"><div class="nc-val">{{ nutrients[meal_time].protein|round(1) }}</div><div class="nc-lbl">Protein (g)</div></div>
+          <div class="nut-chip"><div class="nc-val">{{ nutrients[meal_time].lemak|round(1) }}</div><div class="nc-lbl">Lemak (g)</div></div>
+          <div class="nut-chip"><div class="nc-val">{{ nutrients[meal_time].fiber|round(1) }}</div><div class="nc-lbl">Serat (g)</div></div>
+        </div>
       </div>
-    </form>
-  </section>
-  {% endfor %}
+
+      <div class="row g-3">
+        {% for food in meals[meal_time] %}
+          {% if food['Pokok'] %}
+          <div class="col-md-4">
+            <div class="food-card type-pokok"><div class="food-card-top"></div><div class="food-card-body">
+              <span class="food-cat-badge pokok"><i class="bi bi-bowl-fill"></i>Makanan Pokok</span>
+              <div class="food-name">{{ food['Pokok']['name'] }}</div><div class="food-sub">{{ food['Pokok']['category'] }}</div>
+              <div class="food-row"><span>Porsi</span><b>{{ food['Pokok']['portion']|round(1) }} g</b></div>
+              <div class="food-row"><span>Kalori</span><b>{{ food['Pokok']['calories']|round(1) }} kkal</b></div>
+              <div class="food-row"><span>Karbohidrat</span><b>{{ food['Pokok']['carbs']|round(1) }} g</b></div>
+              <div class="food-row"><span>Protein</span><b>{{ food['Pokok']['protein']|round(1) }} g</b></div>
+              <div class="food-row"><span>Lemak</span><b>{{ food['Pokok']['fat']|round(1) }} g</b></div>
+              <div class="food-row"><span>Serat</span><b>{{ food['Pokok']['fiber']|round(1) }} g</b></div>
+            </div></div>
+          </div>
+          {% endif %}
+          {% if food['Lauk'] %}
+          <div class="col-md-4">
+            <div class="food-card type-lauk"><div class="food-card-top"></div><div class="food-card-body">
+              <span class="food-cat-badge lauk"><i class="bi bi-egg-fried"></i>Lauk</span>
+              <div class="food-name">{{ food['Lauk']['name'] }}</div><div class="food-sub">{{ food['Lauk']['category'] }}</div>
+              <div class="food-row"><span>Porsi</span><b>{{ food['Lauk']['portion']|round(1) }} g</b></div>
+              <div class="food-row"><span>Kalori</span><b>{{ food['Lauk']['calories']|round(1) }} kkal</b></div>
+              <div class="food-row"><span>Karbohidrat</span><b>{{ food['Lauk']['carbs']|round(1) }} g</b></div>
+              <div class="food-row"><span>Protein</span><b>{{ food['Lauk']['protein']|round(1) }} g</b></div>
+              <div class="food-row"><span>Lemak</span><b>{{ food['Lauk']['fat']|round(1) }} g</b></div>
+              <div class="food-row"><span>Serat</span><b>{{ food['Lauk']['fiber']|round(1) }} g</b></div>
+            </div></div>
+          </div>
+          {% endif %}
+          {% if food['Sayur'] %}
+          <div class="col-md-4">
+            <div class="food-card type-sayur"><div class="food-card-top"></div><div class="food-card-body">
+              <span class="food-cat-badge sayur"><i class="bi bi-leaf-fill"></i>Sayur</span>
+              <div class="food-name">{{ food['Sayur']['name'] }}</div><div class="food-sub">{{ food['Sayur']['category'] }}</div>
+              <div class="food-row"><span>Porsi</span><b>{{ food['Sayur']['portion']|round(1) }} g</b></div>
+              <div class="food-row"><span>Kalori</span><b>{{ food['Sayur']['calories']|round(1) }} kkal</b></div>
+              <div class="food-row"><span>Karbohidrat</span><b>{{ food['Sayur']['carbs']|round(1) }} g</b></div>
+              <div class="food-row"><span>Protein</span><b>{{ food['Sayur']['protein']|round(1) }} g</b></div>
+              <div class="food-row"><span>Lemak</span><b>{{ food['Sayur']['fat']|round(1) }} g</b></div>
+              <div class="food-row"><span>Serat</span><b>{{ food['Sayur']['fiber']|round(1) }} g</b></div>
+            </div></div>
+          </div>
+          {% endif %}
+          {% if food['Buah'] %}
+          <div class="col-md-4">
+            <div class="food-card type-buah"><div class="food-card-top"></div><div class="food-card-body">
+              <span class="food-cat-badge buah"><i class="bi bi-apple"></i>Buah</span>
+              <div class="food-name">{{ food['Buah']['name'] }}</div><div class="food-sub">{{ food['Buah']['category'] }}</div>
+              <div class="food-row"><span>Porsi</span><b>{{ food['Buah']['portion']|round(1) }} g</b></div>
+              <div class="food-row"><span>Kalori</span><b>{{ food['Buah']['calories']|round(1) }} kkal</b></div>
+              <div class="food-row"><span>Karbohidrat</span><b>{{ food['Buah']['carbs']|round(1) }} g</b></div>
+              <div class="food-row"><span>Protein</span><b>{{ food['Buah']['protein']|round(1) }} g</b></div>
+              <div class="food-row"><span>Lemak</span><b>{{ food['Buah']['fat']|round(1) }} g</b></div>
+              <div class="food-row"><span>Serat</span><b>{{ food['Buah']['fiber']|round(1) }} g</b></div>
+            </div></div>
+          </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      {% set exclude_now = [] %}
+      {% for food in meals[meal_time] %}
+        {% if food['Pokok'] %}{% set _ = exclude_now.append(food['Pokok']['name']|trim) %}{% endif %}
+        {% if food['Lauk']  %}{% set _ = exclude_now.append(food['Lauk']['name']|trim)  %}{% endif %}
+        {% if food['Sayur'] %}{% set _ = exclude_now.append(food['Sayur']['name']|trim) %}{% endif %}
+        {% if food['Buah']  %}{% set _ = exclude_now.append(food['Buah']['name']|trim)  %}{% endif %}
+      {% endfor %}
+      {% set _ex_list = (_ex.split(',') if _ex else []) | map('trim') | reject('equalto','') | list %}
+      {% set exclude_combined_str = (_ex_list + exclude_now) | unique | join(', ') %}
+
+      <form action="/outputs" method="post" onsubmit="this.querySelector('button[type=submit]').classList.add('loading')" style="margin-top:.75rem;">
+        <input type="hidden" name="name"     value="{{ name }}">
+        <input type="hidden" name="age"      value="{{ age }}">
+        <input type="hidden" name="gender"   value="{{ 'pria' if gender_display=='Laki-laki' else 'wanita' }}">
+        <input type="hidden" name="weight"   value="{{ weight }}">
+        <input type="hidden" name="height"   value="{{ height }}">
+        <input type="hidden" name="activity" value="{{ {'Istirahat':'rest','Ringan':'light','Sedang':'moderate','Berat':'heavy','Sangat Berat':'very_heavy'}[activity_level] if activity_level in ['Istirahat','Ringan','Sedang','Berat','Sangat Berat'] else 'light' }}">
+        {% for a in _al %}<input type="hidden" name="allergies" value="{{ a }}">{% endfor %}
+        <input type="hidden" name="exclude_foods" value="{{ exclude_combined_str }}">
+        <input type="hidden" name="days" value="1">
+        <input type="hidden" name="swap_meal" value="{{ meal_time }}">
+        <div class="swap-wrap">
+          <div class="d-flex align-items-center gap-2" style="position:relative;z-index:1;">
+            <div class="swap-icon-box"><i class="bi bi-arrow-repeat"></i></div>
+            <div class="swap-hint">Kurang cocok? Dapatkan pilihan menu <strong>{{ meal_time }}</strong> yang berbeda!</div>
+          </div>
+          <button type="submit" class="btn-swap"><i class="bi bi-shuffle"></i> Ganti Menu {{ meal_time }}</button>
+        </div>
+      </form>
+    </section>
+    {% endfor %}
+  {% endif %}
 
 </div>
 {% endblock %}
@@ -469,25 +646,96 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const btns = [...document.querySelectorAll('.meal-btn')];
-  const secs = [...document.querySelectorAll('.meal-section')];
-  function show(mealId) {
-    btns.forEach(b => b.classList.toggle('active', b.dataset.meal === mealId));
-    secs.forEach(s => s.classList.toggle('active', s.id === mealId));
-  }
-  const serverActive = "{{ active_meal|default('Pagi') }}".replace('/', '-');
-  show(serverActive);
-  btns.forEach(b => b.addEventListener('click', () => {
-    show(b.dataset.meal);
-    document.getElementById(b.dataset.meal)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }));
+  const numDays = {{ num_days|default(1) }};
+  const isMultiDay = numDays > 1;
 
+  if (isMultiDay) {
+    // Multi-day navigation
+    const dayBtns = [...document.querySelectorAll('.day-btn')];
+    const dayContainers = [...document.querySelectorAll('.day-container')];
+    let currentDay = 0;
+
+    function showDay(dayIdx) {
+      currentDay = dayIdx;
+      dayBtns.forEach((b, i) => b.classList.toggle('active', i === dayIdx));
+      dayContainers.forEach((c, i) => c.classList.toggle('active', i === dayIdx));
+      
+      // Show first meal of the newly selected day
+      const dayMealBtns = [...document.querySelectorAll(`.meal-btn[data-day="${dayIdx}"]`)];
+      const dayMealSecs = [...document.querySelectorAll(`.meal-section[data-day="${dayIdx}"]`)];
+      if (dayMealBtns.length > 0) {
+        const firstMeal = dayMealBtns[0].dataset.meal;
+        showMealInDay(dayIdx, firstMeal);
+      }
+    }
+
+    function showMealInDay(dayIdx, mealId) {
+      const dayMealBtns = [...document.querySelectorAll(`.meal-btn[data-day="${dayIdx}"]`)];
+      const dayMealSecs = [...document.querySelectorAll(`.meal-section[data-day="${dayIdx}"]`)];
+      
+      dayMealBtns.forEach(b => b.classList.toggle('active', b.dataset.meal === mealId));
+      dayMealSecs.forEach(s => {
+        const sectionId = s.id.split('-').slice(1).join('-'); // Remove 'dayX-' prefix
+        s.classList.toggle('active', sectionId === mealId);
+      });
+    }
+
+    // Day button click handlers
+    dayBtns.forEach((btn, idx) => {
+      btn.addEventListener('click', () => {
+        showDay(idx);
+        dayContainers[idx]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    // Meal button click handlers (for multi-day)
+    document.querySelectorAll('.meal-btn[data-day]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const dayIdx = parseInt(btn.dataset.day);
+        const mealId = btn.dataset.meal;
+        showMealInDay(dayIdx, mealId);
+        document.getElementById(`day${dayIdx}-${mealId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    // Initialize: show first day
+    showDay(0);
+    
+  } else {
+    // Single-day navigation (original behavior)
+    const btns = [...document.querySelectorAll('.meal-btn')];
+    const secs = [...document.querySelectorAll('.meal-section')];
+    
+    function show(mealId) {
+      btns.forEach(b => b.classList.toggle('active', b.dataset.meal === mealId));
+      secs.forEach(s => s.classList.toggle('active', s.id === mealId));
+    }
+    
+    const serverActive = "{{ active_meal|default('Pagi') }}".replace('/', '-');
+    show(serverActive);
+    
+    btns.forEach(b => b.addEventListener('click', () => {
+      show(b.dataset.meal);
+      document.getElementById(b.dataset.meal)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }));
+  }
+
+  // Save recommendation button (works for both single and multi-day)
   const saveBtn = document.getElementById('saveRecommendation');
   if (saveBtn) {
     saveBtn.addEventListener('click', async function () {
       const orig = this.innerHTML;
       this.disabled = true;
       this.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Menyimpan...';
+      
+      {% if num_days > 1 %}
+      // Multi-day data
+      const mealsData = {{ all_days_meals|tojson|safe }};
+      {% else %}
+      // Single-day data
+      const mealsData = {{ meals|tojson|safe }};
+      {% endif %}
+      
       const data = {
         gender: "{{ 'pria' if gender_display=='Laki-laki' else 'wanita' }}",
         age: {{ age }}, weight: {{ weight }}, height: {{ height }},
@@ -495,8 +743,10 @@ document.addEventListener('DOMContentLoaded', () => {
         diabetes_type: "{{ diabetes_type|default('Tipe 2') }}",
         total_calories: {{ caloric_needs|round(2) }},
         allergies: {{ allergies|default([])|tojson|safe }},
-        recommendations: {{ meals|tojson|safe }}
+        recommendations: mealsData,
+        num_days: {{ num_days|default(1) }}
       };
+      
       try {
         const res = await fetch('/user/save-recommendation', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },

@@ -644,14 +644,28 @@
               <input type="text" name="exclude_foods" class="f-input"
                 placeholder="cth: tahu, tempe, nasi goreng  (pisahkan dengan koma)">
               <div class="f-hint mt-1"><i class="bi bi-lightbulb"></i> Keyword matching &mdash; kata "ayam" akan memblokir semua menu mengandung ayam.</div>
+              
+              <label class="f-label mt-3"><i class="bi bi-calendar-week"></i> Durasi Rekomendasi Menu</label>
+              <div class="select-wrap">
+                <select name="days" class="f-select" required>
+                  <option value="1" selected>1 Hari</option>
+                  <option value="2">2 Hari</option>
+                  <option value="3">3 Hari</option>
+                  <option value="4">4 Hari</option>
+                  <option value="5">5 Hari</option>
+                  <option value="6">6 Hari</option>
+                  <option value="7">7 Hari (Seminggu)</option>
+                </select>
+              </div>
+              <div class="f-hint mt-2"><i class="bi bi-info-circle"></i> Menu antar hari akan otomatis bervariasi tanpa duplikasi makanan.</div>
             </div>
 
             <!-- algo info -->
             <div class="algo-banner">
               <p>
                 <strong><i class="bi bi-gift me-1"></i>Yang akan kamu dapat</strong> &mdash;
-                Jadwal <strong>5 waktu makan</strong> harian, distribusi <strong>kalori, karbo, protein &amp; lemak</strong>
-                yang sesuai kondisimu, plus rekomendasi menu siap saji dari database TKPI.
+                Jadwal <strong>5 waktu makan</strong> untuk setiap hari, distribusi <strong>kalori, karbo, protein &amp; lemak</strong>
+                yang sesuai kondisimu, plus rekomendasi menu siap saji dari database TKPI dengan variasi antar hari.
               </p>
             </div>
 

@@ -320,6 +320,9 @@ def output():
         allergies = parse_allergies(request.form)
         exclude_foods = parse_exclude_foods(request.form)
         swap_meal = request.form.get('swap_meal', '')
+        
+        # Get number of days for recommendations
+        num_days = int(request.form.get('days', 1))
 
         # 1. Hitung BBI (Broca)
         bbi = calculate_bbi(height, gender)
@@ -362,39 +365,64 @@ def output():
         raw_file = 'clean_food_processed_no_scaling.xlsx'
         ensure_files(raw_file)
 
-        try:
-            meals = generate_recommendations_per_jadwal(
-                raw_file, jadwal_nutrients_dict,
-                allergies=allergies,
-                exclude_foods=exclude_foods
-            )
-        except TypeError:
-            meals = generate_recommendations_per_jadwal(
-                raw_file, jadwal_nutrients_dict
-            )
+        # Generate recommendations for multiple days
+        all_days_meals = []
+        all_days_rmse = []
+        current_exclude = list(exclude_foods) if exclude_foods else []
+        
+        for day_num in range(1, num_days + 1):
+            logger.info(f"\n{'='*60}")
+            logger.info(f"Generating menu for Day {day_num}/{num_days}")
+            logger.info(f"Current exclude list has {len(current_exclude)} items")
+            
+            try:
+                meals = generate_recommendations_per_jadwal(
+                    raw_file, jadwal_nutrients_dict,
+                    allergies=allergies,
+                    exclude_foods=current_exclude
+                )
+            except TypeError:
+                meals = generate_recommendations_per_jadwal(
+                    raw_file, jadwal_nutrients_dict
+                )
 
-        rmse_per_jadwal = {}
-        for mt in distribution:
-            total_meal = sum_meal_nutrients(meals.get(mt, []))
-            target = nutrients[mt]
-            rmse_per_jadwal[mt] = {
-                "kalori": calculate_rmse(
-                    [total_meal["kalori"]], [distribution[mt]]),
-                "protein": calculate_rmse(
-                    [total_meal["protein"]], [target["protein"]]),
-                "lemak": calculate_rmse(
-                    [total_meal["lemak"]], [target["lemak"]]),
-                "karbohidrat": calculate_rmse(
-                    [total_meal["karbohidrat"]], [target["karbohidrat"]]),
-                "serat": calculate_rmse(
-                    [total_meal["serat"]], [target["fiber"]]),
-            }
+            rmse_per_jadwal = {}
+            for mt in distribution:
+                total_meal = sum_meal_nutrients(meals.get(mt, []))
+                target = nutrients[mt]
+                rmse_per_jadwal[mt] = {
+                    "kalori": calculate_rmse(
+                        [total_meal["kalori"]], [distribution[mt]]),
+                    "protein": calculate_rmse(
+                        [total_meal["protein"]], [target["protein"]]),
+                    "lemak": calculate_rmse(
+                        [total_meal["lemak"]], [target["lemak"]]),
+                    "karbohidrat": calculate_rmse(
+                        [total_meal["karbohidrat"]], [target["karbohidrat"]]),
+                    "serat": calculate_rmse(
+                        [total_meal["serat"]], [target["fiber"]]),
+                }
 
-        for mt, v in rmse_per_jadwal.items():
-            logger.info(
-                f"RMSE {mt}: Kal {v['kalori']:.2f} Prot {v['protein']:.2f} "
-                f"Lem {v['lemak']:.2f} Karbo {v['karbohidrat']:.2f} Serat {v['serat']:.2f}"
-            )
+            for mt, v in rmse_per_jadwal.items():
+                logger.info(
+                    f"RMSE {mt}: Kal {v['kalori']:.2f} Prot {v['protein']:.2f} "
+                    f"Lem {v['lemak']:.2f} Karbo {v['karbohidrat']:.2f} Serat {v['serat']:.2f}"
+                )
+            
+            all_days_meals.append(meals)
+            all_days_rmse.append(rmse_per_jadwal)
+            
+            # Extract all food names from this day's meals to exclude in next iteration
+            if day_num < num_days:  # No need to extract on last day
+                for meal_time, meal_items in meals.items():
+                    for meal in meal_items:
+                        for category in ['Pokok', 'Lauk', 'Sayur', 'Buah']:
+                            food_item = meal.get(category)
+                            if food_item and food_item.get('name'):
+                                food_name = food_item['name']
+                                if food_name not in current_exclude:
+                                    current_exclude.append(food_name)
+                                    logger.debug(f"Added to exclude list: {food_name}")
 
         date_today = datetime.now().strftime("%d %B %Y")
         gender_display = "Laki-laki" if gender == "pria" else "Perempuan"
@@ -408,7 +436,7 @@ def output():
         activity_display = activity_display_map.get(activity_level, "Ringan")
 
         active_meal = swap_meal if swap_meal else 'Pagi'
-        exclude_foods_str = ', '.join(exclude_foods)
+        exclude_foods_str = ', '.join(exclude_foods) if exclude_foods else ''
 
         return render_template(
             'outputs.html',
@@ -428,11 +456,14 @@ def output():
             warning=warning,
             distribution=distribution,
             nutrients=nutrients,
-            meals=meals,
+            meals=all_days_meals[0] if num_days == 1 else None,  # Keep compatibility for single day
+            all_days_meals=all_days_meals,
+            num_days=num_days,
             allergies=allergies,
             exclude_foods=exclude_foods_str,
             active_meal=active_meal,
-            rmse_per_jadwal=rmse_per_jadwal,
+            rmse_per_jadwal=all_days_rmse[0] if num_days == 1 else None,  # Keep compatibility
+            all_days_rmse=all_days_rmse,
         )
 
     except Exception as e:
