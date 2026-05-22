@@ -199,7 +199,7 @@ def choose_candidates(raw_df: pd.DataFrame,
     """
     rng = np.random.default_rng(seed)
     
-    # Step 1: Filter kategori
+    # Step 1: Filter kategori content based
     df = raw_df.copy()
     for col, val in filters.items():
         if isinstance(val, (list, tuple, set)):
@@ -207,7 +207,7 @@ def choose_candidates(raw_df: pd.DataFrame,
         else:
             df = df[df[col] == val]
     
-    # Step 2: Filter alergen
+    # Step 2: Filter alergen rule based
     df = exclude_allergens(df, allergies)
     
     # Step 3: Filter exclude foods
@@ -461,7 +461,6 @@ def recommend_morning_afternoon(raw_df: pd.DataFrame,
         "Lauk": get_food_nutrition(l['Nama_Bahan'], portions[1], raw_df),
         "Sayur": get_food_nutrition(s['Nama_Bahan'], portions[2], raw_df),
         "Buah": None,
-        "avg_similarity": None,
         "fit_rmse": round(float(rmse), 2)
     }]
 
@@ -551,7 +550,6 @@ def recommend_evening(raw_df: pd.DataFrame,
         "Lauk": get_food_nutrition(l['Nama_Bahan'], portions[1], raw_df),
         "Sayur": get_food_nutrition(s['Nama_Bahan'], portions[2], raw_df),
         "Buah": None,
-        "avg_similarity": None,
         "fit_rmse": round(float(rmse), 2)
     }]
 
@@ -616,7 +614,6 @@ def recommend_snack(raw_df: pd.DataFrame,
         "Lauk": None,
         "Sayur": None,
         "Buah": get_food_nutrition(f['Nama_Bahan'], portion, raw_df),
-        "avg_similarity": None,
         "fit_rmse": round(float(rmse), 2)
     }]
 
