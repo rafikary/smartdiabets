@@ -233,7 +233,7 @@ def choose_candidates(raw_df: pd.DataFrame,
             if not df.empty:
                 logger.info(f"Fallback successful: Found {len(df)} candidates after relaxing 'Tipe Pokok'")
         
-        # Fallback 2: DIHAPUS - TIDAK AMAN melonggarkan 'Mentahan / Olahan'
+        # Fallback 2: DIHAPUS - TIDAK AMAN melonggarkan 'Mentahan'
         # Jika masih kosong, biarkan empty untuk ditangani error handler
     
     if df.empty:
@@ -619,7 +619,7 @@ def recommend_snack(raw_df: pd.DataFrame,
 
 
 # ==================== MAIN FUNCTION ====================
-def generate_recommendations_per_jadwal(raw_file: str,
+def generate_recommendations_per_jadwal(raw_file: str, #target akan diterima disini
                                        jadwal_nutrients_dict: Dict[str, Dict[str, float]],
                                        allergies: Optional[List[str]] = None,
                                        exclude_foods: Optional[List[str]] = None,

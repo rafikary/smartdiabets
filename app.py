@@ -324,7 +324,7 @@ def output():
         # Get number of days for recommendations
         num_days = int(request.form.get('days', 1))
         
-        # Get current day index (for multi-day navigation persistence)
+        # Get current day index (for multi-day navigation persistence) tracking hari mana yang sedang ditampilkan dalam mode multi-day recommendation.
         current_day = int(request.form.get('current_day', 0))
 
         # 1. Hitung BBI (Broca)
@@ -352,8 +352,8 @@ def output():
         # 7. Enforce batas minimum klinis
         final_calories, warning = check_minimum_calories(calories, gender)
 
-        distribution = distribute_calories(final_calories)
-        nutrients = {mt: calculate_nutrients(kal) for mt, kal in distribution.items()}
+        distribution = distribute_calories(final_calories) # Memecah total kalori harian ke 5 jadwal makan dengan proporsi tetap.
+        nutrients = {mt: calculate_nutrients(kal) for mt, kal in distribution.items()} #Untuk setiap jadwal makan, konversi kalori target menjadi gram makronutrien.
 
         jadwal_nutrients_dict = {
             mt: {
@@ -369,18 +369,18 @@ def output():
         ensure_files(raw_file)
 
         # Generate recommendations for multiple days
-        all_days_meals = []
-        all_days_rmse = []
-        current_exclude = list(exclude_foods) if exclude_foods else []
+        all_days_meals = [] #Container untuk menyimpan menu Hari 1, 2, 3, ..., 7
+        all_days_rmse = [] #  Container untuk menyimpan evaluasi akurasi tiap hari
+        current_exclude = list(exclude_foods) if exclude_foods else [] #Daftar makanan yang dilarang (dimulai dari input user, akan bertambah setiap hari)
         
-        for day_num in range(1, num_days + 1):
-            logger.info(f"\n{'='*60}")
+        for day_num in range(1, num_days + 1): #Jika user request 7 hari → loop 7 kali (day_num = 1, 2, 3, 4, 5, 6, 7)
+            logger.info(f"\n{'='*60}") #Tracking progress + debugging (tahu berapa makanan sudah di-exclude)
             logger.info(f"Generating menu for Day {day_num}/{num_days}")
-            logger.info(f"Current exclude list has {len(current_exclude)} items")
+            logger.info(f"Current exclude list has {len(current_exclude)} items") #Setiap hari dapat menu BERBEDA (tidak ada pengulangan makanan)
             
             try:
-                meals = generate_recommendations_per_jadwal(
-                    raw_file, jadwal_nutrients_dict,
+                meals = generate_recommendations_per_jadwal( #berfungsi mengirim target ke model untuk menghasilkan menu rekomendasi yang sesuai dengan kebutuhan nutrisi tiap jadwal makan, sekaligus menerapkan aturan alergi dan pengecualian makanan yang sudah ada.
+                    raw_file, jadwal_nutrients_dict, 
                     allergies=allergies,
                     exclude_foods=current_exclude
                 )
