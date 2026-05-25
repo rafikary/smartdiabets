@@ -1,0 +1,413 @@
+{% extends "base.html" %}
+
+{% block title %}Snack Ramah Diabetes: Buah Apa Saja yang Aman? - SmartDiabets{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root{
+    --brand:#047857; --brand-mid:#059669; --brand-soft:#10b981; --brand-glow:#34d399;
+    --ink:#0a1628; --muted:#64748b;
+    --paper:#f8fafc; --card:#fff; --border:rgba(0,0,0,.07);
+    --shadow-card:0 4px 24px rgba(15,23,42,.08);
+    --radius-xl:22px; --radius-lg:16px; --radius-md:12px;
+    --tr: all .25s cubic-bezier(.4,0,.2,1);
+  }
+  html[data-theme="dark"]{
+    --paper:#070e1a; --ink:#e2e8f0; --muted:#94a3b8;
+    --card:#0f1829; --border:rgba(255,255,255,.08);
+    --shadow-card:0 4px 24px rgba(0,0,0,.4);
+  }
+
+  .article-hero{
+    background:linear-gradient(135deg,#ecfdf5 0%,#f0f9ff 50%,#f8fafc 100%);
+    padding:2rem 0 1.75rem; position:relative; overflow:hidden;
+  }
+  html[data-theme="dark"] .article-hero{
+    background:linear-gradient(135deg,#070e1a 0%,#091325 50%,#070e1a 100%);
+  }
+  .article-hero::before{
+    content:""; position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse 60% 80% at 10% 30%, rgba(16,185,129,.18) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 60% at 90% 70%, rgba(56,189,248,.14) 0%, transparent 60%);
+  }
+  .hero-back{
+    display:inline-flex; align-items:center; gap:.45rem;
+    font-size:.82rem; font-weight:600; color:var(--brand-mid);
+    text-decoration:none; margin-bottom:1.5rem; transition:var(--tr);
+  }
+  .hero-back:hover{ color:var(--brand); gap:.7rem }
+  .article-eyebrow{
+    display:inline-flex; align-items:center; gap:.4rem;
+    font-size:.7rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--brand-mid);
+    background:rgba(52,211,153,.1); border:1px solid rgba(52,211,153,.2);
+    padding:.3rem .85rem; border-radius:999px; margin-bottom:1rem;
+  }
+  .article-hero-title{
+    font-family:'Poppins',sans-serif; font-size:clamp(1.8rem,4vw,2.8rem);
+    font-weight:900; letter-spacing:-.04em; line-height:1.15; color:var(--ink);
+    margin-bottom:1rem; max-width:720px;
+  }
+  .article-hero-title .grad{
+    background:linear-gradient(130deg,var(--brand-mid),var(--brand-glow));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .article-meta-row{
+    display:flex; align-items:center; flex-wrap:wrap; gap:1rem;
+    font-size:.82rem; color:var(--muted); margin-top:1.2rem;
+  }
+  .article-meta-row i{ color:var(--brand-mid) }
+
+  .article-body{ padding:2rem 0 2.5rem; background:var(--paper) }
+  .article-content-wrap{
+    max-width:760px; margin:0 auto;
+  }
+  .article-lead{
+    font-size:1.1rem; line-height:1.85; color:var(--ink); font-weight:500;
+    margin-bottom:2rem; padding-left:1.25rem;
+    border-left:4px solid var(--brand-soft);
+  }
+  .article-content-wrap h2{
+    font-family:'Poppins',sans-serif; font-size:1.25rem; font-weight:800;
+    color:var(--ink); margin-top:1.8rem; margin-bottom:.7rem;
+    letter-spacing:-.02em;
+  }
+  .article-content-wrap h3{
+    font-family:'Poppins',sans-serif; font-size:1.1rem; font-weight:700;
+    color:var(--brand); margin-top:1.8rem; margin-bottom:.6rem;
+  }
+  .article-content-wrap p{
+    color:var(--muted); line-height:1.85; margin-bottom:1rem; font-size:.95rem;
+  }
+  .article-content-wrap strong{ color:var(--ink) }
+
+  .fruit-grid{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:1rem;
+    margin:1.2rem 0;
+  }
+  @media(max-width:640px){ .fruit-grid{grid-template-columns:1fr;} }
+  .fruit-card{
+    border-radius:var(--radius-lg); padding:1.25rem 1.5rem;
+    display:flex; align-items:center; gap:1rem;
+    border:1px solid var(--border); background:var(--card);
+    box-shadow:var(--shadow-card); transition:var(--tr);
+  }
+  .fruit-card:hover{ transform:translateY(-3px); box-shadow:0 12px 32px rgba(4,120,87,.15) }
+  .fruit-icon{
+    width:52px; height:52px; border-radius:14px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.8rem; flex-shrink:0;
+    background:linear-gradient(135deg, rgba(52,211,153,.12), rgba(16,185,129,.08));
+  }
+  .fruit-info{ flex:1 }
+  .fruit-name{ 
+    font-family:'Poppins',sans-serif; font-weight:700; 
+    font-size:1.05rem; color:var(--ink); margin-bottom:.15rem 
+  }
+  .fruit-portion{ font-size:.82rem; color:var(--muted); line-height:1.5 }
+  .fruit-gi{
+    font-size:.75rem; font-weight:700; padding:.25rem .6rem;
+    border-radius:8px; display:inline-block; margin-top:.3rem;
+  }
+  .gi-low{ background:rgba(16,185,129,.12); color:#047857 }
+  .gi-med{ background:rgba(245,158,11,.12); color:#b45309 }
+
+  .callout{
+    border-radius:var(--radius-md); padding:1.25rem 1.5rem;
+    display:flex; gap:1rem; align-items:flex-start;
+    margin:1.8rem 0;
+  }
+  .callout-info{ background:rgba(16,185,129,.07); border-left:4px solid var(--brand-soft) }
+  .callout-warn{ background:rgba(245,158,11,.07); border-left:4px solid #f59e0b }
+  .callout-danger{ background:rgba(239,68,68,.07); border-left:4px solid #ef4444 }
+  .callout i{ font-size:1.2rem; margin-top:.1rem; flex-shrink:0 }
+  .callout-info i{ color:var(--brand-mid) }
+  .callout-warn i{ color:#f59e0b }
+  .callout-danger i{ color:#ef4444 }
+  .callout p{ margin:0; font-size:.88rem; line-height:1.7; color:var(--ink) }
+  .callout strong{ color:var(--ink) }
+
+  .key-list{ list-style:none; padding:0; margin:1rem 0; }
+  .key-list li{
+    display:flex; align-items:flex-start; gap:.75rem;
+    padding:.6rem 0; border-bottom:1px solid var(--border);
+    font-size:.9rem; color:var(--muted); line-height:1.65;
+  }
+  .key-list li:last-child{ border-bottom:none }
+  .key-list i{ color:var(--brand-mid); font-size:1rem; margin-top:.1rem; flex-shrink:0 }
+
+  .tips-box{
+    background:linear-gradient(135deg, rgba(16,185,129,.06), rgba(52,211,153,.04));
+    border:1.5px solid rgba(16,185,129,.15);
+    border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0;
+  }
+  .tips-title{
+    display:flex; align-items:center; gap:.6rem;
+    font-family:'Poppins',sans-serif; font-size:1.05rem;
+    font-weight:800; color:var(--ink); margin-bottom:.9rem;
+  }
+  .tips-title i{ color:var(--brand-mid); font-size:1.2rem }
+  .tips-list{ margin:0; padding-left:1.2rem; color:var(--muted); font-size:.9rem }
+  .tips-list li{ margin-bottom:.5rem; line-height:1.65 }
+
+  .article-cta{
+    margin-top:1.25rem; border-radius:var(--radius-xl);
+    background:linear-gradient(135deg,var(--brand) 0%,var(--brand-mid) 60%,#059669 100%);
+    padding:1.1rem 1.5rem; text-align:center; position:relative; overflow:hidden;
+  }
+  .article-cta::before{
+    content:""; position:absolute; inset:0; opacity:.07;
+    background-image:radial-gradient(rgba(255,255,255,.6) 1px, transparent 1px);
+    background-size:24px 24px;
+  }
+  .article-cta h3{
+    font-family:'Poppins',sans-serif; font-size:1.1rem; font-weight:800;
+    color:#fff; margin-bottom:.35rem;
+  }
+  .article-cta p{ color:rgba(255,255,255,.85); font-size:.85rem; margin-bottom:.9rem }
+  .btn-cta-white{
+    display:inline-flex; align-items:center; gap:.5rem;
+    background:#fff; color:var(--brand);
+    font-weight:700; font-size:.85rem; padding:.55rem 1.5rem;
+    border-radius:999px; text-decoration:none;
+    box-shadow:0 4px 20px rgba(0,0,0,.15);
+    transition:var(--tr);
+  }
+  .btn-cta-white:hover{ transform:translateY(-2px); box-shadow:0 8px 28px rgba(0,0,0,.2); color:var(--brand) }
+
+  .back-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding-top:1rem; border-top:1px solid var(--border); margin-top:1rem;
+    flex-wrap:wrap; gap:.75rem;
+  }
+  .back-row a{
+    display:inline-flex; align-items:center; gap:.45rem;
+    font-size:.85rem; font-weight:600; color:var(--brand-mid);
+    text-decoration:none; transition:var(--tr);
+  }
+  .back-row a:hover{ color:var(--brand); gap:.7rem }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ──────── HERO ──────── -->
+<section class="article-hero">
+  <div class="container position-relative" style="z-index:1">
+    <a href="{{ url_for('blog') }}" class="hero-back">
+      <i class="bi bi-arrow-left"></i> Kembali ke Artikel
+    </a>
+    <div class="article-eyebrow"><i class="bi bi-apple"></i> Tips Praktis</div>
+    <h1 class="article-hero-title">
+      Snack Ramah Diabetes: <span class="grad">Buah Apa Saja yang Aman?</span>
+    </h1>
+    <div class="article-meta-row">
+      <span><i class="bi bi-clock"></i> 3 menit baca</span>
+      <span><i class="bi bi-tag"></i> Snack & camilan</span>
+      <span><i class="bi bi-calendar3"></i> Updated 2025</span>
+    </div>
+  </div>
+</section>
+
+<!-- ──────── BODY ──────── -->
+<section class="article-body">
+  <div class="container">
+    <article class="article-content-wrap">
+
+      <p class="article-lead">
+        Tidak semua buah diciptakan sama untuk penderita diabetes. Artikel ini membantu Anda memilih buah yang lebih aman untuk jadwal <strong>Snack 1</strong> dan <strong>Snack 2</strong> dalam konsep distribusi kalori 5 waktu makan SmartDiabets.
+      </p>
+
+      <h2>Kenapa Buah Penting untuk Snack?</h2>
+      <p>
+        Dalam distribusi kalori SmartDiabets, <strong>Snack 1 (10%)</strong> dan <strong>Snack 2 (15%)</strong> berfungsi sebagai jembatan energi antara waktu makan utama. Buah adalah pilihan ideal karena:
+      </p>
+
+      <ul class="key-list">
+        <li><i class="bi bi-check-circle-fill"></i> Mengandung serat alami yang memperlambat penyerapan gula</li>
+        <li><i class="bi bi-check-circle-fill"></i> Kaya vitamin, mineral, dan antioksidan</li>
+        <li><i class="bi bi-check-circle-fill"></i> Membantu menjaga rasa kenyang hingga waktu makan berikutnya</li>
+        <li><i class="bi bi-check-circle-fill"></i> Lebih rendah kalori dibanding snack olahan</li>
+      </ul>
+
+      <div class="callout callout-info">
+        <i class="bi bi-lightbulb-fill"></i>
+        <p>
+          <strong>Tips Aman:</strong> Pilih buah dengan <strong>Indeks Glikemik (IG) rendah-sedang</strong> (IG &lt; 70) dan perhatikan porsinya. Buah berserat tinggi lebih lambat menaikkan gula darah.
+        </p>
+      </div>
+
+      <h2>Buah yang Lebih Aman (IG Rendah-Sedang)</h2>
+      <p>
+        Berikut rekomendasi buah dengan indeks glikemik rendah hingga sedang yang cocok untuk snack harian Anda:
+      </p>
+
+      <div class="fruit-grid">
+        <div class="fruit-card">
+          <div class="fruit-icon">🍎</div>
+          <div class="fruit-info">
+            <div class="fruit-name">Apel</div>
+            <div class="fruit-portion">½–1 buah sedang (~75-150 g)<br>~40-80 kkal</div>
+            <span class="fruit-gi gi-low">IG: 36</span>
+          </div>
+        </div>
+
+        <div class="fruit-card">
+          <div class="fruit-icon">🍊</div>
+          <div class="fruit-info">
+            <div class="fruit-name">Jeruk</div>
+            <div class="fruit-portion">1 buah sedang (~130 g)<br>~60 kkal</div>
+            <span class="fruit-gi gi-low">IG: 43</span>
+          </div>
+        </div>
+
+        <div class="fruit-card">
+          <div class="fruit-icon">🍐</div>
+          <div class="fruit-info">
+            <div class="fruit-name">Pir</div>
+            <div class="fruit-portion">½–1 buah sedang (~80-160 g)<br>~45-90 kkal</div>
+            <span class="fruit-gi gi-low">IG: 38</span>
+          </div>
+        </div>
+
+        <div class="fruit-card">
+          <div class="fruit-icon">🍓</div>
+          <div class="fruit-info">
+            <div class="fruit-name">Strawberry</div>
+            <div class="fruit-portion">8-10 buah (~150 g)<br>~50 kkal</div>
+            <span class="fruit-gi gi-low">IG: 40</span>
+          </div>
+        </div>
+
+        <div class="fruit-card">
+          <div class="fruit-icon">🍑</div>
+          <div class="fruit-info">
+            <div class="fruit-name">Persik</div>
+            <div class="fruit-portion">1 buah sedang (~150 g)<br>~60 kkal</div>
+            <span class="fruit-gi gi-low">IG: 42</span>
+          </div>
+        </div>
+
+        <div class="fruit-card">
+          <div class="fruit-icon">🫐</div>
+          <div class="fruit-info">
+            <div class="fruit-name">Blueberry</div>
+            <div class="fruit-portion">½ cangkir (~75 g)<br>~40 kkal</div>
+            <span class="fruit-gi gi-low">IG: 53</span>
+          </div>
+        </div>
+
+        <div class="fruit-card">
+          <div class="fruit-icon">🍈</div>
+          <div class="fruit-info">
+            <div class="fruit-name">Melon</div>
+            <div class="fruit-portion">1 potong sedang (~150 g)<br>~50 kkal</div>
+            <span class="fruit-gi gi-med">IG: 65</span>
+          </div>
+        </div>
+
+        <div class="fruit-card">
+          <div class="fruit-icon">🥝</div>
+          <div class="fruit-info">
+            <div class="fruit-name">Kiwi</div>
+            <div class="fruit-portion">1-2 buah (~100-200 g)<br>~60-120 kkal</div>
+            <span class="fruit-gi gi-med">IG: 58</span>
+          </div>
+        </div>
+      </div>
+
+      <h2>Buah yang Perlu Dibatasi (IG Tinggi atau Kalori Tinggi)</h2>
+      <p>
+        Buah-buah berikut sebaiknya dikonsumsi dalam porsi lebih kecil atau dihindari saat snack karena cepat menaikkan gula darah atau tinggi kalori:
+      </p>
+
+      <div class="callout callout-warn">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <div>
+          <p style="margin-bottom:.6rem">
+            <strong>Batasi konsumsi:</strong>
+          </p>
+          <ul style="margin:0; padding-left:1.2rem; color:var(--ink); font-size:.88rem">
+            <li><strong>Semangka</strong> — IG tinggi (72), meski kalori rendah</li>
+            <li><strong>Nanas</strong> — IG tinggi (66), asam lambung sensitif</li>
+            <li><strong>Mangga</strong> — IG sedang-tinggi (60), porsi mudah berlebihan</li>
+            <li><strong>Pisang matang</strong> — IG tinggi (62), pilih pisang setengah matang</li>
+            <li><strong>Anggur</strong> — IG sedang (59), tapi porsi sulit dikontrol</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout callout-danger">
+        <i class="bi bi-x-circle-fill"></i>
+        <div>
+          <p style="margin-bottom:.4rem">
+            <strong>Hindari untuk snack:</strong>
+          </p>
+          <ul style="margin:0; padding-left:1.2rem; color:var(--ink); font-size:.88rem">
+            <li><strong>Buah kering</strong> (kurma, kismis) — kalori & gula sangat terkonsentrasi</li>
+            <li><strong>Jus buah</strong> — serat hilang, gula langsung diserap</li>
+            <li><strong>Buah kaleng dengan sirup</strong> — tambahan gula berbahaya</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Cara Tepat Konsumsi Buah untuk Snack</h2>
+
+      <div class="tips-box">
+        <div class="tips-title">
+          <i class="bi bi-stars"></i>
+          Panduan Praktis
+        </div>
+        <ol class="tips-list">
+          <li><strong>Utuh lebih baik dari jus:</strong> Serat pada buah utuh memperlambat penyerapan gula.</li>
+          <li><strong>Kombinasikan dengan protein/lemak sehat:</strong> Misal apel + kacang almond (5-7 butir), pir + keju rendah lemak 1 slice.</li>
+          <li><strong>Perhatikan timing:</strong> Konsumsi 2-3 jam setelah makan utama, bukan saat perut kosong.</li>
+          <li><strong>Ukur porsi:</strong> Gunakan takaran standar agar kalori tidak melonjak (1 buah sedang = 1 serving).</li>
+          <li><strong>Cek gula darah:</strong> Monitor respons tubuh Anda terhadap buah tertentu dengan glucometer.</li>
+          <li><strong>Variasi adalah kunci:</strong> Rotasi jenis buah mingguan untuk nutrisi lebih lengkap.</li>
+        </ol>
+      </div>
+
+      <h2>Integrasi dengan SmartDiabets</h2>
+      <p>
+        Ketika Anda menggunakan kalkulator SmartDiabets, sistem otomatis:
+      </p>
+      <ul class="key-list">
+        <li><i class="bi bi-cpu-fill"></i> Menghitung kebutuhan kalori snack berdasarkan total harian Anda</li>
+        <li><i class="bi bi-pie-chart-fill"></i> Merekomendasikan buah dari database dengan prioritas IG rendah</li>
+        <li><i class="bi bi-calculator"></i> Menyesuaikan porsi buah agar sesuai target kalori, karbo, dan serat</li>
+        <li><i class="bi bi-shield-check"></i> Menghindari buah yang Anda tandai sebagai alergi atau preferensi</li>
+      </ul>
+
+      <div class="callout callout-info">
+        <i class="bi bi-info-circle-fill"></i>
+        <p>
+          <strong>Catatan Penting:</strong> Rekomendasi di atas bersifat umum. Respon gula darah individual dapat berbeda. Selalu konsultasikan dengan dokter atau ahli gizi Anda, terutama jika menggunakan insulin atau obat diabetes tertentu.
+        </p>
+      </div>
+
+      <!-- CTA -->
+      <div class="article-cta">
+        <h3>Siap Coba Menu Personal Anda?</h3>
+        <p>Dapatkan rekomendasi snack buah yang disesuaikan dengan kebutuhan kalori dan preferensi Anda.</p>
+        <a href="{{ url_for('calculator') }}" class="btn-cta-white">
+          <i class="bi bi-calculator"></i> Hitung Sekarang
+        </a>
+      </div>
+
+      <!-- Navigation -->
+      <div class="back-row">
+        <a href="{{ url_for('blog') }}">
+          <i class="bi bi-arrow-left"></i> Semua Artikel
+        </a>
+        <a href="{{ url_for('calculator') }}">
+          Coba Kalkulator <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+
+    </article>
+  </div>
+</section>
+
+{% endblock %}

@@ -22,23 +22,23 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Inisialisasi database
 init_db(app)
 
-# Setup Flask-Login
+# Setup sistem login Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'user.login'
-login_manager.login_message = None  # Hilangkan flash message otomatis
+login_manager.login_message = None  # Nonaktifkan pesan flash otomatis
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Register blueprints
+# Daftarkan blueprint untuk route admin dan user
 app.register_blueprint(admin_bp)
 app.register_blueprint(user_bp)
 
 VALID_ACT = {"rest", "light", "moderate", "heavy", "very_heavy"}
 
-# mapping dari value form (indo / english) ke internal code
+# Pemetaan nilai form (Indonesia/Inggris) ke kode internal aktivitas
 ACTIVITY_MAP = {
     # istirahat / sangat ringan
     "istirahat": "rest",
@@ -305,6 +305,14 @@ def blog_article_diet_3j():
 def blog_article_porsi_nasi():
     return render_template('blog/porsi-nasi.html')
 
+@app.route('/blog/snack-buah')
+def blog_article_snack_buah():
+    return render_template('blog/snack-buah.html')
+
+@app.route('/blog/label-gizi')
+def blog_article_label_gizi():
+    return render_template('blog/label-gizi.html')
+
 @app.route('/outputs', methods=['POST'])
 def output():
     try:
@@ -368,15 +376,15 @@ def output():
         raw_file = 'clean_food_processed_no_scaling.xlsx'
         ensure_files(raw_file)
 
-        # Generate recommendations for multiple days
-        all_days_meals = [] #Container untuk menyimpan menu Hari 1, 2, 3, ..., 7
-        all_days_rmse = [] #  Container untuk menyimpan evaluasi akurasi tiap hari
-        current_exclude = list(exclude_foods) if exclude_foods else [] #Daftar makanan yang dilarang (dimulai dari input user, akan bertambah setiap hari)
+        # Generate rekomendasi untuk beberapa hari
+        all_days_meals = [] # Penampung menu untuk Hari 1, 2, 3, ..., 7
+        all_days_rmse = [] # Penampung evaluasi akurasi (RMSE) tiap hari
+        current_exclude = list(exclude_foods) if exclude_foods else [] # Daftar makanan yang dilarang (bertambah setiap hari)
         
-        for day_num in range(1, num_days + 1): #Jika user request 7 hari → loop 7 kali (day_num = 1, 2, 3, 4, 5, 6, 7)
-            logger.info(f"\n{'='*60}") #Tracking progress + debugging (tahu berapa makanan sudah di-exclude)
-            logger.info(f"Generating menu for Day {day_num}/{num_days}")
-            logger.info(f"Current exclude list has {len(current_exclude)} items") #Setiap hari dapat menu BERBEDA (tidak ada pengulangan makanan)
+        for day_num in range(1, num_days + 1): # Loop untuk generate menu multi-hari
+            logger.info(f"\n{'='*60}") # Log pemisah untuk tracking
+            logger.info(f"Membuat menu untuk Hari {day_num}/{num_days}")
+            logger.info(f"Daftar exclude saat ini: {len(current_exclude)} item") # Setiap hari menu berbeda (tidak ada pengulangan)
             
             try:
                 meals = generate_recommendations_per_jadwal( #berfungsi mengirim target ke model untuk menghasilkan menu rekomendasi yang sesuai dengan kebutuhan nutrisi tiap jadwal makan, sekaligus menerapkan aturan alergi dan pengecualian makanan yang sudah ada.
@@ -415,8 +423,8 @@ def output():
             all_days_meals.append(meals)
             all_days_rmse.append(rmse_per_jadwal)
             
-            # Extract all food names from this day's meals to exclude in next iteration
-            if day_num < num_days:  # No need to extract on last day
+            # Ekstrak semua nama makanan dari menu hari ini untuk di-exclude di iterasi berikutnya
+            if day_num < num_days:  # Tidak perlu ekstrak di hari terakhir
                 for meal_time, meal_items in meals.items():
                     for meal in meal_items:
                         for category in ['Pokok', 'Lauk', 'Sayur', 'Buah']:
@@ -424,8 +432,8 @@ def output():
                             if food_item and food_item.get('name'):
                                 food_name = food_item['name']
                                 if food_name not in current_exclude:
-                                    current_exclude.append(food_name)    #menu tidak akan mengulang makanan yang sama di hari berikutnya, sehingga variasi menu lebih banyak dan risiko kebosanan berkurang.
-                                    logger.debug(f"Added to exclude list: {food_name}")
+                                    current_exclude.append(food_name)    # Menu tidak mengulang makanan yang sama di hari berikutnya (variasi tinggi)
+                                    logger.debug(f"Ditambahkan ke daftar exclude: {food_name}")
 
         date_today = datetime.now().strftime("%d %B %Y")
         gender_display = "Laki-laki" if gender == "pria" else "Perempuan"
@@ -459,14 +467,14 @@ def output():
             warning=warning,
             distribution=distribution,
             nutrients=nutrients,
-            meals=all_days_meals[0] if num_days == 1 else None,  # Keep compatibility for single day
+            meals=all_days_meals[0] if num_days == 1 else None,  # Untuk kompatibilitas mode single-day
             all_days_meals=all_days_meals,
             num_days=num_days,
             current_day=current_day,
             allergies=allergies,
             exclude_foods=exclude_foods_str,
             active_meal=active_meal,
-            rmse_per_jadwal=all_days_rmse[0] if num_days == 1 else None,  # Keep compatibility
+            rmse_per_jadwal=all_days_rmse[0] if num_days == 1 else None,  # Untuk kompatibilitas evaluasi single-day
             all_days_rmse=all_days_rmse,
         )
 

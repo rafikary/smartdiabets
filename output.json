@@ -2,109 +2,109 @@
     "Pagi": [
         {
             "Pokok": {
-                "name": "Nasi Merah",
+                "name": "Nasi Basmati",
                 "category": "Makanan pokok",
-                "portion": 183.14,
-                "calories": 201.45,
-                "carbs": 41.72,
-                "protein": 4.69,
-                "fat": 1.63,
-                "fiber": 3.3
+                "portion": 142.82,
+                "calories": 172.81,
+                "carbs": 36.02,
+                "protein": 5.06,
+                "fat": 0.54,
+                "fiber": 0.57
             },
             "Lauk": {
-                "name": "Tahu Sumedang",
+                "name": "Tahu Bejek",
                 "category": "Lauk",
-                "portion": 98.48,
-                "calories": 116.21,
-                "carbs": 4.27,
-                "protein": 6.95,
-                "fat": 7.94,
-                "fiber": 0.39
+                "portion": 63.13,
+                "calories": 73.23,
+                "carbs": 1.67,
+                "protein": 7.18,
+                "fat": 4.12,
+                "fiber": 0.19
             },
             "Sayur": {
-                "name": "Kadada katembe",
+                "name": "Ares, sayur",
                 "category": "Sayur",
-                "portion": 29.53,
-                "calories": 32.48,
-                "carbs": 2.1,
-                "protein": 1.33,
-                "fat": 2.04,
-                "fiber": 1.15
+                "portion": 92.14,
+                "calories": 104.12,
+                "carbs": 10.32,
+                "protein": 0.83,
+                "fat": 6.63,
+                "fiber": 4.33
             },
             "Buah": null,
-            "fit_rmse": 0.09
+            "fit_rmse": 0.2
         }
     ],
     "Siang": [
         {
             "Pokok": {
-                "name": "Nasi Daun Jeruk",
+                "name": "Nasi",
                 "category": "Makanan pokok",
-                "portion": 169.04,
-                "calories": 309.35,
-                "carbs": 57.19,
-                "protein": 5.34,
-                "fat": 6.0,
-                "fiber": 1.18
+                "portion": 152.58,
+                "calories": 274.65,
+                "carbs": 60.73,
+                "protein": 4.58,
+                "fat": 0.46,
+                "fiber": 0.31
             },
             "Lauk": {
                 "name": "Ayam Lada Hitam",
                 "category": "Lauk",
-                "portion": 55.57,
-                "calories": 98.36,
-                "carbs": 2.36,
-                "protein": 11.39,
-                "fat": 4.63,
-                "fiber": 0.22
+                "portion": 61.44,
+                "calories": 108.76,
+                "carbs": 2.61,
+                "protein": 12.59,
+                "fat": 5.12,
+                "fiber": 0.25
             },
             "Sayur": {
-                "name": "Woku ubi",
+                "name": "Sayur garu",
                 "category": "Sayur",
-                "portion": 82.21,
-                "calories": 117.56,
-                "carbs": 12.33,
-                "protein": 2.55,
-                "fat": 6.41,
-                "fiber": 5.75
+                "portion": 79.71,
+                "calories": 141.88,
+                "carbs": 8.45,
+                "protein": 2.07,
+                "fat": 11.08,
+                "fiber": 6.7
             },
             "Buah": null,
-            "fit_rmse": 0.33
+            "fit_rmse": 0.47
         }
     ],
     "Sore/Malam": [
         {
             "Pokok": {
-                "name": "Nasi beras merah",
+                "name": "Bibimbap",
                 "category": "Makanan pokok",
-                "portion": 107.09,
-                "calories": 159.56,
-                "carbs": 34.8,
-                "protein": 3.0,
-                "fat": 0.43,
-                "fiber": 0.32
+                "portion": 218.79,
+                "calories": 319.43,
+                "carbs": 49.1,
+                "protein": 12.06,
+                "fat": 7.66,
+                "fiber": 1.53
             },
             "Lauk": {
-                "name": "Ayam Cincang Buncis",
+                "name": "Betok wadi, masakan",
                 "category": "Lauk",
-                "portion": 103.71,
-                "calories": 149.34,
-                "carbs": 19.94,
-                "protein": 9.57,
-                "fat": 3.83,
-                "fiber": 4.87
+                "portion": 20.0,
+                "calories": 29.0,
+                "carbs": 0.82,
+                "protein": 3.26,
+                "fat": 1.4,
+                "fiber": 0.0
             },
             "Sayur": {
-                "name": "Gulai pakis",
+                "name": "Woku ubi",
                 "category": "Sayur",
-                "portion": 90.04,
-                "calories": 128.76,
-                "carbs": 5.4,
-                "protein": 3.6,
-                "fat": 10.27,
-                "fiber": 1.26
+                "portion": 62.48,
+                "calories": 89.34,
+                "carbs": 9.37,
+                "protein": 1.94,
+                "fat": 4.87,
+                "fiber": 4.37
             },
             "Buah": null,
-            "fit_rmse": 0.19
+            "fit_rmse": 0.63
         }
     ],
     "Snack 1": [

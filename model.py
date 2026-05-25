@@ -59,9 +59,9 @@ ALLERGEN_PATTERNS: Dict[str, str] = {
 }
 
 
-# ==================== LOAD DATA ====================
+# ==================== MUAT DATA ====================
 def load_raw_data(file_path: str) -> pd.DataFrame:
-    """Load data makanan dari Excel dan validasi struktur"""
+    """Muat data makanan dari file Excel dan validasi struktur kolom yang diperlukan"""
     try:
         df = pd.read_excel(file_path, engine='openpyxl')
         df.columns = df.columns.str.strip()
@@ -84,9 +84,9 @@ def load_raw_data(file_path: str) -> pd.DataFrame:
         raise
 
 
-# ==================== FILTER ALERGEN ====================
+# ==================== FILTER ALERGEN (CONTENT-BASED) ====================
 def compile_allergen_regex(allergies: Optional[List[str]]) -> Optional[str]:
-    """Compile pattern regex untuk filter alergen"""
+    """Susun pattern regex untuk memfilter makanan yang mengandung alergen"""
     if not allergies:
         return None
     
@@ -111,7 +111,7 @@ def compile_allergen_regex(allergies: Optional[List[str]]) -> Optional[str]:
 def exclude_allergens(df: pd.DataFrame, 
                      allergies: Optional[List[str]], 
                      col: str = "Nama_Bahan") -> pd.DataFrame:
-    """Filter makanan yang mengandung alergen"""
+    """Filter makanan yang mengandung alergen berdasarkan keyword matching pada kolom Nama_Bahan"""
     if not allergies or df.empty:
         return df
     
@@ -133,37 +133,38 @@ def exclude_allergens(df: pd.DataFrame,
     return df_filtered
 
 
-# ==================== FILTER EXCLUDE FOODS ====================
+# ==================== FILTER MAKANAN YANG DIHINDARI (CONTENT-BASED) ====================
 def exclude_foods(df: pd.DataFrame, 
                  exclude_list: Optional[List[str]], 
                  col: str = "Nama_Bahan") -> pd.DataFrame:
     """
-    Filter makanan yang di-exclude user menggunakan keyword matching.
-    Contoh: 'ayam' akan memblokir 'ayam goreng', 'rendang ayam', 'sate ayam', dll.
+    Filter makanan yang dihindari user berdasarkan keyword matching pada Nama_Bahan.
+    Contoh: keyword 'ayam' akan memblokir 'ayam goreng', 'rendang ayam', 'sate ayam', dll.
+    Ini mendukung fitur preferensi personal dan fitur Ganti Menu.
     """
     if not exclude_list or df.empty:
         return df
     
-    # Clean dan prepare keywords
+    # Bersihkan dan siapkan keywords
     exclude_keywords = [x.strip().lower() for x in exclude_list if x and x.strip()]
     if not exclude_keywords:
         return df
     
-    # Build regex pattern dengan word boundaries untuk partial matching
+    # Bangun pola regex dengan word boundary untuk partial matching
     patterns = []
     for keyword in exclude_keywords:
-        # Escape special regex characters, tapi allow partial matching
+        # Escape karakter spesial regex, tapi tetap izinkan partial matching
         escaped = re.escape(keyword)
-        # Gunakan word boundary untuk menghindari false positive
+        # Gunakan word boundary (\b) untuk menghindari false positive
         patterns.append(rf'\b{escaped}\b')
     
-    # Combine patterns dengan OR operator
+    # Gabungkan semua pattern dengan operator OR
     combined_pattern = '|'.join(f'({p})' for p in patterns)
     
     initial_count = len(df)
-    # Filter rows yang mengandung keywords
+    # Filter baris yang mengandung keywords (hapus yang cocok)
     mask = df[col].astype(str).str.contains(combined_pattern, case=False, regex=True, na=False)
-    df_filtered = df[~mask].copy()
+    df_filtered = df[~mask].copy()  # Negasi mask (~) untuk buang yang match
     
     removed = initial_count - len(df_filtered)
     if removed > 0:
@@ -199,7 +200,7 @@ def choose_candidates(raw_df: pd.DataFrame,
     """
     rng = np.random.default_rng(seed)
     
-    # Step 1: Filter kategori content based
+    # Tahap 1: Filter kategori (rule-based - berdasarkan kolom terstruktur)
     df = raw_df.copy()
     for col, val in filters.items():
         if isinstance(val, (list, tuple, set)):
@@ -207,17 +208,18 @@ def choose_candidates(raw_df: pd.DataFrame,
         else:
             df = df[df[col] == val]
     
-    # Step 2: Filter alergen rule based
+    # Tahap 2: Filter alergen (content-based - keyword matching)
     df = exclude_allergens(df, allergies)
     
-    # Step 3: Filter exclude foods
+    # Tahap 3: Filter makanan dihindari (content-based - keyword matching)
     df = exclude_foods(df, exclude_list)
     
-    # Fallback: longgarkan filter jika kosong (KECUALI 'Mentahan / Olahan')
+    # Mekanisme Fallback: longgarkan filter jika kosong (KECUALI 'Mentahan / Olahan')
     if df.empty:
-        logger.warning(f"No candidates with filters {filters}. Attempting safe relaxation...")
+        logger.warning(f"Tidak ada kandidat dengan filter {filters}. Mencoba relaksasi aman...")
         
-        # Fallback 1: Lepas 'Tipe Pokok' saja (aman untuk dilonggarkan)
+        # Fallback Tahap 1: Lepas 'Tipe Pokok' saja (aman dilonggarkan)
+        # Alasan: Tipe Pokok (Sederhana/Lengkap) hanya preferensi, bukan keamanan medis
         if 'Tipe Pokok' in filters:
             relaxed = dict(filters)
             relaxed.pop('Tipe Pokok', None)
@@ -231,44 +233,53 @@ def choose_candidates(raw_df: pd.DataFrame,
             df = exclude_foods(df, exclude_list)
             
             if not df.empty:
-                logger.info(f"Fallback successful: Found {len(df)} candidates after relaxing 'Tipe Pokok'")
+                logger.info(f"Fallback berhasil: Ditemukan {len(df)} kandidat setelah longgarkan 'Tipe Pokok'")
         
-        # Fallback 2: DIHAPUS - TIDAK AMAN melonggarkan 'Mentahan'
-        # Jika masih kosong, biarkan empty untuk ditangani error handler
+        # Fallback Tahap 2: DIHAPUS - TIDAK AMAN melonggarkan 'Mentahan / Olahan'
+        # Jika masih kosong, biarkan empty untuk ditangani error handler di level atas
     
     if df.empty:
         logger.warning(
-            f"No safe candidates available after filtering. Returning empty dataframe. "
-            f"Filters: {filters}, Exclude count: {len(exclude_list or [])}"
+            f"Tidak ada kandidat aman setelah filtering. Mengembalikan dataframe kosong. "
+            f"Filter: {filters}, Jumlah exclude: {len(exclude_list or [])}"
         )
         return df
     
-    # Step 4: Ranking berdasarkan kedekatan kalori
+    # Tahap 4: Ranking heuristik berdasarkan kedekatan kalori dengan target
+    # Acak urutan dulu agar tidak bias urutan asli dataset
     df = df.sample(frac=1.0, random_state=int(rng.integers(0, 1_000_000))).reset_index(drop=True)
+    # Hitung skor kedekatan: semakin kecil error kuadrat, semakin baik
     df['_cal_score'] = (df['Energi (kal)'] - target_calories) ** 2
+    # Urutkan ascending (terkecil = terbaik) dan ambil top-k
     df = df.sort_values('_cal_score', kind='mergesort').head(k).reset_index(drop=True)
     
-    logger.debug(f"Selected {len(df)} candidates (target_cal={target_calories:.0f})")
+    logger.debug(f"Terpilih {len(df)} kandidat (target_cal={target_calories:.0f})")
     return df
 
 
-# ==================== OPTIMIZATION: LEAST SQUARES ====================
+# ==================== OPTIMASI PORSI: LEAST SQUARES ====================
 def solve_portions_least_squares(items: List[pd.Series], 
                                  target_vec: np.ndarray) -> np.ndarray:
     """
-    Constrained Least Squares untuk hitung porsi optimal (gram)
+    Metode Constrained Least Squares untuk menghitung porsi optimal (dalam gram).
     
-    Minimize: ||A·x - b||²
-    Subject to: MIN_PORTION ≤ x ≤ MAX_PORTION
+    Formulasi Matematika:
+    - Minimize: ||A·x - b||²  (meminimalkan error kuadrat)
+    - Subject to: MIN_PORTION ≤ x ≤ MAX_PORTION  (constraint porsi realistis)
+    
+    Dimana:
+    - A: Matriks nutrisi per-gram (5 nutrisi × n makanan)
+    - x: Vektor porsi yang dicari (variabel optimasi)
+    - b: Vektor target nutrisi [energi, protein, lemak, karbo, serat]
     
     Args:
-        items: List of food items (Series dengan kolom FEATURES)
-        target_vec: Target nutrisi [energi, protein, lemak, karbo, serat]
+        items: List item makanan (pandas Series dengan kolom FEATURES)
+        target_vec: Target nutrisi untuk jadwal makan ini
     
     Returns:
-        np.ndarray: Vektor porsi (gram) untuk setiap item
+        np.ndarray: Vektor porsi optimal (gram) untuk setiap makanan
     """
-    # Konversi per-100g → per-1g (dibagi 100)
+    # Konversi nutrisi dari per-100g (TKPI) menjadi per-1g untuk perhitungan
     A = np.column_stack([
         item[FEATURES].astype(float).to_numpy() / 100.0 
         for item in items
@@ -276,60 +287,64 @@ def solve_portions_least_squares(items: List[pd.Series],
     b = target_vec.astype(float)
     
     n_items = len(items)
+    # Batasan porsi: 20g - 400g (realistis untuk porsi makan)
     bounds = ([MIN_PORTION] * n_items, [MAX_PORTION] * n_items)
     
     try:
-        # Gunakan bounded-variable least squares
+        # Gunakan metode bounded-variable least squares (BVLS) dari scipy
         result = lsq_linear(A, b, bounds=bounds, method='bvls', verbose=0)
-        x = result.x
+        x = result.x  # Solusi optimal
         
-        # Validasi hasil
+        # Validasi hasil optimasi
         if np.any(np.isnan(x)) or np.any(np.isinf(x)):
-            logger.warning("Optimization result contains NaN/Inf. Using NNLS fallback.")
+            logger.warning("Hasil optimasi mengandung NaN/Inf. Menggunakan fallback NNLS.")
+            # Fallback ke Non-Negative Least Squares (lebih sederhana)
             x_nnls, _ = nnls(A, b)
             x = np.clip(x_nnls, MIN_PORTION, MAX_PORTION)
         
         return x
         
     except Exception as e:
-        logger.error(f"Optimization error: {e}. Using equal distribution fallback.")
-        # Fallback: bagi rata kalori target
-        avg_cal_per_gram = 2.0  # Asumsi rata-rata
+        logger.error(f"Error optimasi: {e}. Menggunakan fallback distribusi merata.")
+        # Fallback terakhir: bagi rata kalori ke semua item
+        avg_cal_per_gram = 2.0  # Asumsi kalori rata-rata per gram
         fallback_portion = min(MAX_PORTION, max(MIN_PORTION, target_vec[0] / (n_items * avg_cal_per_gram)))
-        return np.full(n_items, fallback_portion)
+        return np.full(n_items, fallback_portion)  # Semua item porsi sama
 
 
 def single_item_best_portion(item: pd.Series, target_vec: np.ndarray) -> float:
     """
-    Closed-form solution untuk single item (Snack: Buah)
+    Solusi closed-form (analitik) untuk single item - digunakan untuk Snack (Buah).
     
-    Minimize: ||w·x - y||²
-    Solution: w = (x·y) / (x·x)
+    Formulasi:
+    - Minimize: ||w·x - y||²
+    - Solusi analitik: w = (x·y) / (x·x)  [dot product]
     
     Args:
-        item: Food item (Series)
-        target_vec: Target nutrisi
+        item: Item makanan (pandas Series)
+        target_vec: Target nutrisi untuk snack
     
     Returns:
-        float: Porsi optimal (gram)
+        float: Porsi optimal dalam gram
     """
-    x = item[FEATURES].astype(float).to_numpy() / 100.0  # Per-1g
+    x = item[FEATURES].astype(float).to_numpy() / 100.0  # Konversi per-100g ke per-1g
     y = target_vec.astype(float)
     
-    x_norm = float(np.dot(x, x))
+    x_norm = float(np.dot(x, x))  # Norma kuadrat vektor nutrisi
     if x_norm < 1e-6:
-        logger.warning(f"Item '{item.get('Nama_Bahan', 'unknown')}' has near-zero nutrients. Using min portion.")
+        logger.warning(f"Item '{item.get('Nama_Bahan', 'unknown')}' memiliki nutrisi nyaris nol. Menggunakan porsi minimum.")
         return MIN_PORTION
     
+    # Hitung porsi optimal dengan rumus closed-form
     w = float(np.dot(x, y) / x_norm)
-    w = max(0.0, w)  # Tidak boleh negatif
-    w = float(np.clip(w, MIN_PORTION, MAX_PORTION))
+    w = max(0.0, w)  # Pastikan tidak negatif
+    w = float(np.clip(w, MIN_PORTION, MAX_PORTION))  # Enforce constraint
     
     return w
 
 
 def calculate_rmse(pred: np.ndarray, target: np.ndarray) -> float:
-    """Hitung Root Mean Square Error untuk evaluasi"""
+    """Hitung Root Mean Square Error (RMSE) untuk evaluasi akurasi nutrisi"""
     return float(np.sqrt(np.mean((pred - target) ** 2)))
 
 
@@ -365,7 +380,7 @@ def get_food_nutrition(name: str, portion_grams: float, raw_df: pd.DataFrame) ->
     }
 
 
-# ==================== REKOMENDASI PAGI/SIANG ====================
+# ==================== REKOMENDASI PAGI/SIANG (MENU UTAMA) ====================
 def recommend_morning_afternoon(raw_df: pd.DataFrame,
                                 target_vec: np.ndarray,
                                 used_foods: set,
@@ -373,14 +388,14 @@ def recommend_morning_afternoon(raw_df: pd.DataFrame,
                                 exclude_list: Optional[List[str]] = None,
                                 seed: Optional[int] = None) -> List[Dict]:
     """
-    Rekomendasi Pagi/Siang: Pokok + Lauk + Sayur (3 items)
+    Generate rekomendasi untuk jadwal Pagi dan Siang: Pokok + Lauk + Sayur (3 item).
     
     Algoritma:
-    1. Pilih kandidat Pokok, Lauk, Sayur (top-8 terdekat kalori)
-    2. Kombinasi 3x3x3 = 27 kombinasi
-    3. Solve Least Squares untuk setiap kombinasi
-    4. Hitung RMSE
-    5. Pilih 1 kombinasi dengan RMSE terkecil
+    1. Pilih kandidat Pokok, Lauk, Sayur (masing-masing top-8 terdekat kalori)
+    2. Generate kombinasi 3×3×3 = 27 kemungkinan menu
+    3. Solve Least Squares untuk setiap kombinasi (hitung porsi optimal)
+    4. Hitung RMSE (akurasi nutrisi) untuk tiap kombinasi
+    5. Pilih 1 kombinasi dengan RMSE terkecil (paling mendekati target)
     """
     target_cal = float(target_vec[0])
     base_excl = list(used_foods) + (exclude_list or [])
@@ -419,41 +434,42 @@ def recommend_morning_afternoon(raw_df: pd.DataFrame,
     )
     
     if pk.empty or lk.empty or sy.empty:
-        logger.warning("Insufficient candidates for morning/afternoon menu")
+        logger.warning("Kandidat tidak cukup untuk menu pagi/siang")
         return []
     
-    # Kombinasi & Optimasi
+    # Kombinasi dan Optimasi: coba berbagai kombinasi menu
     recommendations = []
-    foods_used_this_schedule = set()
+    foods_used_this_schedule = set()  # Tracking duplikasi dalam jadwal yang sama
     
     for _, p in pk.head(3).iterrows():
         for _, l in lk.head(3).iterrows():
             for _, s in sy.head(3).iterrows():
                 names = {str(p['Nama_Bahan']), str(l['Nama_Bahan']), str(s['Nama_Bahan'])}
                 
-                # Skip jika ada duplikasi
+                # Skip jika ada duplikasi nama (dalam jadwal yang sama atau antar jadwal)
                 if foods_used_this_schedule.intersection(names) or used_foods.intersection(names):
                     continue
                 
-                # Solve Least Squares
+                # Solve Least Squares: hitung porsi optimal untuk kombinasi ini
                 items = [p, l, s]
                 portions = solve_portions_least_squares(items, target_vec)
                 
-                # Hitung prediksi nutrisi
+                # Hitung prediksi nutrisi aktual dengan porsi yang didapat
                 A = np.column_stack([i[FEATURES].astype(float).to_numpy() / 100.0 for i in items])
-                pred = A @ portions
-                rmse = calculate_rmse(pred, target_vec)
+                pred = A @ portions  # Perkalian matriks: nutrisi prediksi
+                rmse = calculate_rmse(pred, target_vec)  # Ukur akurasi
                 
                 recommendations.append((rmse, p, l, s, portions))
     
     if not recommendations:
         return []
     
-    # Ranking: pilih RMSE terkecil
+    # Ranking: urutkan berdasarkan RMSE (ascending = terkecil terbaik)
     recommendations.sort(key=lambda x: x[0])
     
-    # Ambil 1 terbaik
+    # Ambil 1 kombinasi terbaik (RMSE terkecil)
     rmse, p, l, s, portions = recommendations[0]
+    # Tandai makanan ini sebagai sudah digunakan (agar tidak diulang di jadwal lain)
     used_foods.update({str(p['Nama_Bahan']), str(l['Nama_Bahan']), str(s['Nama_Bahan'])})
     
     return [{
@@ -465,7 +481,7 @@ def recommend_morning_afternoon(raw_df: pd.DataFrame,
     }]
 
 
-# ==================== REKOMENDASI SORE/MALAM ====================
+# ==================== REKOMENDASI SORE/MALAM (MENU UTAMA) ====================
 def recommend_evening(raw_df: pd.DataFrame,
                      target_vec: np.ndarray,
                      used_foods: set,
@@ -473,9 +489,10 @@ def recommend_evening(raw_df: pd.DataFrame,
                      exclude_list: Optional[List[str]] = None,
                      seed: Optional[int] = None) -> List[Dict]:
     """
-    Rekomendasi Sore/Malam: Pokok + Lauk + Sayur (3 items)
+    Generate rekomendasi untuk jadwal Sore/Malam: Pokok + Lauk + Sayur (3 item).
     
-    FIX: Sekarang SAMA dengan Pagi/Siang (3 items) untuk nutrisi seimbang
+    Catatan: Struktur SAMA dengan Pagi/Siang (3 items) untuk menjaga keseimbangan nutrisi.
+             Tidak menggunakan struktur 2-item untuk mencegah defisit serat dan protein.
     """
     target_cal = float(target_vec[0])
     base_excl = list(used_foods) + (exclude_list or [])
@@ -514,10 +531,10 @@ def recommend_evening(raw_df: pd.DataFrame,
     )
     
     if pk.empty or lk.empty or sy.empty:
-        logger.warning("Insufficient candidates for evening menu")
+        logger.warning("Kandidat tidak cukup untuk menu sore/malam")
         return []
     
-    # Kombinasi & Optimasi (sama dengan Pagi/Siang)
+    # Kombinasi dan Optimasi (sama dengan algoritma Pagi/Siang)
     recommendations = []
     foods_used_this_schedule = set()
     
@@ -554,7 +571,7 @@ def recommend_evening(raw_df: pd.DataFrame,
     }]
 
 
-# ==================== REKOMENDASI SNACK ====================
+# ==================== REKOMENDASI SNACK (BUAH) ====================
 def recommend_snack(raw_df: pd.DataFrame,
                    target_vec: np.ndarray,
                    used_foods: set,
@@ -562,13 +579,13 @@ def recommend_snack(raw_df: pd.DataFrame,
                    exclude_list: Optional[List[str]] = None,
                    seed: Optional[int] = None) -> List[Dict]:
     """
-    Rekomendasi Snack: Buah (1 item)
+    Generate rekomendasi Snack: Buah (1 item saja, bukan kombinasi).
     
     Algoritma:
     1. Pilih kandidat Buah (top-12 terdekat kalori)
-    2. Hitung porsi optimal dengan closed-form solution
-    3. Hitung RMSE
-    4. Pilih 1 buah dengan RMSE terkecil
+    2. Hitung porsi optimal dengan closed-form solution (formula analitik)
+    3. Hitung RMSE untuk tiap buah
+    4. Pilih 1 buah dengan RMSE terkecil (paling mendekati target snack)
     """
     target_cal = float(target_vec[0])
     base_excl = list(used_foods) + (exclude_list or [])
@@ -584,20 +601,21 @@ def recommend_snack(raw_df: pd.DataFrame,
     )
     
     if fruits.empty:
-        logger.warning("No fruit candidates for snack")
+        logger.warning("Tidak ada kandidat buah untuk snack")
         return []
     
     recommendations = []
     for _, f in fruits.iterrows():
         name = str(f['Nama_Bahan'])
-        if name in used_foods:
+        if name in used_foods:  # Skip jika sudah dipakai di jadwal lain
             continue
         
+        # Hitung porsi optimal dengan closed-form
         portion = single_item_best_portion(f, target_vec)
         
-        # Hitung prediksi
+        # Hitung prediksi nutrisi
         x = f[FEATURES].astype(float).to_numpy() / 100.0
-        pred = x * portion
+        pred = x * portion  # Nutrisi = nutrisi per-gram × porsi
         rmse = calculate_rmse(pred, target_vec)
         
         recommendations.append((rmse, f, portion))
@@ -605,9 +623,10 @@ def recommend_snack(raw_df: pd.DataFrame,
     if not recommendations:
         return []
     
+    # Pilih buah dengan RMSE terkecil
     recommendations.sort(key=lambda x: x[0])
     rmse, f, portion = recommendations[0]
-    used_foods.add(str(f['Nama_Bahan']))
+    used_foods.add(str(f['Nama_Bahan']))  # Tandai sebagai terpakai
     
     return [{
         "Pokok": None,
@@ -618,49 +637,58 @@ def recommend_snack(raw_df: pd.DataFrame,
     }]
 
 
-# ==================== MAIN FUNCTION ====================
-def generate_recommendations_per_jadwal(raw_file: str, #target akan diterima disini
+# ==================== FUNGSI UTAMA (MAIN) ====================
+def generate_recommendations_per_jadwal(raw_file: str,  # Target nutrisi akan diterima di parameter ini
                                        jadwal_nutrients_dict: Dict[str, Dict[str, float]],
                                        allergies: Optional[List[str]] = None,
                                        exclude_foods: Optional[List[str]] = None,
                                        seed: Optional[int] = None) -> Dict[str, List[Dict]]:
     """
-    Generate rekomendasi menu untuk semua jadwal makan
+    Generate rekomendasi menu untuk SEMUA jadwal makan (Pagi, Siang, Sore/Malam, Snack 1, Snack 2).
+    
+    Ini adalah fungsi UTAMA yang dipanggil dari Flask route /outputs.
     
     Args:
-        raw_file: Path ke file Excel data makanan
-        jadwal_nutrients_dict: Target nutrisi per jadwal
+        raw_file: Path ke file Excel data makanan TKPI
+        jadwal_nutrients_dict: Target nutrisi untuk setiap jadwal
+            Contoh struktur:
             {
                 'Pagi': {'Energi (kal)': 360, 'Protein (g)': 13.5, ...},
-                'Siang': {...},
-                ...
+                'Siang': {'Energi (kal)': 540, ...},
+                'Sore/Malam': {'Energi (kal)': 450, ...},
+                'Snack 1': {'Energi (kal)': 180, ...},
+                'Snack 2': {'Energi (kal)': 270, ...}
             }
-        allergies: List alergi user
-        exclude_foods: List makanan yang di-exclude
-        seed: Random seed untuk reproducibility
+        allergies: List alergi user (e.g., ['seafood', 'kacang'])
+        exclude_foods: List makanan yang dihindari/di-exclude user
+        seed: Random seed untuk reproducibility hasil
     
     Returns:
-        Dict dengan struktur:
+        Dictionary berisi rekomendasi untuk tiap jadwal:
         {
-            'Pagi': [{'Pokok': {...}, 'Lauk': {...}, 'Sayur': {...}, 'Buah': None}],
+            'Pagi': [{'Pokok': {...}, 'Lauk': {...}, 'Sayur': {...}, 'Buah': None, 'fit_rmse': ...}],
             'Siang': [...],
-            ...
+            'Sore/Malam': [...],
+            'Snack 1': [{'Pokok': None, 'Lauk': None, 'Sayur': None, 'Buah': {...}, ...}],
+            'Snack 2': [...]
         }
     """
-    # Load data
+    # Muat data makanan dari Excel
     raw_df = load_raw_data(raw_file)
     
-    output: Dict[str, List[Dict]] = {}
+    output: Dict[str, List[Dict]] = {}  # Container hasil rekomendasi
+    # Set makanan yang sudah digunakan (dimulai dari exclude_foods user)
     used_foods = set(x.strip() for x in (exclude_foods or []) if x and x.strip())
     
-    rng = np.random.default_rng(seed)
+    rng = np.random.default_rng(seed)  # Random generator untuk reproducibility
     
+    # Loop untuk setiap jadwal makan
     for schedule, user_nutrients in jadwal_nutrients_dict.items():
         logger.info(f"\n{'='*60}")
-        logger.info(f"Processing schedule: {schedule}")
-        logger.info(f"Target: {user_nutrients['Energi (kal)']:.0f} kkal")
+        logger.info(f"Memproses jadwal: {schedule}")
+        logger.info(f"Target kalori: {user_nutrients['Energi (kal)']:.0f} kkal")
         
-        # Konversi target ke vector
+        # Konversi target nutrisi ke vektor numpy untuk komputasi
         target_vec = np.array([
             user_nutrients['Energi (kal)'],
             user_nutrients['Protein (g)'],
@@ -669,8 +697,9 @@ def generate_recommendations_per_jadwal(raw_file: str, #target akan diterima dis
             user_nutrients['Serat (g)']
         ], dtype=float)
         
-        # Pilih fungsi rekomendasi berdasarkan jadwal
+        # Pilih fungsi rekomendasi yang sesuai berdasarkan jadwal
         if schedule in ['Pagi', 'Siang']:
+            # Menu utama: Pokok + Lauk + Sayur
             recs = recommend_morning_afternoon(
                 raw_df=raw_df,
                 target_vec=target_vec,
@@ -680,6 +709,7 @@ def generate_recommendations_per_jadwal(raw_file: str, #target akan diterima dis
                 seed=int(rng.integers(0, 1_000_000))
             )
         elif schedule == 'Sore/Malam':
+            # Menu utama sore: juga Pokok + Lauk + Sayur
             recs = recommend_evening(
                 raw_df=raw_df,
                 target_vec=target_vec,
@@ -689,6 +719,7 @@ def generate_recommendations_per_jadwal(raw_file: str, #target akan diterima dis
                 seed=int(rng.integers(0, 1_000_000))
             )
         else:  # Snack 1 & Snack 2
+            # Snack: hanya Buah (single item)
             recs = recommend_snack(
                 raw_df=raw_df,
                 target_vec=target_vec,
@@ -700,17 +731,18 @@ def generate_recommendations_per_jadwal(raw_file: str, #target akan diterima dis
         
         output[schedule] = recs
         
+        # Log hasil rekomendasi
         if recs:
-            logger.info(f"✓ Generated recommendation with RMSE: {recs[0]['fit_rmse']:.2f}")
+            logger.info(f"✓ Rekomendasi berhasil dibuat dengan RMSE: {recs[0]['fit_rmse']:.2f}")
         else:
-            logger.warning(f"✗ No recommendation generated for {schedule}")
+            logger.warning(f"✗ Tidak ada rekomendasi yang dibuat untuk {schedule}")
     
-    # Save output untuk debugging
+    # Simpan output ke file JSON untuk debugging dan validasi
     try:
         with open('output.json', 'w', encoding='utf-8') as f:
             json.dump(output, f, indent=4, ensure_ascii=False)
-        logger.info("\nOutput saved to output.json")
+        logger.info("\nOutput disimpan ke output.json")
     except Exception:
-        pass
+        pass  # Abaikan error jika gagal menyimpan (tidak kritikal)
     
     return output

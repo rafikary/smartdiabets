@@ -1,0 +1,513 @@
+{% extends "base.html" %}
+
+{% block title %}Membaca Label Gizi Produk Kemasan - SmartDiabets{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root{
+    --brand:#047857; --brand-mid:#059669; --brand-soft:#10b981; --brand-glow:#34d399;
+    --ink:#0a1628; --muted:#64748b;
+    --paper:#f8fafc; --card:#fff; --border:rgba(0,0,0,.07);
+    --shadow-card:0 4px 24px rgba(15,23,42,.08);
+    --radius-xl:22px; --radius-lg:16px; --radius-md:12px;
+    --tr: all .25s cubic-bezier(.4,0,.2,1);
+  }
+  html[data-theme="dark"]{
+    --paper:#070e1a; --ink:#e2e8f0; --muted:#94a3b8;
+    --card:#0f1829; --border:rgba(255,255,255,.08);
+    --shadow-card:0 4px 24px rgba(0,0,0,.4);
+  }
+
+  .article-hero{
+    background:linear-gradient(135deg,#ecfdf5 0%,#f0f9ff 50%,#f8fafc 100%);
+    padding:2rem 0 1.75rem; position:relative; overflow:hidden;
+  }
+  html[data-theme="dark"] .article-hero{
+    background:linear-gradient(135deg,#070e1a 0%,#091325 50%,#070e1a 100%);
+  }
+  .article-hero::before{
+    content:""; position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse 60% 80% at 10% 30%, rgba(13,148,136,.18) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 60% at 90% 70%, rgba(56,189,248,.14) 0%, transparent 60%);
+  }
+  .hero-back{
+    display:inline-flex; align-items:center; gap:.45rem;
+    font-size:.82rem; font-weight:600; color:var(--brand-mid);
+    text-decoration:none; margin-bottom:1.5rem; transition:var(--tr);
+  }
+  .hero-back:hover{ color:var(--brand); gap:.7rem }
+  .article-eyebrow{
+    display:inline-flex; align-items:center; gap:.4rem;
+    font-size:.7rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+    color:#0d9488;
+    background:rgba(13,148,136,.1); border:1px solid rgba(13,148,136,.2);
+    padding:.3rem .85rem; border-radius:999px; margin-bottom:1rem;
+  }
+  .article-hero-title{
+    font-family:'Poppins',sans-serif; font-size:clamp(1.8rem,4vw,2.8rem);
+    font-weight:900; letter-spacing:-.04em; line-height:1.15; color:var(--ink);
+    margin-bottom:1rem; max-width:720px;
+  }
+  .article-hero-title .grad{
+    background:linear-gradient(130deg,#0d9488,var(--brand-glow));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .article-meta-row{
+    display:flex; align-items:center; flex-wrap:wrap; gap:1rem;
+    font-size:.82rem; color:var(--muted); margin-top:1.2rem;
+  }
+  .article-meta-row i{ color:var(--brand-mid) }
+
+  .article-body{ padding:2rem 0 2.5rem; background:var(--paper) }
+  .article-content-wrap{
+    max-width:760px; margin:0 auto;
+  }
+  .article-lead{
+    font-size:1.1rem; line-height:1.85; color:var(--ink); font-weight:500;
+    margin-bottom:2rem; padding-left:1.25rem;
+    border-left:4px solid var(--brand-soft);
+  }
+  .article-content-wrap h2{
+    font-family:'Poppins',sans-serif; font-size:1.25rem; font-weight:800;
+    color:var(--ink); margin-top:1.8rem; margin-bottom:.7rem;
+    letter-spacing:-.02em;
+  }
+  .article-content-wrap h3{
+    font-family:'Poppins',sans-serif; font-size:1.1rem; font-weight:700;
+    color:var(--brand); margin-top:1.8rem; margin-bottom:.6rem;
+  }
+  .article-content-wrap p{
+    color:var(--muted); line-height:1.85; margin-bottom:1rem; font-size:.95rem;
+  }
+  .article-content-wrap strong{ color:var(--ink) }
+
+  .label-mockup{
+    background:var(--card); border:2px solid var(--border);
+    border-radius:var(--radius-lg); padding:1.5rem;
+    margin:1.5rem 0; font-family:'Courier New',monospace;
+    box-shadow:var(--shadow-card);
+  }
+  .label-mockup-title{
+    font-family:'Poppins',sans-serif; font-weight:800;
+    font-size:1rem; color:var(--ink); margin-bottom:1rem;
+    text-align:center; border-bottom:2px solid var(--border);
+    padding-bottom:.5rem;
+  }
+  .label-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:.5rem 0; border-bottom:1px solid var(--border);
+    font-size:.88rem; color:var(--muted);
+  }
+  .label-row:last-child{ border-bottom:none }
+  .label-row strong{ color:var(--ink) }
+  .label-highlight{
+    background:rgba(245,158,11,.1); padding:.15rem .4rem;
+    border-radius:4px; color:#b45309; font-weight:700;
+  }
+  .label-danger{
+    background:rgba(239,68,68,.1); padding:.15rem .4rem;
+    border-radius:4px; color:#dc2626; font-weight:700;
+  }
+
+  .step-grid{
+    display:grid; grid-template-columns:1fr; gap:1rem;
+    margin:1.2rem 0;
+  }
+  .step-card{
+    border-radius:var(--radius-lg); padding:1.25rem 1.5rem;
+    display:flex; gap:1rem; align-items:flex-start;
+    border:1px solid var(--border); background:var(--card);
+    box-shadow:var(--shadow-card);
+  }
+  .step-num{
+    width:38px; height:38px; border-radius:10px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:900; font-size:1.1rem; color:#fff;
+    background:linear-gradient(135deg, var(--brand-mid), var(--brand-glow));
+  }
+  .step-content{ flex:1 }
+  .step-title{
+    font-family:'Poppins',sans-serif; font-weight:700;
+    font-size:1rem; color:var(--ink); margin-bottom:.4rem;
+  }
+  .step-desc{ font-size:.88rem; color:var(--muted); line-height:1.65 }
+
+  .callout{
+    border-radius:var(--radius-md); padding:1.25rem 1.5rem;
+    display:flex; gap:1rem; align-items:flex-start;
+    margin:1.8rem 0;
+  }
+  .callout-info{ background:rgba(16,185,129,.07); border-left:4px solid var(--brand-soft) }
+  .callout-warn{ background:rgba(245,158,11,.07); border-left:4px solid #f59e0b }
+  .callout-danger{ background:rgba(239,68,68,.07); border-left:4px solid #ef4444 }
+  .callout i{ font-size:1.2rem; margin-top:.1rem; flex-shrink:0 }
+  .callout-info i{ color:var(--brand-mid) }
+  .callout-warn i{ color:#f59e0b }
+  .callout-danger i{ color:#ef4444 }
+  .callout p{ margin:0; font-size:.88rem; line-height:1.7; color:var(--ink) }
+  .callout strong{ color:var(--ink) }
+
+  .key-list{ list-style:none; padding:0; margin:1rem 0; }
+  .key-list li{
+    display:flex; align-items:flex-start; gap:.75rem;
+    padding:.6rem 0; border-bottom:1px solid var(--border);
+    font-size:.9rem; color:var(--muted); line-height:1.65;
+  }
+  .key-list li:last-child{ border-bottom:none }
+  .key-list i{ color:var(--brand-mid); font-size:1rem; margin-top:.1rem; flex-shrink:0 }
+
+  .comparison-table{
+    width:100%; border-collapse:collapse; margin:1.4rem 0; font-size:.87rem;
+  }
+  .comparison-table th{
+    background:linear-gradient(135deg,#0d9488,var(--brand-mid));
+    color:#fff; padding:.75rem 1rem; text-align:left; font-weight:700;
+  }
+  .comparison-table th:first-child{ border-radius:var(--radius-md) 0 0 0 }
+  .comparison-table th:last-child{ border-radius:0 var(--radius-md) 0 0 }
+  .comparison-table td{
+    padding:.7rem 1rem; border-bottom:1px solid var(--border); color:var(--ink);
+    background:var(--card);
+  }
+  .comparison-table tr:last-child td{ border-bottom:none }
+  .comparison-table tr:hover td{ background:rgba(13,148,136,.04) }
+  .badge-good{
+    display:inline-block; padding:.22rem .7rem; border-radius:8px;
+    font-size:.75rem; font-weight:700;
+    background:rgba(16,185,129,.1); color:#047857;
+  }
+  .badge-bad{
+    display:inline-block; padding:.22rem .7rem; border-radius:8px;
+    font-size:.75rem; font-weight:700;
+    background:rgba(239,68,68,.1); color:#dc2626;
+  }
+
+  .article-cta{
+    margin-top:1.25rem; border-radius:var(--radius-xl);
+    background:linear-gradient(135deg,#0d9488 0%,var(--brand-mid) 60%,var(--brand) 100%);
+    padding:1.1rem 1.5rem; text-align:center; position:relative; overflow:hidden;
+  }
+  .article-cta::before{
+    content:""; position:absolute; inset:0; opacity:.07;
+    background-image:radial-gradient(rgba(255,255,255,.6) 1px, transparent 1px);
+    background-size:24px 24px;
+  }
+  .article-cta h3{
+    font-family:'Poppins',sans-serif; font-size:1.1rem; font-weight:800;
+    color:#fff; margin-bottom:.35rem;
+  }
+  .article-cta p{ color:rgba(255,255,255,.85); font-size:.85rem; margin-bottom:.9rem }
+  .btn-cta-white{
+    display:inline-flex; align-items:center; gap:.5rem;
+    background:#fff; color:var(--brand);
+    font-weight:700; font-size:.85rem; padding:.55rem 1.5rem;
+    border-radius:999px; text-decoration:none;
+    box-shadow:0 4px 20px rgba(0,0,0,.15);
+    transition:var(--tr);
+  }
+  .btn-cta-white:hover{ transform:translateY(-2px); box-shadow:0 8px 28px rgba(0,0,0,.2); color:var(--brand) }
+
+  .back-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding-top:1rem; border-top:1px solid var(--border); margin-top:1rem;
+    flex-wrap:wrap; gap:.75rem;
+  }
+  .back-row a{
+    display:inline-flex; align-items:center; gap:.45rem;
+    font-size:.85rem; font-weight:600; color:var(--brand-mid);
+    text-decoration:none; transition:var(--tr);
+  }
+  .back-row a:hover{ color:var(--brand); gap:.7rem }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ──────── HERO ──────── -->
+<section class="article-hero">
+  <div class="container position-relative" style="z-index:1">
+    <a href="{{ url_for('blog') }}" class="hero-back">
+      <i class="bi bi-arrow-left"></i> Kembali ke Artikel
+    </a>
+    <div class="article-eyebrow"><i class="bi bi-upc-scan"></i> Edukasi Pasien</div>
+    <h1 class="article-hero-title">
+      Membaca Label Gizi <span class="grad">Produk Kemasan</span>
+    </h1>
+    <div class="article-meta-row">
+      <span><i class="bi bi-clock"></i> 5 menit baca</span>
+      <span><i class="bi bi-tag"></i> Edukasi label</span>
+      <span><i class="bi bi-calendar3"></i> Updated 2025</span>
+    </div>
+  </div>
+</section>
+
+<!-- ──────── BODY ──────── -->
+<section class="article-body">
+  <div class="container">
+    <article class="article-content-wrap">
+
+      <p class="article-lead">
+        Label gizi adalah <strong>"peta rahasia"</strong> yang membantu Anda menghindari produk tinggi gula tersembunyi, lemak jenuh berlebih, dan kalori mengejutkan. Pelajari cara cepat membacanya agar tidak <strong>"kecolongan"</strong> saat belanja kebutuhan sehari-hari.
+      </p>
+
+      <h2>Kenapa Label Gizi Penting untuk Penderita Diabetes?</h2>
+      <p>
+        Banyak produk kemasan yang terlihat "sehat" di iklan, ternyata menyimpan kandungan gula dan lemak yang berbahaya. Label gizi membantu Anda:
+      </p>
+
+      <ul class="key-list">
+        <li><i class="bi bi-check-circle-fill"></i> Mendeteksi gula tambahan yang tersembunyi dengan nama lain</li>
+        <li><i class="bi bi-check-circle-fill"></i> Membandingkan produk serupa untuk pilihan lebih sehat</li>
+        <li><i class="bi bi-check-circle-fill"></i> Menghitung kalori dan karbohidrat per sajian dengan akurat</li>
+        <li><i class="bi bi-check-circle-fill"></i> Menghindari lemak trans dan lemak jenuh berlebih</li>
+      </ul>
+
+      <div class="callout callout-warn">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <p>
+          <strong>Hati-hati!</strong> Produsen sering menggunakan istilah <strong>"rendah lemak"</strong>, <strong>"bebas gula"</strong>, atau <strong>"organik"</strong> sebagai trik marketing. Label gizi adalah satu-satunya sumber informasi faktual yang wajib tercantum di kemasan.
+        </p>
+      </div>
+
+      <h2>Contoh Label Gizi & Cara Membacanya</h2>
+
+      <div class="label-mockup">
+        <div class="label-mockup-title">🏷️ INFORMASI NILAI GIZI</div>
+        <div class="label-row">
+          <span><strong>Takaran Saji:</strong> 30 g (± 10 keping)</span>
+        </div>
+        <div class="label-row">
+          <span><strong>Jumlah Sajian per Kemasan:</strong> ± 5</span>
+        </div>
+        <hr style="margin:.75rem 0; border:none; border-top:2px solid var(--border)">
+        <div class="label-row">
+          <span>Energi Total</span>
+          <strong>150 kkal</strong>
+        </div>
+        <div class="label-row">
+          <span>Lemak Total</span>
+          <strong>8 g</strong>
+        </div>
+        <div class="label-row" style="padding-left:1rem">
+          <span style="font-size:.82rem">— Lemak Jenuh</span>
+          <span class="label-danger">4 g (20% AKG*)</span>
+        </div>
+        <div class="label-row" style="padding-left:1rem">
+          <span style="font-size:.82rem">— Lemak Trans</span>
+          <span class="label-danger">0.5 g</span>
+        </div>
+        <div class="label-row">
+          <span>Karbohidrat Total</span>
+          <strong>18 g</strong>
+        </div>
+        <div class="label-row" style="padding-left:1rem">
+          <span style="font-size:.82rem">— Gula</span>
+          <span class="label-highlight">10 g</span>
+        </div>
+        <div class="label-row" style="padding-left:1rem">
+          <span style="font-size:.82rem">— Serat Pangan</span>
+          <strong>1 g</strong>
+        </div>
+        <div class="label-row">
+          <span>Protein</span>
+          <strong>2 g</strong>
+        </div>
+        <div class="label-row">
+          <span>Garam (Natrium)</span>
+          <span class="label-highlight">200 mg</span>
+        </div>
+        <p style="margin-top:.75rem; font-size:.75rem; color:var(--muted); font-family:sans-serif">
+          <em>*AKG = Angka Kecukupan Gizi berdasarkan kebutuhan energi 2000 kkal</em>
+        </p>
+      </div>
+
+      <h2>5 Langkah Cepat Membaca Label Gizi</h2>
+
+      <div class="step-grid">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Cek Ukuran Sajian (Serving Size)</div>
+            <div class="step-desc">
+              <strong>Penting!</strong> Semua angka nutrisi di label merujuk pada <strong>1 takaran saji</strong>, bukan 1 kemasan utuh. Jika Anda makan 2x takaran saji, kalikan semua angka dengan 2. Contoh: takaran saji 30g, kemasan 150g = 5 sajian.
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">Perhatikan Total Kalori per Sajian</div>
+            <div class="step-desc">
+              Bandingkan dengan target kalori Anda per waktu makan. Misal: snack target 150 kkal, produk 1 sajian = 200 kkal, artinya terlalu tinggi atau harus dimakan setengah sajian.
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">Fokus pada Gula & Karbohidrat</div>
+            <div class="step-desc">
+              <strong>Gula:</strong> Diabetes harus membatasi gula tambahan (added sugar). Pilih produk dengan gula &lt;5g per sajian untuk snack, &lt;10g untuk makanan utama.<br>
+              <strong>Karbohidrat Total:</strong> Hitung ke dalam alokasi karbohidrat harian Anda (biasanya 45-60g per makan utama).
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">Cek Lemak Jenuh & Trans</div>
+            <div class="step-desc">
+              <strong>Lemak Jenuh:</strong> Batas aman &lt;10% kalori harian (±22g untuk diet 2000 kkal). Pilih produk &lt;2g per sajian.<br>
+              <strong>Lemak Trans:</strong> <strong>HARUS 0 gram!</strong> Lemak trans meningkatkan risiko penyakit jantung. Hindari produk dengan "partially hydrogenated oil" di daftar bahan.
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">5</div>
+          <div class="step-content">
+            <div class="step-title">Lihat Daftar Komposisi Bahan (Ingredients)</div>
+            <div class="step-desc">
+              Bahan tercantum dari jumlah terbesar ke terkecil. Jika gula/pemanis ada di 3 bahan pertama, produk tersebut tinggi gula. <strong>Nama samaran gula:</strong> sukrosa, fruktosa, sirup jagung tinggi fruktosa (HFCS), maltosa, dekstrosa, madu, molase, agave nectar.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2>Perbandingan Produk: Contoh Kasus</h2>
+      <p>
+        Berikut perbandingan 2 produk sereal untuk sarapan. Mana yang lebih aman untuk penderita diabetes?
+      </p>
+
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Nutrisi (per sajian 40g)</th>
+            <th>Sereal A "Chocolate Crunch"</th>
+            <th>Sereal B "Oat Whole Grain"</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Kalori</strong></td>
+            <td>180 kkal</td>
+            <td>150 kkal</td>
+          </tr>
+          <tr>
+            <td><strong>Gula</strong></td>
+            <td><span class="badge-bad">14 g (35% AKG)</span></td>
+            <td><span class="badge-good">3 g (7% AKG)</span></td>
+          </tr>
+          <tr>
+            <td><strong>Karbohidrat Total</strong></td>
+            <td>32 g</td>
+            <td>28 g</td>
+          </tr>
+          <tr>
+            <td><strong>Serat</strong></td>
+            <td><span class="badge-bad">1 g</span></td>
+            <td><span class="badge-good">5 g</span></td>
+          </tr>
+          <tr>
+            <td><strong>Lemak Jenuh</strong></td>
+            <td><span class="badge-bad">3 g (15% AKG)</span></td>
+            <td><span class="badge-good">0.5 g (3% AKG)</span></td>
+          </tr>
+          <tr>
+            <td><strong>Bahan Utama</strong></td>
+            <td>Tepung terigu, gula, cokelat</td>
+            <td>Oat utuh, beras merah, kismis</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout-info">
+        <i class="bi bi-lightbulb-fill"></i>
+        <p>
+          <strong>Kesimpulan:</strong> Sereal B lebih aman karena rendah gula (3g vs 14g), tinggi serat (5g vs 1g), dan lemak jenuh minimal. Sereal A meski terlihat "enak", mengandung gula setara <strong>3,5 sendok teh</strong> per sajian!
+        </p>
+      </div>
+
+      <h2>Istilah Marketing yang Sering Menyesatkan</h2>
+
+      <div class="callout callout-warn">
+        <i class="bi bi-shield-exclamation"></i>
+        <div>
+          <p style="margin-bottom:.6rem">
+            <strong>Jangan tertipu! Periksa label gizi untuk memastikan klaim ini benar:</strong>
+          </p>
+          <ul style="margin:0; padding-left:1.2rem; color:var(--ink); font-size:.88rem; line-height:1.8">
+            <li><strong>"Rendah Lemak"</strong> → Sering diganti dengan gula lebih tinggi untuk rasa</li>
+            <li><strong>"Tanpa Gula Tambahan"</strong> → Bisa tetap tinggi gula alami (misal jus buah)</li>
+            <li><strong>"Multigrain"</strong> → Belum tentu whole grain, bisa jadi tepung olahan</li>
+            <li><strong>"Organik"</strong> → Tetap bisa tinggi gula dan kalori</li>
+            <li><strong>"Bebas Gluten"</strong> → Tidak otomatis rendah karbohidrat</li>
+            <li><strong>"Sumber Serat"</strong> → Cek angka sebenarnya, kadang cuma 1-2g (kurang)</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Checklist Belanja untuk Penderita Diabetes</h2>
+
+      <ul class="key-list">
+        <li><i class="bi bi-check2-square"></i> <strong>Gula &lt; 5g per sajian</strong> untuk snack, &lt;10g untuk makanan utama</li>
+        <li><i class="bi bi-check2-square"></i> <strong>Serat ≥ 3g per sajian</strong> untuk memperlambat penyerapan gula</li>
+        <li><i class="bi bi-check2-square"></i> <strong>Lemak jenuh &lt; 2g per sajian</strong></li>
+        <li><i class="bi bi-check2-square"></i> <strong>Lemak trans = 0 gram</strong> (WAJIB!)</li>
+        <li><i class="bi bi-check2-square"></i> <strong>Natrium &lt; 200mg per sajian</strong> (untuk kontrol tekanan darah)</li>
+        <li><i class="bi bi-check2-square"></i> <strong>Whole grain sebagai bahan utama</strong> (bukan tepung terigu biasa)</li>
+        <li><i class="bi bi-check2-square"></i> <strong>Tidak ada HFCS atau pemanis buatan berlebih</strong> di 3 bahan pertama</li>
+      </ul>
+
+      <div class="callout callout-info">
+        <i class="bi bi-bookmark-check-fill"></i>
+        <p>
+          <strong>Tips Praktis:</strong> Ambil foto label gizi dengan smartphone Anda saat belanja pertama kali. Buat album "Produk Aman" dan "Produk Hindari" sebagai referensi cepat belanja berikutnya.
+        </p>
+      </div>
+
+      <h2>Integrasi dengan SmartDiabets</h2>
+      <p>
+        Setelah Anda mahir membaca label, SmartDiabets membantu Anda:
+      </p>
+      <ul class="key-list">
+        <li><i class="bi bi-calculator"></i> Menghitung apakah produk tersebut masuk dalam alokasi kalori & karbohidrat harian Anda</li>
+        <li><i class="bi bi-pie-chart-fill"></i> Menyesuaikan porsi agar tidak melebihi target nutrisi per waktu makan</li>
+        <li><i class="bi bi-journal-check"></i> Menyimpan produk yang sering Anda konsumsi untuk tracking lebih mudah (fitur rencana mendatang)</li>
+      </ul>
+
+      <div class="callout callout-danger">
+        <i class="bi bi-exclamation-octagon-fill"></i>
+        <p>
+          <strong>Disclaimer:</strong> Artikel ini memberikan panduan umum. Jika Anda menggunakan insulin atau obat khusus, konsultasikan dengan dokter/ahli gizi sebelum mengubah pola makan secara signifikan. Sensitivitas terhadap karbohidrat dan gula bisa berbeda antar individu.
+        </p>
+      </div>
+
+      <!-- CTA -->
+      <div class="article-cta">
+        <h3>Siap Kontrol Nutrisi Anda?</h3>
+        <p>Gunakan kalkulator SmartDiabets untuk menghitung kebutuhan harian dan bandingkan dengan label produk Anda.</p>
+        <a href="{{ url_for('calculator') }}" class="btn-cta-white">
+          <i class="bi bi-calculator"></i> Hitung Sekarang
+        </a>
+      </div>
+
+      <!-- Navigation -->
+      <div class="back-row">
+        <a href="{{ url_for('blog') }}">
+          <i class="bi bi-arrow-left"></i> Semua Artikel
+        </a>
+        <a href="{{ url_for('calculator') }}">
+          Coba Kalkulator <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+
+    </article>
+  </div>
+</section>
+
+{% endblock %}
