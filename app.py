@@ -424,7 +424,7 @@ def output():
                             if food_item and food_item.get('name'):
                                 food_name = food_item['name']
                                 if food_name not in current_exclude:
-                                    current_exclude.append(food_name)
+                                    current_exclude.append(food_name)    #menu tidak akan mengulang makanan yang sama di hari berikutnya, sehingga variasi menu lebih banyak dan risiko kebosanan berkurang.
                                     logger.debug(f"Added to exclude list: {food_name}")
 
         date_today = datetime.now().strftime("%d %B %Y")
